@@ -1,0 +1,23 @@
+<!doctype html><html><head><meta charset="utf-8"><style>body{margin:0;background:#333}canvas{image-rendering:pixelated}</style></head><body>
+<canvas id="c" width="1200" height="700"></canvas>
+<script>window.onerror = (m, s, l) => document.body.setAttribute('data-err', m + ' @' + l);</script>
+<script src="../src/core.js"></script>
+<script src="../src/sculpt.js"></script>
+<script src="../src/models.js"></script>
+<script>
+const cv = document.getElementById('c'), g = cv.getContext('2d');
+g.imageSmoothingEnabled = false;
+g.fillStyle = '#56624a'; g.fillRect(0, 0, cv.width, cv.height);
+function put(r, x, y, Z) { g.drawImage(r.img, x - r.ox * Z, y - r.oy * Z, r.w * Z, r.h * Z); }
+const scout = { outfit: 'scout', cloak: true, hair: '#4a3020', look: 'short', skin: '#e2b08e' };
+put(renderSculpt(buildHuman(scout, 'idle', 0), Math.PI / 2, { edge: 3 }), 90, 300, 8);
+put(renderSculpt(buildHuman(scout, 'idle', 0), Math.PI / 2 - 0.7, { edge: 3 }), 260, 300, 8);
+put(renderSculpt(buildHuman(scout, 'idle', 0), -Math.PI / 2, { edge: 3 }), 420, 300, 8);
+const titan = { type: 'normal', g: bodyOf('normal'), Hp: 120, skin: '#cf9e86', hair: '#3b2a20', style: 1, eyes: 'wide', mouth: 'grin', iris: '#3a6a8a' };
+put(renderSculpt(buildTitan(titan, 'walk', 0.12), Math.PI / 2 - 0.2, { edge: 3.6 }), 700, 650, 4);
+const S = makeRamp('#e2b08e', 5, { lo: 0.3, hi: 0.14 });
+S.forEach((c, i) => { g.fillStyle = c; g.fillRect(20 + i * 30, 620, 28, 28); });
+const T = makeRamp('#d6b4a0', 6, { lo: 0.42, hi: 0.12, shift: 0.3 });
+T.forEach((c, i) => { g.fillStyle = c; g.fillRect(20 + i * 30, 660, 28, 28); });
+const o = document.createElement('pre'); o.id = 'snap'; o.textContent = cv.toDataURL('image/png'); document.body.appendChild(o);
+</script></body></html>

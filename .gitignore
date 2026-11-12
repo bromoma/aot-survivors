@@ -1,0 +1,6 @@
+dev/out_test/
+dev/_preview.html
+dev/play_dbg.html
+concept/*.png
+.DS_Store
+*.log

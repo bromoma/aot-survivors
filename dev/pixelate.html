@@ -1,0 +1,71 @@
+<!doctype html><html><head><meta charset="utf-8"></head><body>
+<script>window.onerror = (m, s, l) => document.body.setAttribute('data-err', m + ' @' + l);</script>
+<script>
+const P = new URLSearchParams(location.hash.slice(1));
+const TRIM = P.get('trim') === '1';
+const SRC = P.get('src'), FORCE = +P.get('px') || 0, TW = +P.get('w') || 0;
+function estimate(d, w, h) {
+  const runs = new Map();
+  for (let y = 0; y < h; y += 3) {
+    let run = 0, pr = -1, pg = -1, pb = -1;
+    for (let x = 0; x < w; x++) {
+      const i = (y * w + x) * 4;
+      if (d[i + 3] < 128) { if (run) runs.set(run, (runs.get(run) || 0) + 1); run = 0; pr = -1; continue; }
+      const r = d[i], g = d[i + 1], b = d[i + 2];
+      if (pr >= 0 && Math.abs(r - pr) < 18 && Math.abs(g - pg) < 18 && Math.abs(b - pb) < 18) run++;
+      else { if (run) runs.set(run, (runs.get(run) || 0) + 1); run = 1; }
+      pr = r; pg = g; pb = b;
+    }
+  }
+  let best = 1, score = -1;
+  for (let s = 2; s < 16; s++) {
+    let sc = 0;
+    for (const [r, n] of runs) if (r >= s - 1 && Math.abs(r / s - Math.round(r / s)) < 0.18) sc += n;
+    sc *= s;
+    if (sc > score) { best = s; score = sc; }
+  }
+  return best;
+}
+const img = new Image();
+img.onload = () => {
+  let w = img.naturalWidth, h = img.naturalHeight, ox = 0, oy = 0;
+  const c0 = document.createElement('canvas'); c0.width = w; c0.height = h;
+  const g0 = c0.getContext('2d', { willReadFrequently: true }); g0.drawImage(img, 0, 0);
+  if (TRIM) {
+    const d0 = g0.getImageData(0, 0, w, h).data;
+    let x0 = w, y0 = h, x1 = -1, y1 = -1;
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (d0[(y * w + x) * 4 + 3] > 128) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+    if (x1 >= 0) { ox = x0; oy = y0; w = x1 - x0 + 1; h = y1 - y0 + 1; }
+  }
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(c0, -ox, -oy);
+  const d = g.getImageData(0, 0, w, h).data;
+  const s = FORCE || estimate(d, w, h);
+  const tw = TW || Math.round(w / s), th = TW ? Math.round(h * TW / w) : Math.round(h / s);
+  const oc = document.createElement('canvas'); oc.width = tw; oc.height = th;
+  const og = oc.getContext('2d'); const od = og.createImageData(tw, th);
+  const kx = w / tw, ky = h / th;
+  for (let ty = 0; ty < th; ty++) for (let tx = 0; tx < tw; tx++) {
+    const x0 = Math.floor(tx * kx), x1 = Math.max(x0 + 1, Math.floor((tx + 1) * kx)), y0 = Math.floor(ty * ky), y1 = Math.max(y0 + 1, Math.floor((ty + 1) * ky));
+    const cnt = new Map(); let opaque = 0, tot = 0;
+    for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) {
+      const i = (y * w + x) * 4; tot++;
+      if (d[i + 3] < 128) continue;
+      opaque++;
+      const key = (d[i] >> 3) << 10 | (d[i + 1] >> 3) << 5 | (d[i + 2] >> 3);
+      let e = cnt.get(key); if (!e) { e = [0, 0, 0, 0]; cnt.set(key, e); }
+      e[0]++; e[1] += d[i]; e[2] += d[i + 1]; e[3] += d[i + 2];
+    }
+    if (opaque / tot < 0.5) continue;
+    let best = null; for (const e of cnt.values()) if (!best || e[0] > best[0]) best = e;
+    const o = (ty * tw + tx) * 4;
+    od.data[o] = best[1] / best[0]; od.data[o + 1] = best[2] / best[0]; od.data[o + 2] = best[3] / best[0]; od.data[o + 3] = 255;
+  }
+  og.putImageData(od, 0, 0);
+  const pre = document.createElement('pre'); pre.id = 'out';
+  pre.textContent = JSON.stringify({ s, w: tw, h: th, png: oc.toDataURL('image/png') });
+  document.body.appendChild(pre);
+};
+img.onerror = () => document.body.setAttribute('data-err', 'load failed');
+img.src = SRC;
+</script></body></html>

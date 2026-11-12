@@ -1,0 +1,13 @@
+<!doctype html><html><head><meta charset="utf-8"></head><body>
+<script>window.onerror=(m,s,l)=>document.body.setAttribute('data-err',m+' @'+l);window.ASSET_BASE='../';</script>
+<canvas id="c" width="1200" height="520"></canvas>
+<script src="../src/core.js"></script><script src="../src/assets.js"></script>
+<script>
+loadAssets().then(() => {
+  const g = document.getElementById('c').getContext('2d'); g.imageSmoothingEnabled = false;
+  g.fillStyle = '#56a03a'; g.fillRect(0, 0, 1200, 520);
+  let x = 10;
+  for (const t of TITAN_TYPES) { const s = SPR[`titan_${t}_140_up`]; if (s) { g.drawImage(s, x, 10, s.width * 3, s.height * 3); x += s.width * 3 + 10; } }
+  const o = document.createElement('pre'); o.id = 'snap'; o.textContent = document.getElementById('c').toDataURL(); document.body.appendChild(o);
+});
+</script></body></html>

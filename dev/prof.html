@@ -1,0 +1,39 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;700&display=swap" rel="stylesheet">
+<style>html,body{margin:0;height:100%;background:#0b0d14;overflow:hidden}canvas{display:block}</style></head>
+<body><script>window.onerror=(m,s,l,c,e)=>{document.body.setAttribute('data-err',m+' @'+l+':'+c+' '+(e&&e.stack||'').slice(0,400))};window.requestAnimationFrame=()=>0;</script>
+<canvas id="game"></canvas>
+<script src="../src/core.js"></script><script src="../src/sculpt.js"></script><script src="../src/models.js"></script>
+<script src="../src/terrain.js"></script><script src="../src/fx.js"></script><script src="../src/game.js"></script>
+<script>
+const LOG = []; const PROF = {}; for (const fn of ["buildHouse2","buildTower2","paintGround","paintWalls","wallMaria","wallTop","forestEdge","castShadow","scatterRubble","scorch","treeSprite","genRuins","genCity","genField"]) { const orig = window[fn] || eval(fn); const wrapped = function(...a) { const t = performance.now(); const r = orig.apply(this, a); PROF[fn] = (PROF[fn] || 0) + performance.now() - t; return r; }; try { eval(fn + " = wrapped"); } catch (e) {} }
+const log = s => LOG.push(s);
+const [fac, secs, mode] = (location.hash.slice(1) || '1,30,play').split(',');
+let t0 = performance.now();
+factionSel = +fac; reset();
+log(JSON.stringify(Object.fromEntries(Object.entries(PROF).map(([k,v]) => [k, Math.round(v)])))); log('world gen ' + FACTIONS[+fac].id + ': ' + (performance.now() - t0).toFixed(0) + 'ms, buildings ' + buildings.length + ', trees ' + trees.length);
+if (mode === 'play') {
+  start();
+  keys.KeyD = true;
+  let upd = 0, rnd = 0, rn = 0, worst = 0;
+  const N = 60 * (+secs);
+  for (let i = 0; i < N; i++) {
+    let a = performance.now();
+    update(1 / 60);
+    upd += performance.now() - a;
+    if (state === 'levelup') choose(0);
+    if (state === 'over') { log('died at ' + game.time.toFixed(1)); state = 'play'; player.hp = 5; }
+    if (i % 75 === 0) engage();
+    if (i % 600 === 300) { keys.KeyD = false; keys.KeyS = true; }
+    if (i % 600 === 0 && i) { keys.KeyS = false; keys.KeyD = true; }
+    if (i % 4 === 0) { a = performance.now(); render(); const d = performance.now() - a; rnd += d; rn++; worst = Math.max(worst, d); }
+  }
+  log(`sim ${secs}s: update avg ${(upd / N).toFixed(2)}ms, render avg ${(rnd / rn).toFixed(2)}ms worst ${worst.toFixed(0)}ms, titans ${titans.length}, kills ${game.kills}, lvl ${game.level}, hp ${player.hp}`);
+  let a = performance.now();
+  for (let i = 0; i < 30; i++) render();
+  log('steady render avg ' + ((performance.now() - a) / 30).toFixed(2) + 'ms; heroCache ' + heroCache.size + ' civCache ' + civCache.size);
+}
+render();
+const o = document.createElement('pre'); o.id = 'snap'; o.textContent = canvas.toDataURL('image/png'); document.body.appendChild(o);
+const l = document.createElement('pre'); l.id = 'log'; l.textContent = LOG.join(' | '); document.body.appendChild(l);
+</script></body></html>

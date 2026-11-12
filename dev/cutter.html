@@ -1,0 +1,153 @@
+<!doctype html><html><head><meta charset="utf-8"></head><body>
+<script>window.onerror = (m, s, l) => document.body.setAttribute('data-err', m + ' @' + l);</script>
+<script>
+const P = new URLSearchParams(location.hash.slice(1));
+const UNI = +P.get('uniform') || 0;
+const SRC = P.get('src'), NAME = P.get('name'), TH = +P.get('h') || 64, LABELS = (P.get('labels') || 'down,left,right,up').split(',');
+
+function isBg(r, g, b) {
+  if (r > 120 && b > 120 && g < 90 && Math.abs(r - b) < 110) return true;
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b);
+  if (mx < 60) return false;
+  return (mx - mn) / mx > 0.55 && g === mn && r > g + 70 && b > g + 70;
+}
+
+function run(img) {
+  const w = img.naturalWidth, h = img.naturalHeight;
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const g = c.getContext('2d', { willReadFrequently: true });
+  g.drawImage(img, 0, 0);
+  const d = g.getImageData(0, 0, w, h).data;
+  const m = new Uint8Array(w * h);
+  for (let i = 0; i < w * h; i++) m[i] = isBg(d[i * 4], d[i * 4 + 1], d[i * 4 + 2]) ? 0 : 1;
+  const cols = new Int32Array(w);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) cols[x] += m[y * w + x];
+  const segs = [];
+  let start = -1, gap = 0;
+  for (let x = 0; x < w; x++) {
+    if (cols[x] > 2) { if (start < 0) start = x; gap = 0; }
+    else if (start >= 0) {
+      gap++;
+      if (gap >= 6) { if (x - gap - start > 20) segs.push([start, x - gap]); start = -1; gap = 0; }
+    }
+  }
+  if (start >= 0 && w - start > 20) segs.push([start, w - 1]);
+  let ccBoxes = null;
+  if (LABELS.length > 1) {
+    const lab = new Int32Array(w * h).fill(-1), comps = [], q = new Int32Array(w * h);
+    for (let i = 0; i < w * h; i++) {
+      if (!m[i] || lab[i] >= 0) continue;
+      const id = comps.length;
+      let qh = 0, qt = 0, x0 = w, y0 = h, x1 = -1, y1 = -1, area = 0;
+      q[qt++] = i; lab[i] = id;
+      while (qh < qt) {
+        const p = q[qh++], x = p % w, y = (p - x) / w;
+        area++;
+        if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+        const nb = [p - 1, p + 1, p - w, p + w];
+        if (x === 0) nb[0] = -1;
+        if (x === w - 1) nb[1] = -1;
+        for (const n of nb) if (n >= 0 && n < w * h && m[n] && lab[n] < 0) { lab[n] = id; q[qt++] = n; }
+      }
+      comps.push({ x0, y0, x1, y1, area });
+    }
+    const N = LABELS.length;
+    let G = comps.filter(c => c.area >= 20).sort((p, r) => p.x0 - r.x0).map(c => ({ ...c }));
+    const merged = [];
+    for (const c of G) {
+      const last = merged[merged.length - 1];
+      if (last && c.x0 <= last.x1 + 2) { last.x1 = Math.max(last.x1, c.x1); last.y0 = Math.min(last.y0, c.y0); last.y1 = Math.max(last.y1, c.y1); last.area += c.area; }
+      else merged.push({ ...c });
+    }
+    G = merged;
+    while (G.length > N) {
+      let si = 0;
+      for (let i = 1; i < G.length; i++) if (G[i].area < G[si].area) si = i;
+      const gl = si > 0 ? G[si].x0 - G[si - 1].x1 : Infinity, gr = si < G.length - 1 ? G[si + 1].x0 - G[si].x1 : Infinity;
+      const ti = gl <= gr ? si - 1 : si + 1, t = G[ti], c = G[si];
+      t.x0 = Math.min(t.x0, c.x0); t.x1 = Math.max(t.x1, c.x1); t.y0 = Math.min(t.y0, c.y0); t.y1 = Math.max(t.y1, c.y1); t.area += c.area;
+      G.splice(si, 1);
+    }
+    while (G.length < N && G.length) {
+      let wi = 0;
+      for (let i = 1; i < G.length; i++) if (G[i].x1 - G[i].x0 > G[wi].x1 - G[wi].x0) wi = i;
+      const g0 = G[wi], lo = Math.round(g0.x0 + (g0.x1 - g0.x0) * 0.3), hi = Math.round(g0.x0 + (g0.x1 - g0.x0) * 0.7);
+      let cut = lo, cv = Infinity;
+      for (let x = lo; x <= hi; x++) if (cols[x] < cv) { cv = cols[x]; cut = x; }
+      const L = { x0: g0.x0, x1: cut, y0: g0.y0, y1: g0.y1, area: g0.area / 2 }, R = { x0: cut + 1, x1: g0.x1, y0: g0.y0, y1: g0.y1, area: g0.area / 2 };
+      G.splice(wi, 1, L, R);
+    }
+    if (G.length === N) {
+      ccBoxes = G.map(g => {
+        let x0 = w, y0 = h, x1 = -1, y1 = -1;
+        for (let y = g.y0; y <= g.y1; y++) for (let x = g.x0; x <= g.x1; x++) if (m[y * w + x]) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+        return [x0, y0, x1, y1];
+      });
+    }
+  }
+  if (!ccBoxes && segs.length !== LABELS.length && LABELS.length > 1) {
+    const N = LABELS.length, xs = [];
+    let first = 0, last = w - 1;
+    while (first < w && cols[first] <= 2) first++;
+    while (last > 0 && cols[last] <= 2) last--;
+    const span = (last - first) / N;
+    for (let k = 1; k < N; k++) {
+      const c = first + span * k, r = span * 0.3;
+      let best = Math.round(c), bv = Infinity;
+      for (let x = Math.round(c - r); x <= Math.round(c + r); x++) if (cols[x] < bv) { bv = cols[x]; best = x; }
+      xs.push(best);
+    }
+    const bounds = [first, ...xs, last + 1];
+    segs.length = 0;
+    for (let k = 0; k < N; k++) segs.push([bounds[k], bounds[k + 1] - 1]);
+  }
+  const out = { segments: ccBoxes ? ccBoxes.length : segs.length, cc: !!ccBoxes, frames: {} };
+  const boxes = ccBoxes || segs.slice(0, LABELS.length).map(([a, b]) => {
+    let x0 = w, x1 = 0, y0 = h, y1 = 0;
+    for (let y = 0; y < h; y++) for (let x = a; x <= b; x++) if (m[y * w + x]) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+    return [x0, y0, x1, y1];
+  });
+  const refK = UNI ? Math.max(...boxes.slice(0, UNI).map(q => q[3] - q[1] + 1)) / TH : 0;
+  boxes.forEach(([x0, y0, x1, y1], k) => {
+    const bw = x1 - x0 + 1, bh = y1 - y0 + 1, kf = refK || bh / TH, tw = Math.max(1, Math.round(bw / kf)), TH2 = Math.max(1, Math.round(bh / kf));
+    const oc = document.createElement('canvas'); oc.width = tw; oc.height = TH2;
+    const og = oc.getContext('2d');
+    const od = og.createImageData(tw, TH2);
+    for (let ty = 0; ty < TH2; ty++) for (let tx = 0; tx < tw; tx++) {
+      const sx0 = x0 + Math.floor(tx * kf), sx1 = Math.min(x1 + 1, x0 + Math.max(Math.floor(tx * kf) + 1, Math.floor((tx + 1) * kf)));
+      const sy0 = y0 + Math.floor(ty * kf), sy1 = Math.min(y1 + 1, y0 + Math.max(Math.floor(ty * kf) + 1, Math.floor((ty + 1) * kf)));
+      const cnt = new Map();
+      let fg = 0, tot = 0;
+      for (let yy = sy0; yy < sy1; yy++) for (let xx = sx0; xx < sx1; xx++) {
+        tot++;
+        const i = yy * w + xx;
+        if (!m[i]) continue;
+        fg++;
+        const key = (d[i * 4] >> 3) << 10 | (d[i * 4 + 1] >> 3) << 5 | (d[i * 4 + 2] >> 3);
+        let e = cnt.get(key);
+        if (!e) { e = [0, 0, 0, 0]; cnt.set(key, e); }
+        e[0]++; e[1] += d[i * 4]; e[2] += d[i * 4 + 1]; e[3] += d[i * 4 + 2];
+      }
+      if (!tot || fg / tot < 0.45) continue;
+      let best = null;
+      for (const e of cnt.values()) if (!best || e[0] > best[0]) best = e;
+      const o = (ty * tw + tx) * 4;
+      od.data[o] = best[1] / best[0]; od.data[o + 1] = best[2] / best[0]; od.data[o + 2] = best[3] / best[0]; od.data[o + 3] = 255;
+    }
+    og.putImageData(od, 0, 0);
+    out.frames[LABELS[k]] = { w: tw, h: TH2, box: [x0, y0, x1, y1], png: oc.toDataURL('image/png') };
+  });
+  return out;
+}
+
+const img = new Image();
+img.onload = () => {
+  const res = run(img);
+  const pre = document.createElement('pre');
+  pre.id = 'out';
+  pre.textContent = JSON.stringify({ name: NAME, ...res });
+  document.body.appendChild(pre);
+};
+img.onerror = () => document.body.setAttribute('data-err', 'load failed ' + SRC);
+img.src = SRC;
+</script></body></html>

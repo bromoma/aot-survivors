@@ -1,0 +1,41 @@
+<!doctype html><html><head><meta charset="utf-8"><style>body{margin:0;background:#333}canvas{image-rendering:pixelated}</style></head><body>
+<canvas id="c" width="1400" height="1000"></canvas>
+<script>window.onerror = (m, s, l) => document.body.setAttribute('data-err', m + ' @' + l);</script>
+<script src="../src/core.js"></script>
+<script src="../src/sculpt.js"></script>
+<script src="../src/models.js"></script>
+<script>
+const cv = document.getElementById('c'), g = cv.getContext('2d');
+g.imageSmoothingEnabled = false;
+g.fillStyle = '#56624a'; g.fillRect(0, 0, cv.width, cv.height);
+const Z = 3;
+function put(r, x, y) { g.drawImage(r.img, x - r.ox * Z, y - r.oy * Z, r.w * Z, r.h * Z); }
+const scout = { outfit: 'scout', cloak: true, hair: '#4a3020', look: 'short', skin: '#e2b08e' };
+const dirs = [Math.PI / 2, Math.PI / 4, 0, -Math.PI / 4, -Math.PI / 2, -3 * Math.PI / 4, Math.PI, 3 * Math.PI / 4];
+let t0 = performance.now(), cnt = 0;
+['idle', 'run', 'fly', 'slash'].forEach((pose, row) => {
+  dirs.forEach((d, i) => { put(renderSculpt(buildHuman(scout, pose, 1), d, { edge: 3 }), 50 + i * 75, 120 + row * 120); cnt++; });
+});
+const chars = [
+  { look: 'scarf', hair: '#151214', scarf: true }, { look: 'undercut', hair: '#1c1a1e' }, { look: 'bob', hair: '#e2c46a' },
+  { look: 'goggles', hair: '#6a4028' }, { look: 'ponytail', hair: '#7a4a2a' }, { look: 'buzz', hair: '#8d8780' },
+];
+chars.forEach((c, i) => put(renderSculpt(buildHuman({ ...scout, ...c }, 'idle', 0), Math.PI / 2 - 0.35, { edge: 3 }), 50 + i * 75, 620));
+const civs = [{ shirt: '#7a5048', pants: '#4a4038', hair: '#5a3d2b' }, { shirt: '#8a7650', pants: '#6b5a48', hair: '#2d2620', dress: true }, { shirt: '#5c6a4a', pants: '#3e4a5a', hair: '#c9a35a' }];
+civs.forEach((c, i) => put(renderSculpt(buildHuman(c, i === 1 ? 'panic' : 'run', 2), Math.PI / 2 - 0.6 + i * 0.5, { edge: 3 }), 500 + i * 70, 620));
+const ht = performance.now() - t0;
+const titan = (type, skin, extra) => ({ type, g: bodyOf(type), Hp: 120, skin, hair: '#3b2a20', style: 1, eyes: 'wide', mouth: 'grin', iris: '#3a6a8a', ...extra });
+const ts = [titan('normal', '#d6b4a0'), titan('fat', '#c9a690', { style: 0, eyes: 'dot', mouth: 'open' }), titan('lanky', '#dfc2ae', { style: 2, eyes: 'big', mouth: 'lipless', Hp: 140 }), titan('bighead', '#bc9a86', { style: 4, eyes: 'sleepy', beard: true }), titan('aberrant', '#d98f80', { style: 3, mouth: 'lipless', eyes: 'wide' })];
+t0 = performance.now();
+ts.forEach((t, i) => {
+  [Math.PI / 2, 0, -Math.PI / 2].forEach((d, j) => {
+    const Zs = 2;
+    const r = renderSculpt(buildTitan(t, 'walk', 0.12), d - 0.2, { edge: 3.6 });
+    g.drawImage(r.img, 680 + i * 140 - r.ox * Zs * 0.5, 300 + j * 300 - r.oy * Zs * 0.5, r.w * Zs * 0.5, r.h * Zs * 0.5);
+  });
+});
+const tt = performance.now() - t0;
+[60, 90, 120].forEach((h, i) => put(renderSculpt(buildTree(i + 3, h), 0, { edge: 0 }), 120 + i * 160, 960));
+g.fillStyle = '#fff'; g.font = '14px sans-serif'; g.fillText(`humans ${cnt + 9}: ${ht.toFixed(0)}ms, titans 15: ${tt.toFixed(0)}ms`, 10, 20);
+const o = document.createElement('pre'); o.id = 'snap'; o.textContent = cv.toDataURL('image/png'); document.body.appendChild(o);
+</script></body></html>

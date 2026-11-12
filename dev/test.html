@@ -1,0 +1,26 @@
+<!doctype html><html><head><meta charset="utf-8"><style>body{margin:0;background:#333}canvas{image-rendering:pixelated}</style></head><body>
+<canvas id="c" width="640" height="300"></canvas>
+<script src="../src/core.js"></script>
+<script src="../src/sculpt.js"></script>
+<script>
+window.onerror = (m, s, l) => document.body.setAttribute('data-err', m + ' @' + l);
+const g = document.getElementById('c').getContext('2d');
+g.imageSmoothingEnabled = false;
+g.fillStyle = '#5d6a50'; g.fillRect(0, 0, 640, 300);
+const skin = material('#d6a48c', { dither: 0.8 });
+const cloth = material('#3f6b45');
+const metal = material('#9aa3aa', { gloss: 1.2 });
+const S = new Sculpt();
+S.sph([0, 0, 12], 10, skin);
+S.ell([0, 26, 10], [6, 10, 4], cloth, rotZ(0.6));
+S.cone([24, 0, 4], [24, 0, 26], 7, 3, metal);
+S.cone([24, 18, 4], [40, 26, 18], 3, 3, skin);
+const t0 = performance.now();
+const r = renderSculpt(S, 0.3, { edge: 2.5 });
+const dt = performance.now() - t0;
+g.drawImage(r.img, 10, 10, r.w * 4, r.h * 4);
+const S2 = new Sculpt(); S2.sph([0,0,8], 8, skin); S2.cone([-6,0,8],[6,0,20],3,2,cloth);
+for (let i = 0; i < 6; i++) { const q = renderSculpt(S2, i * 1.05); g.drawImage(q.img, 340 + (i % 3) * 90, 20 + Math.floor(i / 3) * 120, q.w * 3, q.h * 3); }
+g.fillStyle = '#fff'; g.font = '12px sans-serif'; g.fillText(dt.toFixed(2) + 'ms ' + r.w + 'x' + r.h, 10, 290);
+const o = document.createElement('pre'); o.id = 'snap'; o.textContent = document.getElementById('c').toDataURL('image/png'); document.body.appendChild(o);
+</script></body></html>

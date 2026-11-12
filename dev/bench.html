@@ -1,0 +1,25 @@
+<!doctype html><html><head><meta charset="utf-8"></head><body>
+<script>window.onerror=(m,s,l,c,e)=>{document.body.setAttribute('data-err',m+' @'+l)};</script>
+<canvas id="c" width="10" height="10"></canvas>
+<script src="../src/core.js"></script><script src="../src/sculpt.js"></script><script src="../src/models.js"></script>
+<script>
+const LOG = [];
+const types = ['normal', 'lanky', 'fat', 'bighead', 'aberrant'];
+for (const Hp of [80, 150, 210]) {
+  for (const type of types) {
+    const t = { type, g: bodyOf(type), Hp, skin: '#c0927c', hair: '#3b2a20', style: 2, eyes: 'big', mouth: 'grin', iris: '#3a6a8a' };
+    const res = [];
+    for (const [pose, k] of [['walk', 0.25], ['grab', 0.8], ['eat', 0.5], ['fall', 0.6], ['fall', 1]]) {
+      const a = performance.now();
+      const r = renderSculpt(buildTitan(t, pose, k), 0.7, { edge: Hp * 0.026 });
+      res.push(pose + k + ':' + (performance.now() - a).toFixed(1) + '(' + r.w + 'x' + r.h + ')');
+    }
+    LOG.push(Hp + ' ' + type + ' ' + res.join(' '));
+  }
+}
+let a = performance.now();
+for (let i = 0; i < 20; i++) renderSculpt(buildHuman({ shirt: '#7a5048', pants: '#4a4038', hair: '#5a3d2b' }, 'run', i & 7), i * 0.3, { edge: 3 });
+LOG.push('human x20 ' + (performance.now() - a).toFixed(1));
+const l = document.createElement('pre'); l.id = 'log'; l.textContent = LOG.join(' | '); document.body.appendChild(l);
+const o = document.createElement('pre'); o.id = 'snap'; o.textContent = document.getElementById('c').toDataURL(); document.body.appendChild(o);
+</script></body></html>
