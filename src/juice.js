@@ -244,14 +244,17 @@ function drawOrbitTrail() {
 
 function epicKill(t) {
   const n = nape(t);
-  game.slowT = 0.3;
-  game.zoomT = 0.42;
+  const quick = game.time - (game.lastKill || -9) < 4;
+  const big = t.boss || t.H >= 300 || t.aberrant || ['giant', 'crawler', 'thrower'].includes(t.kind) || !quick || (quick && (game.combo + 1) % 5 === 0) || game.time - (game.lastEpic || -9) > 8;
+  if (big) game.lastEpic = game.time;
+  game.slowT = big ? 0.3 : 0.06;
+  game.zoomT = big ? 0.42 : 0.2;
   game.zoomAt = { x: n.x, y: n.y, z: n.z };
   game.hitstop = Math.max(game.hitstop, 0.05);
   game.kickT = 0.1;
   xslashes.push({ x: n.x, y: n.y - KZ * n.z, ang: t.face + Math.PI / 2 + rand(-0.3, 0.3), t: 0 });
   const back = t.face + Math.PI;
-  for (let i = 0; i < 70; i++) {
+  for (let i = 0; i < (big ? 70 : 34); i++) {
     const a = back + rand(-0.9, 0.9), s = rand(200, 620);
     particles.push({ x: n.x, y: n.y - KZ * n.z, vx: Math.cos(a) * s, vy: Math.sin(a) * s * 0.7 - rand(80, 260), life: rand(0.6, 1.3), max: 1.3, size: Math.random() < 0.4 ? 4 : 3, color: pick(['#d8283a', '#b3122e', '#8a0e20', '#ff4a4a']), g: 900, kind: 'px' });
   }

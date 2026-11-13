@@ -82,3 +82,7 @@ if (!only || only === 'tradisea') {
     px(path.join(tmp, `pine${i + 1}.png`), `pine${i + 1}.png`, [60, 80, 92][i], true);
   });
 }
+
+if (!only || only === 'atlas' || only === 'sprites' || only === 'heroes' || only === 'tradisea') {
+  console.log(execFileSync('node', [path.join(root, 'dev/pack.js')], { cwd: root }).toString().trim().split('\n').pop());
+}

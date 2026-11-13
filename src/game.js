@@ -462,7 +462,14 @@ function start() {
   state = 'play';
 }
 
+const TOUCH = { on: false, x: 0, y: 0 };
+const IS_TOUCH = (() => { try { return new URLSearchParams(location.search).get('touch') === '1' || matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window; } catch (e) { return false; } })();
 function inputVec() {
+  if (TOUCH.on) {
+    const l = Math.hypot(TOUCH.x, TOUCH.y);
+    if (l < 0.18) return { x: 0, y: 0 };
+    return { x: TOUCH.x / l, y: TOUCH.y / l };
+  }
   const x = (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0);
   const y = (keys.KeyS || keys.ArrowDown ? 1 : 0) - (keys.KeyW || keys.ArrowUp ? 1 : 0);
   const l = Math.hypot(x, y);
@@ -1043,6 +1050,13 @@ function updateTitans(dt) {
         const k = rand(0.1, 0.95);
         steam(t.x + Math.cos(t.face) * t.H * k, t.y + Math.sin(t.face) * t.H * k * KY - rand(0, 24), 1, 12);
       }
+      continue;
+    }
+    if (t.retreat > 0) {
+      t.retreat -= dt;
+      t.flash = Math.floor(t.retreat * 10) % 2 ? 0.05 : 0;
+      if (Math.random() < dt * 40) steam(t.x + rand(-60, 60), t.y - KZ * t.H * rand(0.2, 0.9), 1, 40);
+      if (t.retreat <= 0) t.gone = true;
       continue;
     }
     if (t.stun > 0) {

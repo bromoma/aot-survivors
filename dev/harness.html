@@ -40,6 +40,7 @@ function runTest() {
   const os = spawnBoss; spawnBoss = function (d, c) { BOSSLOG.push(d.kind + ' spawn@' + game.time.toFixed(0)); return os(d, c); };
   if (HS.includes("prof")) prof();
   let t0 = performance.now();
+  if (HS.includes('gear')) for (const sl of GEAR_SLOTS) grantGear(GEAR.find(g => g.slot === sl).id, 3);
   factionSel = +fac; worldUsed = true; reset();
   log('world gen ' + FACTIONS[+fac].id + ': ' + (performance.now() - t0).toFixed(0) + 'ms, buildings ' + buildings.length + ', trees ' + trees.length + ', props ' + props.length);
   if (mode === 'play') {
@@ -59,7 +60,7 @@ function runTest() {
       if (i % 3 === 0) { a = performance.now(); render(); const d = performance.now() - a; rnd += d; rn++; worst = Math.max(worst, d); if (d > 120) log(`slow ${d.toFixed(0)}ms t=${game.time.toFixed(1)} ` + JSON.stringify(Object.fromEntries(Object.entries(FP).filter(([k, v]) => v > 3).map(([k, v]) => [k, Math.round(v)])))); for (const k in FP) delete FP[k]; }
     }
     if (HS.includes('meta')) { if (state === 'play') finishRun(false); log(`META tokens ${save.tokens} reward ${game.reward} state ${state} t ${game.time.toFixed(0)} | done ${achievementsState().filter(a => a.done).map(a => a.id).join(',')} | daily ${JSON.stringify(dailyState().map(t => t.value + '/' + t.goal))} | stats ${JSON.stringify(save.stats)}`); }
-    log(`skills ${JSON.stringify(stats.skills)} pass ${JSON.stringify(stats.pass)} bossIdx ${game.bossIdx} bossKills ${game.bossKills} boss ${game.boss ? game.boss.boss.kind + ' hp' + game.boss.boss.hp : '-'} deaths ${DEATHS} hurt ${JSON.stringify(HURT)} | ${BOSSLOG.join(', ')}`); log(`sim: update ${(upd / N).toFixed(2)}ms, render avg ${(rnd / rn).toFixed(2)}ms worst ${worst.toFixed(0)}ms, titans ${titans.length}, kills ${game.kills}, snapAt ${snapAt}`);
+    log(`gt ${game.time.toFixed(0)} state ${state} skills ${JSON.stringify(stats.skills)} pass ${JSON.stringify(stats.pass)} bossIdx ${game.bossIdx} bossKills ${game.bossKills} boss ${game.boss ? game.boss.boss.kind + ' hp' + game.boss.boss.hp : '-'} deaths ${DEATHS} hurt ${JSON.stringify(HURT)} | ${BOSSLOG.join(', ')}`); log(`sim: update ${(upd / N).toFixed(2)}ms, render avg ${(rnd / rn).toFixed(2)}ms worst ${worst.toFixed(0)}ms, titans ${titans.length}, kills ${game.kills}, snapAt ${snapAt}`);
     const a = performance.now();
     for (let i = 0; i < 20; i++) render();
     log('steady ' + ((performance.now() - a) / 20).toFixed(2) + 'ms');

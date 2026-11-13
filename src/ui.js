@@ -227,7 +227,7 @@ const UI = (() => {
       <div class="msg k-tip" id="msg"></div>`;
     const hm = $('#hub-menu', M);
     HUB_ITEMS.forEach((it, i) => {
-      const b = el('button', 'k-btn', `${img(it.icon, 'ico')} ${it.label}${it.id === 'missions' ? '<span class="badge" id="mis-badge"></span>' : ''}`);
+      const b = el('button', 'k-btn', `${img(it.icon, 'ico')} ${it.label}${it.id === 'missions' ? '<span class="badge" id="mis-badge"></span>' : it.id === 'gacha' ? '<span class="badge" id="gacha-badge"></span>' : it.id === 'gear' ? '<span class="badge" id="gear-badge"></span>' : ''}`);
       b.addEventListener('click', () => go(it.id));
       b.addEventListener('mouseenter', () => { hubSel = i; refreshHubFocus(); });
       hm.appendChild(b);
@@ -257,13 +257,42 @@ const UI = (() => {
       </div>
       <div class="lvl wood-text" id="hud-lvl"></div>
       <div class="xp k-field"><div class="bar" id="hud-xp"></div></div>
-      <div class="tip-line k-tip" id="hud-tip">${tr('WASD — летишь на тросах вверх, на крыши и деревья. С высоты — Пробел: атака')}</div>`;
+      <div class="tip-line k-tip" id="hud-tip">${IS_TOUCH ? tr('Веди пальцем — полёт на тросах к крышам и деревьям. С высоты — круглая кнопка: атака по затылку') : tr('WASD — летишь на тросах вверх, на крыши и деревья. С высоты — Пробел: атака')}</div>
+      ${IS_TOUCH ? '<div class="tzone" id="tzone"></div><div class="tstick" id="tstick"><i></i></div><button class="tatk" id="tatk">⚔</button>' : ''}`;
     Object.assign(hud, {
       face: $('#hud-face', Hd), hearts: $('#hud-hearts', Hd), name: $('#hud-name', Hd), gauge: $('#hud-gauge', Hd),
       fill: $('#hud-gauge .fill', Hd), need: $('#hud-gauge .need', Hd), timer: $('#hud-timer', Hd), kills: $('#hud-kills', Hd),
       combo: $('#hud-combo', Hd), boss: $('#hud-boss', Hd), bossName: $('#hud-boss-name', Hd), bossSegs: $('#hud-boss-segs', Hd), skills: $('#hud-skills', Hd), banner: $('#hud-banner', Hd), bannerT: $('#hud-banner-t', Hd), bannerS: $('#hud-banner-s', Hd), civ: $('#hud-civ', Hd), lvl: $('#hud-lvl', Hd), xp: $('#hud-xp', Hd), tip: $('#hud-tip', Hd),
     });
     $('#hud-pause', Hd).addEventListener('click', () => { if (state === 'play') state = 'paused'; });
+    if (IS_TOUCH) {
+      const zone = $('#tzone', Hd), stick = $('#tstick', Hd), knob = $('#tstick i', Hd), atk = $('#tatk', Hd);
+      let pid = null, ox = 0, oy = 0;
+      const R = 56;
+      zone.addEventListener('pointerdown', e => {
+        if (pid !== null || state !== 'play') return;
+        pid = e.pointerId; ox = e.clientX; oy = e.clientY;
+        zone.setPointerCapture(pid);
+        stick.style.left = ox + 'px'; stick.style.top = oy + 'px';
+        stick.classList.add('on');
+        knob.style.transform = 'translate(-50%, -50%)';
+        TOUCH.on = true; TOUCH.x = 0; TOUCH.y = 0;
+        e.preventDefault();
+      });
+      zone.addEventListener('pointermove', e => {
+        if (e.pointerId !== pid) return;
+        let dx = e.clientX - ox, dy = e.clientY - oy;
+        const l = Math.hypot(dx, dy);
+        if (l > R) { ox += dx * (1 - R / l); oy += dy * (1 - R / l); dx = e.clientX - ox; dy = e.clientY - oy; stick.style.left = ox + 'px'; stick.style.top = oy + 'px'; }
+        TOUCH.x = dx / R; TOUCH.y = dy / R;
+        knob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+        e.preventDefault();
+      });
+      const end = e => { if (e.pointerId !== pid) return; pid = null; TOUCH.on = false; TOUCH.x = TOUCH.y = 0; stick.classList.remove('on'); };
+      zone.addEventListener('pointerup', end);
+      zone.addEventListener('pointercancel', end);
+      atk.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); atk.classList.add('hit'); setTimeout(() => atk.classList.remove('hit'), 120); engage(); });
+    }
   }
 
   function go(id) {
@@ -290,6 +319,10 @@ const UI = (() => {
     const n = claimableCount();
     const bd = $('#mis-badge');
     if (bd) { bd.textContent = n || ''; bd.style.display = n ? '' : 'none'; }
+    const gb = $('#gacha-badge'), gt = (freeAvailable() ? 1 : 0) + tickets() + (gachaState().tickets10 || 0);
+    if (gb) { gb.textContent = gt ? (freeAvailable() && gt === 1 ? '!' : gt) : ''; gb.style.display = gt ? '' : 'none'; }
+    const nb = $('#gear-badge'), gs = gearSave(), nn = Object.keys(gs.items).filter(k => !(gs.seen || {})[k]).length;
+    if (nb) { nb.textContent = nn || ''; nb.style.display = nn ? '' : 'none'; }
     const hints = { gear: tr('Клик по ячейке — фильтр, по предмету — подробнее, Esc — назад'), hub: tr('↑↓ — выбрать, Enter — открыть'), battle: tr('← → — фракция, ↑↓ — угроза, Enter — в бой, Esc — назад'), squad: tr('Стрелки — выбрать, Enter — взять в бой, Esc — назад'), gacha: tr('1 — один призыв, 0 — десять, F — бесплатный, T — билет, Tab — баннер, Esc — назад'), records: tr('Esc — назад'), settings: tr('Esc — назад'), training: tr('Клик — купить уровень, Esc — назад'), missions: tr('Клик — забрать награду, Esc — назад') };
     $('#menu-hint').textContent = hints[screen] || '';
   }
@@ -485,11 +518,11 @@ const UI = (() => {
     const p5 = save.pity5 || 0, p4 = save.pity4 || 0, ck = gBanner, chest = g.chest[ck] || 0;
     $('#g-info').innerHTML = `<div class="pity"><span class="t5">${tr('Леген.')}</span><div class="pbar"><i style="width:${Math.round(p5 / PITY5 * 100)}%"></i></div><span>${tr('гарантия через {0}', PITY5 - p5)}</span></div>
       <div class="pity"><span class="t4">${tr('Эпич.')}</span><div class="pbar p4"><i style="width:${Math.round(p4 / PITY4 * 100)}%"></i></div><span>${tr('гарантия через {0}', PITY4 - p4)}</span></div>
-      <div class="pity"><span class="chest-ic">▣</span><div class="pbar pc"><i style="width:${Math.round(chest * 10)}%"></i></div><span>${tr('Сундук трофеев: {0}/10 призывов ×10', Math.floor(chest))}</span></div>
+      <div class="pity"><img class="chest-ic" src="assets/sprites/ui_chest.png" alt=""><div class="pbar pc"><i style="width:${Math.round(chest * 10)}%"></i></div><span>${tr('Сундук трофеев: {0}/10 призывов ×10', Math.floor(chest))}</span></div>
       ${gBanner === 'event' && g.guar ? '<div class="guar">' + tr('Следующий легендарный боец — точно {0}!', charById(B.five).name) + '</div>' : ''}
       ${gBanner === 'arsenal' && g.guarG ? '<div class="guar">' + tr('Следующее легендарное — точно {0}!', tr(gearById(B.gear).name)) + '</div>' : ''}
-      <div class="muted small">${tr('Шансы: легендарное 1,5% (в среднем 1 из ~37 с гарантией) · эпическое 7% (минимум раз в 10) · редкое 17,5% · необычное 30% · обычное 44%; бойцы — 12%, золотой мундир — 3% от бойцов')} · <a class="lnk" id="g-hist-btn">${tr('История')}</a></div>
-      <div class="g-wallet"><span><img src="assets/ui/ribbon.png" alt="">${tr('Перья: {0}', feathers())}</span><span><img src="assets/ui/pearl.png" alt="">${tr('Билеты: {0}', tickets())}</span><span><img src="assets/ui/pearl.png" alt="">${tr('Билеты ×10: {0}', g.tickets10 || 0)}</span></div>`;
+
+      <div class="g-wallet"><a class="lnk" id="g-hist-btn">${tr('Шансы и история')}</a><span><img src="assets/ui/ribbon.png" alt="">${tr('Перья: {0}', feathers())}</span><span><img src="assets/ui/pearl.png" alt="">${tr('Билеты: {0}', tickets())}</span><span><img src="assets/ui/pearl.png" alt="">${tr('Билеты ×10: {0}', g.tickets10 || 0)}</span></div>`;
     $('#g-hist-btn').addEventListener('click', () => { $('#g-history').classList.toggle('hid'); refreshHistory(); });
     const bb = $('#g-btns');
     bb.innerHTML = '';
@@ -506,6 +539,10 @@ const UI = (() => {
   let gearSlot = null, gearSel = null;
   function refreshGear() {
     const gs = gearSave();
+    gs.seen = gs.seen || {};
+    for (const k of Object.keys(gs.items)) gs.seen[k] = 1;
+    persist();
+    refreshFooter();
     $('#gear-coll').textContent = tr('Собрано {0}/{1}', gearOwned(), GEAR_TOTAL);
     const sl = $('#gear-slots');
     sl.innerHTML = '';
@@ -597,7 +634,7 @@ const UI = (() => {
     if (h.classList.contains('hid')) return;
     const list = gachaState().history;
     const nm = e => e.k === 'gear' ? tr(parseGear(e.id).m.name) : e.id === 'manual' ? tr('Наставление') : (charById(e.id) || { name: e.id }).name;
-    h.innerHTML = '<div class="sec">' + tr('История призывов') + '</div>' + (list.length ? list.map(e => `<span class="hi t${e.r}">${nm(e)}${e.gold ? ' ✦✦' : e.f ? ' ✦' : ''}</span>`).join('') : '<span class="muted">' + tr('Пока пусто') + '</span>');
+    h.innerHTML = '<div class="muted small">' + tr('Шансы: легендарное 1,5% (в среднем 1 из ~37 с гарантией) · эпическое 7% (минимум раз в 10) · редкое 17,5% · необычное 30% · обычное 44%; бойцы — 12%, золотой мундир — 3% от бойцов') + '</div><div class="sec">' + tr('История призывов') + '</div>' + (list.length ? list.map(e => `<span class="hi t${e.r}">${nm(e)}${e.gold ? ' ✦✦' : e.f ? ' ✦' : ''}</span>`).join('') : '<span class="muted">' + tr('Пока пусто') + '</span>');
   }
 
   function refreshTraining() {
@@ -762,8 +799,15 @@ const UI = (() => {
   const isBig = r => r.rarity === 5 || r.golden;
 
   function doPull(n, mode) {
+    if (performance.now() < pullLock) return;
     const res = gachaPull(n, gBanner === 'shop' ? 'event' : gBanner, mode);
     if (!res) { toast(mode === 'ticket' ? tr('Нет билетов') : tr('Не хватает жетонов — сыграй забег')); snd('error', { vol: 0.6 }); return; }
+    if (res.length <= 10) {
+      const w = r => r.rarity * 10 + (r.golden ? 5 : 0) + (r.kind === 'hero' ? 1 : 0) + Math.random();
+      const keep = { feathers: res.feathers, anomaly: res.anomaly, chest: res.chest };
+      res.sort((a, b) => w(a) - w(b));
+      Object.assign(res, keep);
+    }
     pullRes = res;
     state = 'pull';
     refreshFooter();
@@ -1011,13 +1055,13 @@ const UI = (() => {
     const box = overlay ? el('div', 'cine-over') : host;
     if (!overlay) host.innerHTML = '';
     const gear = r.kind === 'gear';
-    const q = gear ? tr('Легендарное снаряжение Разведкорпуса') : '«' + tr(QUOTES[r.c.id] || QUOTES.cadet) + '»';
+    const q = gear ? gearFxLines(r.gear, r.rarity, r.lvl).join(' · ') : '«' + tr(QUOTES[r.c.id] || QUOTES.cadet) + '»';
     const kick = gear ? tr('Легендарное снаряжение') : r.golden ? tr('Золотой боец!') : tr('Легендарный боец');
     box.insertAdjacentHTML('beforeend', `<div class="cine${r.golden ? ' golden' : ''}"><div class="cine-black"></div><div class="cine-rays"></div><div class="cine-emblem" id="ce"></div>${gear ? '' : '<div class="cine-cables"><i></i><i></i></div>'}<div class="cine-hero${gear ? ' gear' : ''}" id="chero"></div>
-      <div class="cine-text"><div class="cine-kick">${kick}</div><div class="cine-name">${resName(r)}</div>${gear ? `<div class="rrar t5">${tr(SLOT_NAMES[r.gear.slot])}</div>` : `<div class="rstars">${rvStars(r)}</div>`}<div class="cine-quote" id="cq"></div>
-      <div class="cine-sub">${gear ? gearFxLines(r.gear, r.rarity, r.lvl).join(' · ') + (r.isNew ? ' · <b>' + tr('Новое!') + '</b>' : ' · ' + tr('Ур. {0}', r.lvl)) : (r.isNew ? '<b>' + tr('Новый!') + '</b> ' + r.c.ability : r.refund ? tr('Уже 5★ — возвращено {0} жетонов', r.refund) : tr('Повтор: +1 звезда'))}${r.golden ? ' · <b class="gold">' + tr('Золотой мундир открыт!') + '</b>' : ''}</div><div class="rv-fe">+${r.feathers || 0} ${tr('перьев')}</div></div></div>`);
+      <div class="cine-text"><div class="cine-kick">${kick}</div><div class="cine-name${resName(r).length > 14 ? ' long' : ''}">${resName(r)}</div>${gear ? `<div class="rrar t5">${tr(SLOT_NAMES[r.gear.slot])}</div>` : `<div class="rstars">${rvStars(r)}</div>`}<div class="cine-quote" id="cq"></div>
+      <div class="cine-sub">${gear ? (r.isNew ? '<b>' + tr('Новое в коллекции!') + '</b>' : tr('Повтор: уровень {0}', r.lvl)) : (r.isNew ? '<b>' + tr('Новый!') + '</b> ' + r.c.ability : r.refund ? tr('Уже 5★ — возвращено {0} жетонов', r.refund) : tr('Повтор: +1 звезда'))}${r.golden ? ' · <b class="gold">' + tr('Золотой мундир открыт!') + '</b>' : ''}</div><div class="rv-fe">+${r.feathers || 0} ${tr('перьев')}</div></div></div>`);
     if (overlay) host.appendChild(box);
-    $('#ce', box).appendChild(emblem('scouts'));
+    if (SPR.ui_emblem) $('#ce', box).appendChild(cv(SPR.ui_emblem)); else $('#ce', box).appendChild(emblem('scouts'));
     const hc = resIcon(r, true);
     $('#chero', box).appendChild(hc);
     snd('horn', { vol: 0.45 });
@@ -1134,7 +1178,7 @@ const UI = (() => {
     rv.phase = 'chest';
     rv.chestShown = true;
     const st = $('#rv-stage', layers.reveal), r = pullRes.chest;
-    st.innerHTML = `<div class="chest-wrap"><div class="chest-title">${tr('Сундук трофеев!')}</div><div class="chest" id="chest"><div class="lid"></div><div class="box"></div><div class="lock"></div></div></div>`;
+    st.innerHTML = `<div class="chest-wrap"><div class="chest-title">${tr('Сундук трофеев!')}</div><div class="chest" id="chest"><img class="c0" src="assets/sprites/ui_chest.png" alt=""><img class="c1" src="assets/sprites/ui_chestopen.png" alt=""></div></div>`;
     rvNext('');
     const ch = $('#chest', st);
     [400, 1000, 1500].forEach((ms, k) => rvLater(ms, () => { ch.classList.remove('wob'); void ch.offsetWidth; ch.classList.add('wob'); snd('thud', { vol: 0.6 + k * 0.15 }); fxAt(ch, 12 + k * 10, RCOL[r.rarity], 160); }));
@@ -1144,11 +1188,13 @@ const UI = (() => {
       snd(r.rarity === 5 ? 'choir' : 'shimmer', { vol: 0.8 });
       snd('boom', { vol: 0.6, rate: 1.3 });
     });
-    rvLater(2700, () => { const wrap = el('div', 'chest-res'); st.appendChild(wrap); rvShow(r, wrap); rvNext(tr('Enter или клик — готово')); rv.phase = 'chest-done'; });
+    rvLater(2700, () => { const cw = $('.chest-wrap', st); if (cw) cw.style.opacity = '0'; const wrap = el('div', 'chest-res'); st.appendChild(wrap); rvShow(r, wrap); rvNext(tr('Enter или клик — готово')); rv.phase = 'chest-done'; });
   }
 
+  let pullLock = 0;
   function rvClose() {
     rvClear();
+    pullLock = performance.now() + 900;
     const fe = pullRes.feathers;
     rv = null;
     state = 'menu';
@@ -1379,6 +1425,7 @@ const UI = (() => {
       if (c === 'Enter' || c === 'Space') pickHero();
       refreshSquad();
     } else if (screen === 'gacha') {
+      if (performance.now() < pullLock) return true;
       if (c === 'Digit1' || c === 'Enter') doPull(1);
       if (c === 'Digit0') doPull(10);
       if (c === 'KeyF' && freeAvailable()) doPull(1, 'free');
@@ -1389,6 +1436,7 @@ const UI = (() => {
   }
 
   function init() {
+    if (IS_TOUCH) document.documentElement.classList.add('touch');
     build();
     applyAudio();
     root.addEventListener('click', e => { if (e.target.closest('.k-btn:not(.off), .faction, .hero-card, .up-card, .k-icon')) snd('click', { vol: 0.7 }); }, true);
@@ -1421,6 +1469,7 @@ const UI = (() => {
       save.tokens += 900;
       save.pity5 = PITY5 - 1;
       window.FORCE_ANOMALY = q === 'anomaly';
+      if (U.get('chest')) { gachaState().chest[gBanner] = 9.5; }
       go('gacha');
       doPull(q === 'pull10x' ? 10 : 1);
       if (U.get('skipaim')) rvAimDone();

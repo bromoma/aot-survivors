@@ -382,8 +382,23 @@ function bossPlan() {
   });
 }
 
+function bossRetreat(t) {
+  t.retreat = 1.4;
+  t.state = 'walk';
+  t.hand = null;
+  if (player.target === t) { player.mode = 'fly'; player.target = null; player.wp = null; }
+  game.boss = null;
+  game.banner = { text: t.boss.name, sub: tr('Отступает… но вернётся'), t: 2.2 };
+  sfx('roar', { x: t.x, y: t.y, vol: 0.7 });
+  steam(t.x, t.y - KZ * t.H * 0.5, 30, 120);
+}
+
 function bossSchedule() {
-  if (game.boss) return;
+  if (game.boss) {
+    const B = game.boss, nx = game.bossQueue && game.bossQueue[0];
+    if (nx && !B.dying && game.time >= nx.at && game.time - (B.boss.born || 0) > 90) bossRetreat(B);
+    return;
+  }
   if (!game.bossQueue || !game.bossQueue.length) {
     const cyc = game.bossCycle = (game.bossCycle ?? -1) + 1;
     game.bossQueue = bossPlan().map(s => ({ def: s.def, at: s.at + cyc * 600, cycle: cyc }));
@@ -420,7 +435,7 @@ function spawnBoss(def, cycle = 0) {
     type: 'normal', g: bodyOf('normal'), speed: def.speed * faction.speed, aberrant: false,
     state: 'walk', grabT: 0, grabCd: 2, grabAng: 0, hand: null, prey: null, preyT: 99, held: -1,
     stun: 0, lunge: 0, lungeCd: 99, flash: 0, phase: 0, dying: 0, fallDir: 1, fallSide: 1, deathKey: 'down',
-    boss: { kind: def.kind, name: def.name, hp, max: hp, harden: 0, act: 'walk', actT: 0, cd: 3, dir: 0, warned: 0, def, kneel: 0, wp: [{ side: -1, cut: false }, { side: 1, cut: false }], kickCd: 3, callT: 14, rainT: 6 },
+    boss: { born: game.time, kind: def.kind, name: def.name, hp, max: hp, harden: 0, act: 'walk', actT: 0, cd: 3, dir: 0, warned: 0, def, kneel: 0, wp: [{ side: -1, cut: false }, { side: 1, cut: false }], kickCd: 3, callT: 14, rainT: 6 },
   };
   titans.push(t);
   if (def.fixed) placePylons(t);

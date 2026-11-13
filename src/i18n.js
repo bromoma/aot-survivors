@@ -493,6 +493,9 @@ const I18N_ROWS = [
   ['Надето', 'Equipped', 'Equipado'],
   ['Надеть', 'Equip', 'Equipar'],
   ['Выбери предмет, чтобы увидеть бонусы и надеть его', 'Pick an item to see its bonuses and equip it', 'Elige un objeto para ver sus bonificaciones y equiparlo'],
+  ['Веди пальцем — полёт на тросах к крышам и деревьям. С высоты — круглая кнопка: атака по затылку', 'Drag your finger to fly on your cables to rooftops and trees. From above, the round button: strike the nape', 'Desliza el dedo para volar con los cables a tejados y árboles. Desde arriba, el botón redondo: ataca la nuca'],
+  ['Шансы и история', 'Rates & history', 'Probabilidades e historial'],
+  ['Отступает… но вернётся', 'Retreats… but will be back', 'Se retira… pero volverá'],
   ['Строим карту…', 'Building the map…', 'Creando el mapa…'],
 ];
 

@@ -37,6 +37,7 @@ function assetList() {
   }
   for (const k of ['house_h1', 'house_h2', 'house_h3', 'house_tower', 'ruin_r1', 'ruin_r2', 'ruin_r3', 'ruin_r4', 'wall_a']) L[k] = `assets/sprites/${k}.png`;
   for (const k of TR_GROUND.concat(TR_PROPS)) L[k] = `assets/tradisea/${k}.png`;
+  for (const k of ['ui_emblem', 'ui_cardback', 'ui_chest', 'ui_chestopen']) L[k] = `assets/sprites/${k}.png`;
   for (const s of ['blade', 'odm', 'gas', 'cloak', 'boots', 'relic']) for (let i = 1; i <= 4; i++) L[`gear_${s}${i}`] = `assets/sprites/gear_${s}${i}.png`;
   return L;
 }
@@ -50,15 +51,36 @@ function toCanvas(im) {
   return c;
 }
 
-function loadAssets(onProgress) {
-  const list = Object.entries(assetList());
+function loadImage(src) {
+  return new Promise(res => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = (window.ASSET_BASE || '') + src; });
+}
+
+async function loadAtlas(list, onProgress) {
+  if (location.protocol === 'file:' || new URLSearchParams(location.search).get('noatlas')) return list;
+  let meta;
+  try { meta = await (await fetch((window.ASSET_BASE || '') + 'assets/atlas/atlas.json', { cache: 'no-cache' })).json(); } catch (e) { return list; }
+  const names = Object.entries(meta.files);
   let done = 0;
-  return Promise.all(list.map(([key, src]) => new Promise(res => {
-    const im = new Image();
-    im.onload = () => { SPR[key] = toCanvas(im); done++; if (onProgress) onProgress(done / list.length); res(); };
-    im.onerror = () => { SPR[key] = null; done++; if (onProgress) onProgress(done / list.length); res(); };
-    im.src = (window.ASSET_BASE || '') + src;
-  }))).then(() => {
+  const pages = {};
+  await Promise.all(names.map(async ([g, f]) => { pages[g] = await loadImage('assets/atlas/' + f); done++; if (onProgress) onProgress(0.9 * done / names.length); }));
+  const rest = [];
+  for (const [key, src] of list) {
+    const e = meta.map[key], pg = e && pages[e[0]];
+    if (!pg) { rest.push([key, src]); continue; }
+    const [c, g] = makeCanvas(e[3], e[4]);
+    g.drawImage(pg, e[1], e[2], e[3], e[4], 0, 0, e[3], e[4]);
+    SPR[key] = c;
+  }
+  return rest;
+}
+
+function loadAssets(onProgress) {
+  const all = Object.entries(assetList());
+  return loadAtlas(all, onProgress).then(list => {
+    let done = 0;
+    const base = all.length - list.length ? 0.9 : 0;
+    return Promise.all(list.map(([key, src]) => loadImage(src).then(im => { SPR[key] = im ? toCanvas(im) : null; done++; if (onProgress) onProgress(base + (1 - base) * done / list.length); })));
+  }).then(() => {
     for (const t of WALK_BASE) for (const h of sizesOf(t)) {
       for (const d of ['down', 'left', 'up']) { const w = SPR[`titan_${t}_${h}_walk0_${d}`]; if (w) SPR[`titan_${t}_${h}_${d}`] = w; }
       const wl = SPR[`titan_${t}_${h}_walk0_left`];

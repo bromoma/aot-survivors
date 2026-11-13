@@ -1,0 +1,47 @@
+<!doctype html><html><head><meta charset="utf-8"></head><body>
+<script>window.onerror = (m, s, l) => document.body.setAttribute('data-err', m + ' @' + l);</script>
+<script src="../src/assets.js"></script>
+<script>
+const L = assetList();
+const groupOf = k => {
+  let m;
+  if ((m = /^titan_([a-z]+)_/.exec(k))) return 'titan_' + m[1];
+  if ((m = /^boss_([a-z]+)_/.exec(k))) return ['reiss', 'colossal'].includes(m[1]) ? 'boss_big' : ['jaw', 'cart', 'female', 'armored'].includes(m[1]) ? 'boss_a' : 'boss_b';
+  if (/^hero(fly)?_/.test(k)) return 'heroes';
+  if (/^(civ|rider)_/.test(k)) return 'people';
+  if (/^(house|ruin|wall)_/.test(k)) return 'buildings';
+  if (/^gear_/.test(k)) return 'gear';
+  if (/^(grass|grass3|path|paving_[abc])$/.test(k)) return 'ground';
+  return 'props';
+};
+const MAXW = 2048, PAD = 2;
+const groups = {};
+for (const [k, src] of Object.entries(L)) (groups[groupOf(k)] = groups[groupOf(k)] || []).push([k, src]);
+const load = src => new Promise(res => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = '../' + src; });
+(async () => {
+  const out = { groups: {}, map: {} };
+  for (const [g, list] of Object.entries(groups)) {
+    const imgs = [];
+    for (const [k, src] of list) { const im = await load(src); if (im) imgs.push([k, im]); }
+    imgs.sort((a, b) => b[1].naturalHeight - a[1].naturalHeight || b[1].naturalWidth - a[1].naturalWidth);
+    let x = PAD, y = PAD, rowH = 0, W = 0;
+    const pos = [];
+    for (const [k, im] of imgs) {
+      const w = im.naturalWidth, h = im.naturalHeight;
+      if (x + w + PAD > MAXW) { x = PAD; y += rowH + PAD; rowH = 0; }
+      pos.push([k, im, x, y, w, h]);
+      x += w + PAD; rowH = Math.max(rowH, h); W = Math.max(W, x);
+    }
+    const H = y + rowH + PAD;
+    const c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    const ctx = c.getContext('2d');
+    for (const [k, im, px, py, w, h] of pos) { ctx.drawImage(im, px, py); out.map[k] = [g, px, py, w, h]; }
+    out.groups[g] = { w: W, h: H, n: pos.length, data: c.toDataURL('image/png') };
+  }
+  const pre = document.createElement('pre');
+  pre.id = 'out';
+  pre.textContent = JSON.stringify(out);
+  document.body.appendChild(pre);
+})();
+</script></body></html>
