@@ -24,13 +24,13 @@ const UI = (() => {
   const cache = {};
 
   const HUB_ITEMS = [
-    { id: 'battle', label: 'В бой', icon: 'play' },
-    { id: 'squad', label: 'Отряд', icon: 'square' },
-    { id: 'training', label: 'Тренировки', icon: 'pearl' },
-    { id: 'gacha', label: 'Призыв', icon: 'coin' },
-    { id: 'missions', label: 'Задания', icon: 'ribbon' },
-    { id: 'records', label: 'Рекорды', icon: 'seal_green' },
-    { id: 'settings', label: 'Настройки', icon: 'gear' },
+    { id: 'battle', get label() { return tr('В бой'); }, icon: 'play' },
+    { id: 'squad', get label() { return tr('Отряд'); }, icon: 'square' },
+    { id: 'training', get label() { return tr('Тренировки'); }, icon: 'pearl' },
+    { id: 'gacha', get label() { return tr('Призыв'); }, icon: 'coin' },
+    { id: 'missions', get label() { return tr('Задания'); }, icon: 'ribbon' },
+    { id: 'records', get label() { return tr('Рекорды'); }, icon: 'seal_green' },
+    { id: 'settings', get label() { return tr('Настройки'); }, icon: 'gear' },
   ];
 
   function settings() {
@@ -163,7 +163,7 @@ const UI = (() => {
     const M = layers.menu;
     M.innerHTML = `
       <div class="screen" data-s="hub">
-        <div class="logo"><div class="title">АТАКА ТИТАНОВ</div><div class="sub">SURVIVORS</div></div>
+        <div class="logo"><div class="title">${tr('АТАКА ТИТАНОВ')}</div><div class="sub">SURVIVORS</div></div>
         <div class="hub-hero k-frame">
           <div class="stage"><img id="hub-hero-img" alt=""></div>
           <div class="name" id="hub-hero-name"></div>
@@ -173,49 +173,49 @@ const UI = (() => {
         <div class="hub-menu" id="hub-menu"></div>
       </div>
       <div class="screen" data-s="battle"><div class="panel-wrap"><div class="panel k-frame">
-        <div class="head"><span class="h2">Выбери вылазку</span><button class="k-icon" data-back>${img('close')}</button></div>
+        <div class="head"><span class="h2">${tr('Выбери вылазку')}</span><button class="k-icon" data-back>${img('close')}</button></div>
         <div class="factions" id="factions"></div>
         <div class="threat" id="threat"></div>
-        <div class="buttons"><button class="k-btn big" id="go">${img('play')} В бой!</button></div>
-        <div class="center muted" style="margin-top:8px">WASD — летишь на тросах вверх, на крыши и деревья. С высоты — Пробел: атака по затылку</div>
+        <div class="buttons"><button class="k-btn big" id="go">${img('play')} ${tr('В бой!')}</button></div>
+        <div class="center muted" style="margin-top:8px">${tr('WASD — летишь на тросах вверх, на крыши и деревья. С высоты — Пробел: атака по затылку')}</div>
       </div></div></div>
       <div class="screen" data-s="squad"><div class="panel-wrap"><div class="panel k-frame">
-        <div class="head"><span class="h2">Отряд</span><button class="k-icon" data-back>${img('close')}</button></div>
+        <div class="head"><span class="h2">${tr('Отряд')}</span><button class="k-icon" data-back>${img('close')}</button></div>
         <div class="row" style="align-items:flex-start">
           <div class="squad" id="squad"></div>
           <div class="squad-detail k-card" id="squad-detail"></div>
         </div>
       </div></div></div>
       <div class="screen" data-s="gacha"><div class="panel-wrap"><div class="panel k-frame gacha-banner">
-        <div class="head"><span class="h2">Призыв разведчиков</span><button class="k-icon" data-back>${img('close')}</button></div>
+        <div class="head"><span class="h2">${tr('Призыв разведчиков')}</span><button class="k-icon" data-back>${img('close')}</button></div>
         <div class="faces" id="gacha-faces"></div>
-        <div>Сигнальная ракета покажет, кто откликнулся на зов</div>
-        <div class="muted" style="margin:6px 0"><span class="r5">Легендарный 4%</span> · <span class="r4">Эпический 21%</span> · <span class="r3">Редкий 75%</span></div>
+        <div>${tr('Сигнальная ракета покажет, кто откликнулся на зов')}</div>
+        <div class="muted" style="margin:6px 0"><span class="r5">${tr('Легендарный')} 4%</span> · <span class="r4">${tr('Эпический')} 21%</span> · <span class="r3">${tr('Редкий')} 75%</span></div>
         <div id="gacha-pity" style="color:#7a3aa8"></div>
-        <div class="muted">Повтор даёт звезду (+3% к скорости), сверх пяти звёзд — жетоны</div>
+        <div class="muted">${tr('Повтор даёт звезду (+3% к скорости), сверх пяти звёзд — жетоны')}</div>
         <div class="buttons">
           <button class="k-btn big" id="pull1">${img('coin')} 1 — 100</button>
           <button class="k-btn big" id="pull10">${img('coin')} 10 — 900</button>
         </div>
       </div></div></div>
       <div class="screen" data-s="training"><div class="panel-wrap"><div class="panel k-frame" style="width:min(1000px,94vw)">
-        <div class="head"><span class="h2">Тренировки кадетского корпуса</span><button class="k-icon" data-back>${img('close')}</button></div>
-        <div class="muted" style="margin-bottom:8px">Постоянные улучшения за жетоны — действуют в каждом забеге</div>
+        <div class="head"><span class="h2">${tr('Тренировки кадетского корпуса')}</span><button class="k-icon" data-back>${img('close')}</button></div>
+        <div class="muted" style="margin-bottom:8px">${tr('Постоянные улучшения за жетоны — действуют в каждом забеге')}</div>
         <div class="train-grid" id="training"></div>
       </div></div></div>
       <div class="screen" data-s="missions"><div class="panel-wrap"><div class="panel k-frame" style="width:min(820px,94vw)">
-        <div class="head"><span class="h2">Задания</span><span class="rank" id="rank"></span><button class="k-icon" data-back>${img('close')}</button></div>
-        <div class="sec">Сегодня</div>
+        <div class="head"><span class="h2">${tr('Задания')}</span><span class="rank" id="rank"></span><button class="k-icon" data-back>${img('close')}</button></div>
+        <div class="sec">${tr('Сегодня')}</div>
         <div class="mis-list" id="daily"></div>
-        <div class="sec">Достижения</div>
+        <div class="sec">${tr('Достижения')}</div>
         <div class="mis-list" id="achievements"></div>
       </div></div></div>
       <div class="screen" data-s="records"><div class="panel-wrap"><div class="panel k-frame">
-        <div class="head"><span class="h2">Рекорды</span><button class="k-icon" data-back>${img('close')}</button></div>
+        <div class="head"><span class="h2">${tr('Рекорды')}</span><button class="k-icon" data-back>${img('close')}</button></div>
         <div class="list" id="records"></div>
       </div></div></div>
       <div class="screen" data-s="settings"><div class="panel-wrap"><div class="panel k-frame" style="width:min(560px,92vw)">
-        <div class="head"><span class="h2">Настройки</span><button class="k-icon" data-back>${img('close')}</button></div>
+        <div class="head"><span class="h2">${tr('Настройки')}</span><button class="k-icon" data-back>${img('close')}</button></div>
         <div id="settings"></div>
       </div></div></div>
       <div class="bottom-bar">
@@ -245,7 +245,7 @@ const UI = (() => {
     Hd.innerHTML = `
       <div class="tl">
         <div class="plate wood-text"><span id="hud-face"></span><div class="hearts" id="hud-hearts"></div><span id="hud-name"></span></div>
-        <div style="position:relative"><div class="gauge k-field" id="hud-gauge"><div class="fill"></div><div class="need"></div></div><div class="gauge-label wood-text">ВЫСОТА</div></div>
+        <div style="position:relative"><div class="gauge k-field" id="hud-gauge"><div class="fill"></div><div class="need"></div></div><div class="gauge-label wood-text">${tr('ВЫСОТА')}</div></div>
       </div>
       <div class="top">
         <div class="plate wood-text timer" id="hud-timer"></div>
@@ -261,7 +261,7 @@ const UI = (() => {
       </div>
       <div class="lvl wood-text" id="hud-lvl"></div>
       <div class="xp k-field"><div class="bar" id="hud-xp"></div></div>
-      <div class="tip-line k-tip" id="hud-tip">WASD — летишь на тросах вверх, на крыши и деревья. С высоты — Пробел: атака</div>`;
+      <div class="tip-line k-tip" id="hud-tip">${tr('WASD — летишь на тросах вверх, на крыши и деревья. С высоты — Пробел: атака')}</div>`;
     Object.assign(hud, {
       face: $('#hud-face', Hd), hearts: $('#hud-hearts', Hd), name: $('#hud-name', Hd), gauge: $('#hud-gauge', Hd),
       fill: $('#hud-gauge .fill', Hd), need: $('#hud-gauge .need', Hd), timer: $('#hud-timer', Hd), kills: $('#hud-kills', Hd),
@@ -293,7 +293,7 @@ const UI = (() => {
     const n = claimableCount();
     const bd = $('#mis-badge');
     if (bd) { bd.textContent = n || ''; bd.style.display = n ? '' : 'none'; }
-    const hints = { hub: '↑↓ — выбрать, Enter — открыть', battle: '← → — фракция, Enter — в бой, Esc — назад', squad: 'Стрелки — выбрать, Enter — взять в бой, Esc — назад', gacha: '1 — один призыв, 0 — десять, Esc — назад', records: 'Esc — назад', settings: 'Esc — назад', training: 'Клик — купить уровень, Esc — назад', missions: 'Клик — забрать награду, Esc — назад' };
+    const hints = { hub: tr('↑↓ — выбрать, Enter — открыть'), battle: tr('← → — фракция, ↑↓ — угроза, Enter — в бой, Esc — назад'), squad: tr('Стрелки — выбрать, Enter — взять в бой, Esc — назад'), gacha: tr('1 — один призыв, 0 — десять, Esc — назад'), records: tr('Esc — назад'), settings: tr('Esc — назад'), training: tr('Клик — купить уровень, Esc — назад'), missions: tr('Клик — забрать награду, Esc — назад') };
     $('#menu-hint').textContent = hints[screen] || '';
   }
 
@@ -319,7 +319,7 @@ const UI = (() => {
       const c = el('div', 'faction k-card' + (i === factionSel ? ' sel' : ''));
       c.appendChild(emblem(f.id));
       const b = bestOf(f);
-      c.insertAdjacentHTML('beforeend', `<div class="fname">${f.name}</div><div class="diff" style="color:${['#2c7030', '#a8681a', '#b8302a'][i]}">${f.diff} · жетоны x${[1, 1.5, 2][i]}</div><div class="desc">${f.desc}</div><div class="muted">${b ? 'Рекорд: ' + fmtTime(b) : 'Ещё не пройдено'}</div>`);
+      c.insertAdjacentHTML('beforeend', `<div class="fname">${f.name}</div><div class="diff" style="color:${['#2c7030', '#a8681a', '#b8302a'][i]}">${tr('{0} · жетоны x{1}', f.diff, [1, 1.5, 2][i])}</div><div class="desc">${f.desc}</div><div class="muted">${b ? tr('Рекорд: {0}', fmtTime(b)) : tr('Ещё не пройдено')}</div>`);
       c.addEventListener('click', () => {
         if (i === factionSel) start();
         else { factionSel = i; requestReset(); refreshBattle(); }
@@ -330,14 +330,14 @@ const UI = (() => {
     const f = FACTIONS[factionSel], max = threatMax(factionSel);
     save.threatSel = save.threatSel || {};
     const cur = clamp(save.threatSel[f.id] || 1, 1, max);
-    tb.innerHTML = '<span class="tl">Угроза:</span>';
+    tb.innerHTML = '<span class="tl">' + tr('Угроза:') + '</span>';
     THREAT_NAMES.forEach((n, k) => {
       const b = el('button', 'k-btn th' + (k + 1 === cur ? ' sel' : '') + (k + 1 > max ? ' off' : ''), n);
-      b.title = k + 1 > max ? 'Открой: выживи 10 минут на угрозе ' + THREAT_NAMES[k - 1] : 'Больше титанов, они быстрее и злее. Жетоны x' + (1 + 0.3 * k).toFixed(1);
+      b.title = k + 1 > max ? tr('Открой: выживи 10 минут на угрозе {0}', THREAT_NAMES[k - 1]) : tr('Больше титанов, они быстрее и злее. Жетоны x{0}', (1 + 0.3 * k).toFixed(1));
       b.addEventListener('click', () => setThreat(k + 1));
       tb.appendChild(b);
     });
-    tb.insertAdjacentHTML('beforeend', `<span class="muted">${cur > 1 ? 'титаны злее, жетоны x' + (1 + 0.3 * (cur - 1)).toFixed(1) : 'выживи 10 минут, чтобы открыть следующую'}</span>`);
+    tb.insertAdjacentHTML('beforeend', `<span class="muted">${cur > 1 ? tr('титаны злее, жетоны x{0}', (1 + 0.3 * (cur - 1)).toFixed(1)) : tr('выживи 10 минут, чтобы открыть следующую')}</span>`);
   }
 
   function setThreat(k) {
@@ -366,10 +366,10 @@ const UI = (() => {
     const det = $('#squad-detail');
     det.innerHTML = '';
     det.appendChild(face(c.id));
-    det.insertAdjacentHTML('beforeend', `<div class="center h2 ${rarityClass(c.rarity)}" style="line-height:1">${owned ? c.name : 'Не открыт'}</div>
+    det.insertAdjacentHTML('beforeend', `<div class="center h2 ${rarityClass(c.rarity)}" style="line-height:1">${owned ? c.name : tr('Не открыт')}</div>
       <div class="center ${rarityClass(c.rarity)}">${RARITY[c.rarity].name}</div>
-      <div class="center muted" style="margin:6px 0;min-height:60px">${owned ? c.ability : 'Можно получить в «Призыве»'}</div>`);
-    const btn = el('button', 'k-btn' + (owned && save.selected !== c.id ? '' : ' off'), save.selected === c.id ? 'Уже в бою' : owned ? 'Взять в бой' : 'Закрыт');
+      <div class="center muted" style="margin:6px 0;min-height:60px">${owned ? c.ability : tr('Можно получить в «Призыве»')}</div>`);
+    const btn = el('button', 'k-btn' + (owned && save.selected !== c.id ? '' : ' off'), save.selected === c.id ? tr('Уже в бою') : owned ? tr('Взять в бой') : tr('Закрыт'));
     btn.style.width = '100%';
     btn.addEventListener('click', pickHero);
     det.appendChild(btn);
@@ -380,12 +380,12 @@ const UI = (() => {
     if (!save.chars[c.id]) return;
     save.selected = c.id;
     persist();
-    toast(`${c.name} идёт в бой`);
+    toast(tr('{0} идёт в бой', c.name));
     refreshSquad();
   }
 
   function refreshGacha() {
-    $('#gacha-pity').textContent = `Эпический гарантирован через ${Math.max(1, 10 - save.pity4)}, легендарный — через ${Math.max(1, 40 - save.pity5)}`;
+    $('#gacha-pity').textContent = tr('Эпический гарантирован через {0}, легендарный — через {1}', Math.max(1, 10 - save.pity4), Math.max(1, 40 - save.pity5));
     $('#pull1').classList.toggle('off', save.tokens < 100);
     $('#pull10').classList.toggle('off', save.tokens < 900);
     refreshFooter();
@@ -401,12 +401,12 @@ const UI = (() => {
       d.appendChild(cv(upIcon(t.icon)));
       const pips = Array.from({ length: t.max }, (_, i) => '<i class="' + (i < l ? 'on' : '') + '"></i>').join('');
       d.insertAdjacentHTML('beforeend', `<div class="tn">${t.name}</div><div class="pips">${pips}</div>
-        <div class="ud">${cost === null ? t.text(l) : (l ? 'Ур. ' + (l + 1) + ': ' : '') + t.text(l + 1)}</div>`);
-      const b = el('button', 'k-btn' + (cost === null || save.tokens < cost ? ' off' : ''), cost === null ? 'Максимум' : `<img src="assets/ui/coin.png" alt=""> ${cost}`);
+        <div class="ud">${cost === null ? t.text(l) : (l ? tr('Ур. {0}: ', l + 1) : '') + t.text(l + 1)}</div>`);
+      const b = el('button', 'k-btn' + (cost === null || save.tokens < cost ? ' off' : ''), cost === null ? tr('Максимум') : `<img src="assets/ui/coin.png" alt=""> ${cost}`);
       b.addEventListener('click', () => {
         if (cost === null) return;
-        if (save.tokens < cost) { toast('Не хватает жетонов — сыграй забег'); snd('error', { vol: 0.6 }); return; }
-        if (buyTraining(t.id)) { snd('levelup', { vol: 0.6 }); toast(t.name + ': уровень ' + save.meta[t.id]); refreshTraining(); refreshFooter(); }
+        if (save.tokens < cost) { toast(tr('Не хватает жетонов — сыграй забег')); snd('error', { vol: 0.6 }); return; }
+        if (buyTraining(t.id)) { snd('levelup', { vol: 0.6 }); toast(tr('{0}: уровень {1}', t.name, save.meta[t.id])); refreshTraining(); refreshFooter(); }
       });
       d.appendChild(b);
       box.appendChild(d);
@@ -419,11 +419,11 @@ const UI = (() => {
     row.innerHTML = `<div class="mt"><div class="mn">${name}</div><div class="muted">${text}</div>
       <div class="bar"><i style="width:${pct}%"></i></div></div>
       <div class="mv">${goal > 1 ? value + ' / ' + goal : ''}</div>`;
-    const b = el('button', 'k-btn' + (done && !claimed ? '' : ' off'), claimed ? 'Получено' : `<img src="assets/ui/coin.png" alt=""> ${reward}`);
+    const b = el('button', 'k-btn' + (done && !claimed ? '' : ' off'), claimed ? tr('Получено') : `<img src="assets/ui/coin.png" alt=""> ${reward}`);
     b.addEventListener('click', () => {
       if (!done || claimed) return;
       const got = onClaim();
-      if (got) { snd('chime5', { vol: 0.7, tag: 'chime' }); snd('bong', { vol: 0.5 }); toast('+' + got + ' жетонов'); refreshMissions(); refreshFooter(); }
+      if (got) { snd('chime5', { vol: 0.7, tag: 'chime' }); snd('bong', { vol: 0.5 }); toast(tr('+{0} жетонов', got)); refreshMissions(); refreshFooter(); }
     });
     row.appendChild(b);
     return row;
@@ -431,10 +431,10 @@ const UI = (() => {
 
   function refreshMissions() {
     const rk = rankInfo();
-    $('#rank').innerHTML = `Звание: <b>${rk.name}</b>${rk.next ? ' · до «' + rk.next.name + '»: ' + (rk.next.at - rk.n) : ''}`;
+    $('#rank').innerHTML = `${tr('Звание:')} <b>${rk.name}</b>${rk.next ? tr(' · до «{0}»: {1}', rk.next.name, rk.next.at - rk.n) : ''}`;
     const dbox = $('#daily');
     dbox.innerHTML = '';
-    for (const t of dailyState()) dbox.appendChild(misRow('Задание дня', t.text, t.value, t.goal, t.reward, t.done, t.claimed, () => claimDaily(t.i)));
+    for (const t of dailyState()) dbox.appendChild(misRow(tr('Задание дня'), t.text, t.value, t.goal, t.reward, t.done, t.claimed, () => claimDaily(t.i)));
     const abox = $('#achievements');
     abox.innerHTML = '';
     const list = achievementsState().sort((a, b) => ((b.done && !b.claimed) - (a.done && !a.claimed)) || (a.claimed - b.claimed));
@@ -444,8 +444,12 @@ const UI = (() => {
   function refreshRecords() {
     const s = statsOf();
     const rows = FACTIONS.map(f => [f.name, bestOf(f) ? fmtTime(bestOf(f)) : '—']);
-    rows.push(['Забегов', s.runs], ['Победы', s.wins], ['Титанов убито', s.kills], ['Лучший уровень', s.bestLevel], ['Время в бою', fmtTime(s.time)], ['Призывов', save.pulls], ['Бойцов открыто', `${Object.keys(save.chars).length} / ${CHARS.length}`]);
+    rows.push([tr('Забегов'), s.runs], [tr('Победы'), s.wins], [tr('Титанов убито'), s.kills], [tr('Лучший уровень'), s.bestLevel], [tr('Время в бою'), fmtTime(s.time)], [tr('Призывов'), save.pulls], [tr('Бойцов открыто'), `${Object.keys(save.chars).length} / ${CHARS.length}`]);
     $('#records').innerHTML = rows.map(([k, v]) => `<div>${k}</div><div class="v">${v}</div>`).join('');
+  }
+
+  function langRow() {
+    return '<div class="langs"><span>' + tr('Язык') + '</span>' + LANGS.map(([k, n]) => '<button class="k-btn lang' + (k === LANG ? ' sel' : '') + '" data-lang="' + k + '">' + n + '</button>').join('') + '</div>';
   }
 
   function refreshSettings() {
@@ -453,20 +457,28 @@ const UI = (() => {
     const box = $('#settings');
     const chk = (key, label) => `<div class="check" data-k="${key}"><img src="assets/ui/${st[key] ? 'check_on' : 'check_off'}.png" alt=""><span>${label}</span></div>`;
     box.innerHTML = `
-      ${chk('shake', 'Тряска экрана при ударах')}
-      ${chk('hints', 'Подсказки в бою')}
-      ${chk('mute', 'Выключить весь звук (M)')}
-      <div class="vol"><span>Музыка</span><input type="range" min="0" max="100" id="vol-music" value="${Math.round((st.music ?? 0.6) * 100)}"><span id="vol-music-v">${Math.round((st.music ?? 0.6) * 100)}</span></div>
-      <div class="vol"><span>Эффекты</span><input type="range" min="0" max="100" id="vol-sfx" value="${Math.round((st.sfx ?? 0.8) * 100)}"><span id="vol-sfx-v">${Math.round((st.sfx ?? 0.8) * 100)}</span></div>
-      <div style="margin-top:10px">Код сохранения — перенос прогресса на другой компьютер:</div>
+      ${langRow()}
+      ${chk('shake', tr('Тряска экрана при ударах'))}
+      ${chk('hints', tr('Подсказки в бою'))}
+      ${chk('mute', tr('Выключить весь звук (M)'))}
+      <div class="vol"><span>${tr('Музыка')}</span><input type="range" min="0" max="100" id="vol-music" value="${Math.round((st.music ?? 0.6) * 100)}"><span id="vol-music-v">${Math.round((st.music ?? 0.6) * 100)}</span></div>
+      <div class="vol"><span>${tr('Эффекты')}</span><input type="range" min="0" max="100" id="vol-sfx" value="${Math.round((st.sfx ?? 0.8) * 100)}"><span id="vol-sfx-v">${Math.round((st.sfx ?? 0.8) * 100)}</span></div>
+      <div style="margin-top:10px">${tr('Код сохранения — перенос прогресса на другой компьютер:')}</div>
       <textarea class="code-box" id="code" rows="3" spellcheck="false"></textarea>
       <div class="buttons" style="justify-content:flex-start">
-        <button class="k-btn" id="code-copy">Скопировать мой код</button>
-        <button class="k-btn" id="code-load">Загрузить код</button>
-        <button class="k-btn" id="full">Во весь экран</button>
-        <button class="k-btn" id="wipe">${confirmReset ? 'Точно стереть?' : 'Стереть прогресс'}</button>
+        <button class="k-btn" id="code-copy">${tr('Скопировать мой код')}</button>
+        <button class="k-btn" id="code-load">${tr('Загрузить код')}</button>
+        <button class="k-btn" id="full">${tr('Во весь экран')}</button>
+        <button class="k-btn" id="wipe">${confirmReset ? tr('Точно стереть?') : tr('Стереть прогресс')}</button>
       </div>
-      <div class="muted" style="margin-top:10px;font-size:16px">Фан-игра по «Атаке титанов», некоммерческая. Шрифт Pixellari — Zacchary Dempsey-Plante. Музыка — RandomMind, Komiku, Will Carpenter, cynicmusic (CC0). Звуки — Kenney (CC0). Подробно — CREDITS.md.</div>`;
+      <div class="muted" style="margin-top:10px;font-size:16px">${tr('Фан-игра по «Атаке титанов», некоммерческая. Шрифт Pixellari — Zacchary Dempsey-Plante. Музыка — RandomMind, Komiku, Will Carpenter, cynicmusic (CC0). Звуки — Kenney (CC0). Подробно — CREDITS.md.')}</div>`;
+    box.querySelectorAll('[data-lang]').forEach(b => b.addEventListener('click', () => {
+      const k = b.dataset.lang;
+      if (k === LANG) return;
+      settings().lang = k;
+      persist();
+      location.reload();
+    }));
     box.querySelectorAll('.check').forEach(c => c.addEventListener('click', () => {
       st[c.dataset.k] = !st[c.dataset.k];
       persist();
@@ -490,12 +502,12 @@ const UI = (() => {
       const code = exportCode();
       ta.value = code;
       ta.select();
-      if (navigator.clipboard) navigator.clipboard.writeText(code).then(() => toast('Код скопирован'), () => toast('Выдели код и скопируй вручную'));
+      if (navigator.clipboard) navigator.clipboard.writeText(code).then(() => toast(tr('Код скопирован')), () => toast(tr('Выдели код и скопируй вручную')));
     });
     $('#code-load').addEventListener('click', () => {
-      if (!ta.value.trim()) { toast('Вставь код в поле'); return; }
-      if (importCode(ta.value)) { toast('Сохранение загружено'); factionSel = clamp(save.faction || 0, 0, 2); requestReset(); refreshSettings(); }
-      else toast('Код не подходит');
+      if (!ta.value.trim()) { toast(tr('Вставь код в поле')); return; }
+      if (importCode(ta.value)) { toast(tr('Сохранение загружено')); factionSel = clamp(save.faction || 0, 0, 2); requestReset(); refreshSettings(); }
+      else toast(tr('Код не подходит'));
     });
     $('#full').addEventListener('click', () => {
       if (document.fullscreenElement) document.exitFullscreen();
@@ -507,7 +519,7 @@ const UI = (() => {
       save = loadSave();
       persist();
       confirmReset = false;
-      toast('Прогресс стёрт');
+      toast(tr('Прогресс стёрт'));
       refreshSettings();
     });
   }
@@ -524,7 +536,7 @@ const UI = (() => {
     st.mute = !st.mute;
     persist();
     applyAudio();
-    toast(st.mute ? 'Звук выключен' : 'Звук включён');
+    toast(st.mute ? tr('Звук выключен') : tr('Звук включён'));
     if (screen === 'settings' && state === 'menu') refreshSettings();
   }
 
@@ -536,7 +548,7 @@ const UI = (() => {
   }
 
   function doPull(n) {
-    if (save.tokens < (n === 10 ? 900 : 100)) { toast('Не хватает жетонов — сыграй забег'); snd('error', { vol: 0.6 }); return; }
+    if (save.tokens < (n === 10 ? 900 : 100)) { toast(tr('Не хватает жетонов — сыграй забег')); snd('error', { vol: 0.6 }); return; }
     pull(n);
     revealIdx = 0;
     revealSummary = false;
@@ -547,12 +559,12 @@ const UI = (() => {
     const L = layers.reveal;
     if (revealSummary || revealIdx >= pullRes.length) {
       revealSummary = true;
-      L.innerHTML = `<div class="summary k-frame"><div class="big-title wood-text" style="color:var(--gold)">Итоги призыва</div><div class="grid" id="rv-grid"></div></div><div class="next wood-text">Enter или клик — дальше</div>`;
+      L.innerHTML = `<div class="summary k-frame"><div class="big-title wood-text" style="color:var(--gold)">${tr('Итоги призыва')}</div><div class="grid" id="rv-grid"></div></div><div class="next wood-text">${tr('Enter или клик — дальше')}</div>`;
       const gr = $('#rv-grid', L);
       for (const r of pullRes) {
         const d = el('div', 'hero-card k-card' + (r.c.rarity >= 4 ? ' sel' : ''));
         d.appendChild(face(r.c.id));
-        d.insertAdjacentHTML('beforeend', `<div class="hn">${r.c.name}</div><div class="${r.isNew ? '' : rarityClass(r.c.rarity)}" style="${r.isNew ? 'color:var(--good)' : ''}">${r.isNew ? 'Новый!' : r.refund ? '+' + r.refund : starsHTML(r.stars)}</div>`);
+        d.insertAdjacentHTML('beforeend', `<div class="hn">${r.c.name}</div><div class="${r.isNew ? '' : rarityClass(r.c.rarity)}" style="${r.isNew ? 'color:var(--good)' : ''}">${r.isNew ? tr('Новый!') : r.refund ? '+' + r.refund : starsHTML(r.stars)}</div>`);
         gr.appendChild(d);
       }
       return;
@@ -565,13 +577,13 @@ const UI = (() => {
       else snd('chime3', { vol: 0.6, tag: 'chime' });
     }, 780);
     L.innerHTML = `<div class="flare" style="background:linear-gradient(${rar.flare}, transparent)"></div><div class="flash" style="background:${rar.flare}"></div>
-      <div class="card-pop k-frame hid" id="rv-card"></div><div class="next wood-text">${revealIdx + 1} / ${pullRes.length} · Enter или клик — дальше</div>`;
+      <div class="card-pop k-frame hid" id="rv-card"></div><div class="next wood-text">${revealIdx + 1} / ${pullRes.length} · ${tr('Enter или клик — дальше')}</div>`;
     const card = $('#rv-card', L);
     setTimeout(() => card.classList.remove('hid'), 800);
     card.appendChild(body(r.c.id));
     card.insertAdjacentHTML('beforeend', `<div class="rname ${rarityClass(r.c.rarity)}" style="text-shadow:2px 2px 0 #3a1e0c">${r.c.name}</div>
       <div class="${rarityClass(r.c.rarity)}" style="text-shadow:1px 1px 0 #3a1e0c">${rar.name} ${starsHTML(r.stars)}</div>
-      <div style="margin-top:6px">${r.isNew ? '<span style="color:var(--good)">Новый боец!</span> ' + r.c.ability : r.refund ? `Уже 5★ — возвращено ${r.refund} жетонов` : 'Повтор: +1 звезда'}</div>`);
+      <div style="margin-top:6px">${r.isNew ? '<span style="color:var(--good)">' + tr('Новый боец!') + '</span> ' + r.c.ability : r.refund ? tr('Уже 5★ — возвращено {0} жетонов', r.refund) : tr('Повтор: +1 звезда')}</div>`);
   }
 
   function nextReveal() {
@@ -584,10 +596,10 @@ const UI = (() => {
   function buildLevelUp() {
     const L = layers.levelup;
     L.innerHTML = `<div class="shade"></div><div class="panel-wrap"><div class="col" style="pointer-events:auto">
-      <div class="big-title" style="color:#7cfc9a">Уровень ${game.level - pendingLevels + 1}!</div>
+      <div class="big-title" style="color:#7cfc9a">${tr('Уровень {0}!', game.level - pendingLevels + 1)}</div>
       <div class="cards" id="lv-cards"></div>
-      <div class="center wood-text" style="margin-top:10px">← → и Enter, клик или 1 / 2 / 3</div>
-      ${game.rerolls > 0 ? '<div class="buttons"><button class="k-btn" id="lv-reroll"><img src="assets/ui/dice.png" alt=""> Перебросить (' + game.rerolls + ') — R</button></div>' : ''}</div></div>`;
+      <div class="center wood-text" style="margin-top:10px">${tr('← → и Enter, клик или 1 / 2 / 3')}</div>
+      ${game.rerolls > 0 ? '<div class="buttons"><button class="k-btn" id="lv-reroll"><img src="assets/ui/dice.png" alt=""> ' + tr('Перебросить ({0}) — R', game.rerolls) + '</button></div>' : ''}</div></div>`;
     const rr = $('#lv-reroll', L);
     if (rr) rr.addEventListener('click', () => rerollChoices());
     const box = $('#lv-cards', L);
@@ -595,7 +607,7 @@ const UI = (() => {
       const d = el('div', 'up-card k-card' + (i === sel ? ' sel' : ''));
       d.insertAdjacentHTML('beforeend', `<div class="num">${i + 1}</div>`);
       d.appendChild(cv(upIcon(c.icon)));
-      d.insertAdjacentHTML('beforeend', `<div class="un">${c.name}</div><div class="lvl-tag">${c.kind === 'skill' ? 'Умение' : 'Улучшение'} · ${c.isNew ? '<b style="color:var(--good)">Новое!</b>' : 'ур. ' + c.lvl + ' → ' + (c.lvl + 1)}</div><div class="ud">${c.desc()}</div>`);
+      d.insertAdjacentHTML('beforeend', `<div class="un">${c.name}</div><div class="lvl-tag">${c.kind === 'skill' ? tr('Умение') : tr('Улучшение')} · ${c.isNew ? '<b style="color:var(--good)">' + tr('Новое!') + '</b>' : tr('ур. {0} → {1}', c.lvl, c.lvl + 1)}</div><div class="ud">${c.desc()}</div>`);
       d.addEventListener('mouseenter', () => { sel = i; markLevel(); });
       d.addEventListener('click', () => choose(i));
       box.appendChild(d);
@@ -610,30 +622,30 @@ const UI = (() => {
 
   function buildPause() {
     layers.pause.innerHTML = `<div class="shade"></div><div class="panel-wrap"><div class="panel k-frame" style="text-align:center;min-width:320px">
-      <div class="big-title wood-text" style="color:var(--wood-text)">Пауза</div>
-      <div class="col"><button class="k-btn big" id="ps-go">Продолжить</button><button class="k-btn big" id="ps-menu">В меню</button></div>
-      <div class="muted" style="margin-top:8px">Esc — продолжить, Q — в меню</div></div></div>`;
+      <div class="big-title wood-text" style="color:var(--wood-text)">${tr('Пауза')}</div>
+      <div class="col"><button class="k-btn big" id="ps-go">${tr('Продолжить')}</button><button class="k-btn big" id="ps-menu">${tr('В меню')}</button></div>
+      <div class="muted" style="margin-top:8px">${tr('Esc — продолжить, Q — в меню')}</div></div></div>`;
     $('#ps-go').addEventListener('click', () => { state = 'play'; });
     $('#ps-menu').addEventListener('click', () => toMenu());
   }
 
   function buildResult(won) {
     const s = statsOf();
-    const rows = [['Продержался', fmtTime(game.time)], ['Титанов убито', game.kills], ['Уровень', game.level]];
-    if (faction.civs) rows.push(['Горожан погибло', game.lost]);
-    if (faction.threat > 1) rows.push(['Угроза', THREAT_NAMES[faction.threat - 1]]);
-    if (game.unlocked) rows.push(['Открыта угроза', THREAT_NAMES[game.unlocked - 1] + '!']);
-    rows.push(['Рекорд', fmtTime(bestOf(faction))]);
+    const rows = [[tr('Продержался'), fmtTime(game.time)], [tr('Титанов убито'), game.kills], [tr('Уровень'), game.level]];
+    if (faction.civs) rows.push([tr('Горожан погибло'), game.lost]);
+    if (faction.threat > 1) rows.push([tr('Угроза'), THREAT_NAMES[faction.threat - 1]]);
+    if (game.unlocked) rows.push([tr('Открыта угроза'), THREAT_NAMES[game.unlocked - 1] + '!']);
+    rows.push([tr('Рекорд'), fmtTime(bestOf(faction))]);
     layers.result.innerHTML = `<div class="shade"></div><div class="panel-wrap"><div class="panel k-frame result">
-      <div class="rt" style="color:${won ? '#2c7030' : '#b8302a'}">${won ? (faction.map === 'field' ? 'Вылазка удалась!' : 'Город отбит!') : 'Ты пал'}</div>
-      <div class="muted">${won ? faction.name + ' гордится тобой' : faction.name + ' · отдай своё сердце…'}</div>
+      <div class="rt" style="color:${won ? '#2c7030' : '#b8302a'}">${won ? (faction.map === 'field' ? tr('Вылазка удалась!') : tr('Город отбит!')) : tr('Ты пал')}</div>
+      <div class="muted">${won ? tr('{0} гордится тобой', faction.name) : tr('{0} · отдай своё сердце…', faction.name)}</div>
       <div class="list">${rows.map(([k, v]) => `<div>${k}</div><div class="v">${v}</div>`).join('')}</div>
       <div class="reward"><img src="assets/ui/coin.png" alt="">+${game.reward}</div>
-      ${(game.newDone && game.newDone.length) || game.newDaily > 0 ? '<div class="newdone k-tip">Выполнено: ' + [...(game.newDone || []).map(n => '«' + n + '»'), ...(game.newDaily > 0 ? ['заданий дня: ' + game.newDaily] : [])].join(', ') + ' — забери награду в «Заданиях»</div>' : ''}
+      ${(game.newDone && game.newDone.length) || game.newDaily > 0 ? '<div class="newdone k-tip">' + tr('Выполнено: ') + [...(game.newDone || []).map(n => '«' + n + '»'), ...(game.newDaily > 0 ? [tr('заданий дня: {0}', game.newDaily)] : [])].join(', ') + tr(' — забери награду в «Заданиях»') + '</div>' : ''}
       <div class="buttons">
-        ${won ? '<button class="k-btn big" id="rs-endless">Дальше без конца</button>' : ''}
-        <button class="k-btn big" id="rs-again">Ещё раз</button>
-        <button class="k-btn big" id="rs-menu">В меню</button>
+        ${won ? '<button class="k-btn big" id="rs-endless">' + tr('Дальше без конца') + '</button>' : ''}
+        <button class="k-btn big" id="rs-again">${tr('Ещё раз')}</button>
+        <button class="k-btn big" id="rs-menu">${tr('В меню')}</button>
       </div></div></div>`;
     $('#rs-again').addEventListener('click', () => start());
     $('#rs-menu').addEventListener('click', () => toMenu());
@@ -693,10 +705,10 @@ const UI = (() => {
       for (let i = 0; i < stats.maxHp; i++) hud.hearts.appendChild(cv(i < player.hp ? HEART : HEART_EMPTY));
     }
     setText(hud.timer, 'timer', game.endless ? fmtTime(game.time) : `${fmtTime(game.time)} / ${fmtTime(WIN_TIME)}`);
-    setText(hud.kills, 'kills', `Титанов убито: ${game.kills}`);
-    setText(hud.combo, 'combo', game.combo > 1 && game.time - game.lastKill < 4 ? `КОМБО x${game.combo}` : '');
-    setText(hud.civ, 'civ', `Горожан погибло: ${game.lost}`);
-    setText(hud.lvl, 'lvl', `Ур. ${game.level}`);
+    setText(hud.kills, 'kills', tr('Титанов убито: {0}', game.kills));
+    setText(hud.combo, 'combo', game.combo > 1 && game.time - game.lastKill < 4 ? tr('КОМБО x{0}', game.combo) : '');
+    setText(hud.civ, 'civ', tr('Горожан погибло: {0}', game.lost));
+    setText(hud.lvl, 'lvl', tr('Ур. {0}', game.level));
     const xp = Math.round(clamp(game.xp / game.need, 0, 1) * 1000) / 10;
     if (cache.xp !== xp) { cache.xp = xp; hud.xp.style.width = xp + '%'; }
     const z = Math.round(clamp(player.z / MAXZ, 0, 1) * 100);
@@ -713,7 +725,7 @@ const UI = (() => {
     }
     hud.gauge.classList.toggle('low', player.lowT > 0 && Math.floor(player.lowT * 10) % 2 === 1);
     const B = game.boss;
-    const bst = B ? (B.boss.kneel > 0 ? ' · на коленях — бей в затылок!' : ` · ${B.boss.def.wp}: ${B.boss.wp.filter(w => w.cut).length}/2`) : '';
+    const bst = B ? (B.boss.kneel > 0 ? ' · ' + tr('на коленях — бей в затылок!') : ` · ${B.boss.def.wp}: ${B.boss.wp.filter(w => w.cut).length}/2`) : '';
     const bk = B ? B.boss.name + B.boss.hp + '/' + B.boss.max + (B.boss.harden > 0 ? 'h' : '') + bst : '';
     if (cache.boss !== bk) {
       cache.boss = bk;

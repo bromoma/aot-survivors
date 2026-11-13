@@ -125,7 +125,8 @@
 #menu { background: radial-gradient(ellipse at 60% 50%, rgba(10, 6, 2, 0) 30%, rgba(10, 6, 2, 0.55) 100%); }
 #menu .screen { position: absolute; inset: 0; display: none; pointer-events: none; }
 #menu .screen.on { display: block; }
-.logo { position: absolute; left: 50%; top: 4%; transform: translateX(-50%); text-align: center; pointer-events: none; }
+.logo { position: absolute; left: 50%; top: 4%; transform: translateX(-50%); text-align: center; pointer-events: none; white-space: nowrap; }
+html[lang="es"] .logo .title { font-size: 40px; }
 .logo .sub { font-size: 32px; color: var(--wood-text); text-shadow: 3px 3px 0 var(--shadow); letter-spacing: 8px; margin-top: -6px; }
 .hub-hero { position: absolute; left: 8%; top: 24%; width: min(360px, 34vw); pointer-events: auto; }
 .hub-hero .stage { display: flex; justify-content: center; align-items: flex-end; height: calc(110px * var(--u)); }
@@ -299,3 +300,7 @@
 #levelup .buttons .k-btn img { width: calc(12px * var(--u)); height: calc(12px * var(--u)); }
 @media (max-width: 900px) { .train-grid { grid-template-columns: repeat(2, 1fr); } }
 .train .k-btn { min-height: calc(20px * var(--u)); padding: 0 12px; }
+.langs { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+.langs span { margin-right: 6px; }
+.langs .lang { padding: 3px 10px; min-height: 0; }
+.langs .lang.sel { border-image-source: url('../assets/ui/hover.png'); color: var(--wood-hot); }

@@ -4,37 +4,37 @@ const SKILLS = {
   spin: {
     name: 'Вихрь клинков', icon: 4, max: 5,
     cd: [6, 5, 4.2, 3.5, 2.8], rad: [155, 175, 195, 215, 240],
-    text: l => l === 0 ? 'Время от времени режет всех титанов вокруг. Работает только в воздухе' : 'Вихрь шире и чаще',
+    text: l => l === 0 ? tr('Время от времени режет всех титанов вокруг. Работает только в воздухе') : tr('Вихрь шире и чаще'),
   },
   flash: {
     name: 'Световая ракета', icon: 7, max: 5,
     cd: [9, 8, 7, 6, 5], rad: [220, 250, 280, 310, 350], dur: [2, 2.4, 2.8, 3.2, 3.6],
-    text: l => l === 0 ? 'Ослепляет толпу титанов: они замирают, а их затылок проще достать' : 'Вспышка шире, титаны слепнут дольше',
+    text: l => l === 0 ? tr('Ослепляет толпу титанов: они замирают, а их затылок проще достать') : tr('Вспышка шире, титаны слепнут дольше'),
   },
   cannon: {
     name: 'Пушки гарнизона', icon: 8, max: 5,
     cd: [4, 3.6, 3.2, 2.8, 2.4], shots: [1, 1, 2, 2, 3], stun: [0.8, 1, 1, 1.2, 1.4],
-    text: l => l === 0 ? 'Стена стреляет по титанам рядом с тобой: сбивает с ног и прерывает захват' : l === 1 || l === 3 ? 'Залп из двух ядер' : 'Пушки бьют чаще и сильнее',
+    text: l => l === 0 ? tr('Стена стреляет по титанам рядом с тобой: сбивает с ног и прерывает захват') : l === 1 || l === 3 ? tr('Залп из двух ядер') : tr('Пушки бьют чаще и сильнее'),
   },
   ally: {
     name: 'Боевой товарищ', icon: 9, max: 5,
     count: [1, 1, 2, 2, 3], cd: [9, 7, 7, 5.5, 5.5],
-    text: l => l === 0 ? 'С тобой летит разведчик и сам срезает затылки титанам' : l === 1 || l === 3 ? 'Ещё один товарищ в отряде' : 'Товарищи атакуют чаще',
+    text: l => l === 0 ? tr('С тобой летит разведчик и сам срезает затылки титанам') : l === 1 || l === 3 ? tr('Ещё один товарищ в отряде') : tr('Товарищи атакуют чаще'),
   },
   trap: {
     name: 'Ловушка Ханджи', icon: 10, max: 5,
     cd: [12, 11, 10, 9, 8], caps: [1, 1, 2, 2, 3], dur: [4, 5, 5, 6, 7],
-    text: l => l === 0 ? 'Сеть из тросов на пути титана: пойманный стоит на месте, затылок низко' : 'Сеть держит дольше и ловит больше титанов',
+    text: l => l === 0 ? tr('Сеть из тросов на пути титана: пойманный стоит на месте, затылок низко') : tr('Сеть держит дольше и ловит больше титанов'),
   },
 };
 
 const PASSIVES = {
-  speed: { name: 'Мощная лебёдка', icon: 0, max: 5, text: () => 'Летаешь на 10% быстрее', apply: s => { s.speed *= 1.1; } },
-  range: { name: 'Длинные тросы', icon: 1, max: 5, text: () => 'Тросы и атака достают на 15% дальше', apply: s => { s.range *= 1.15; s.engage *= 1.15; } },
-  orbit: { name: 'Быстрый облёт', icon: 2, max: 5, text: () => 'Заходишь титану за спину на 15% быстрее', apply: s => { s.orbit *= 1.15; } },
-  hp: { name: 'Перевязка', icon: 3, max: 5, text: () => '+1 к здоровью и лечение', apply: s => { s.maxHp += 1; player.hp = Math.min(s.maxHp, player.hp + 2); } },
-  heal: { name: 'Полевой медик', icon: 5, max: 5, text: () => 'Лечение за убийства приходит быстрее', apply: s => { s.healEvery = Math.max(6, s.healEvery - 4); } },
-  glide: { name: 'Лёгкий газ', icon: 6, max: 5, text: () => 'Планируешь вниз на 25% медленнее', apply: s => { s.glide *= 0.75; } },
+  speed: { name: 'Мощная лебёдка', icon: 0, max: 5, text: () => tr('Летаешь на 10% быстрее'), apply: s => { s.speed *= 1.1; } },
+  range: { name: 'Длинные тросы', icon: 1, max: 5, text: () => tr('Тросы и атака достают на 15% дальше'), apply: s => { s.range *= 1.15; s.engage *= 1.15; } },
+  orbit: { name: 'Быстрый облёт', icon: 2, max: 5, text: () => tr('Заходишь титану за спину на 15% быстрее'), apply: s => { s.orbit *= 1.15; } },
+  hp: { name: 'Перевязка', icon: 3, max: 5, text: () => tr('+1 к здоровью и лечение'), apply: s => { s.maxHp += 1; player.hp = Math.min(s.maxHp, player.hp + 2); } },
+  heal: { name: 'Полевой медик', icon: 5, max: 5, text: () => tr('Лечение за убийства приходит быстрее'), apply: s => { s.healEvery = Math.max(6, s.healEvery - 4); } },
+  glide: { name: 'Лёгкий газ', icon: 6, max: 5, text: () => tr('Планируешь вниз на 25% медленнее'), apply: s => { s.glide *= 0.75; } },
 };
 
 const BOSSES = [
@@ -44,6 +44,9 @@ const BOSSES = [
   { kind: 'colossal', at: 570, name: 'Колоссальный титан', size: 300, hp: 4, speed: 22, wp: 'лодыжки', wz: 0.05, ws: 0.12, kneel: 4 },
 ];
 
+trFields(Object.values(SKILLS), ['name']);
+trFields(Object.values(PASSIVES), ['name']);
+trFields(BOSSES, ['name', 'wp']);
 let allies = [], traps = [], shots = [], rocks = [], marks = [];
 
 function combatReset() {
@@ -63,11 +66,11 @@ function combatReset() {
 
 function skillLevelText(id, l) {
   const S = SKILLS[id];
-  if (id === 'spin') return `Каждые ${S.cd[l]} с`;
-  if (id === 'flash') return `Каждые ${S.cd[l]} с, ослепляет на ${S.dur[l]} с`;
-  if (id === 'cannon') return `Каждые ${S.cd[l]} с, ядер: ${S.shots[l]}`;
-  if (id === 'ally') return `Товарищей: ${S.count[l]}, атака раз в ${S.cd[l]} с`;
-  return `Каждые ${S.cd[l]} с, ловит до ${S.caps[l]}, держит ${S.dur[l]} с`;
+  if (id === 'spin') return tr('Каждые {0} с', S.cd[l]);
+  if (id === 'flash') return tr('Каждые {0} с, ослепляет на {1} с', S.cd[l], S.dur[l]);
+  if (id === 'cannon') return tr('Каждые {0} с, ядер: {1}', S.cd[l], S.shots[l]);
+  if (id === 'ally') return tr('Товарищей: {0}, атака раз в {1} с', S.count[l], S.cd[l]);
+  return tr('Каждые {0} с, ловит до {1}, держит {2} с', S.cd[l], S.caps[l], S.dur[l]);
 }
 
 function rollChoices(n) {
@@ -250,7 +253,7 @@ function updateTraps(dt) {
         stunTitan(t, tr.dur, 'trap');
         t.bound = tr;
         tr.caught.push(t);
-        addText('Пойман!', t.x, t.y - KZ * t.H * 0.6, '#7ad8d0');
+        addText(tr('Пойман!'), t.x, t.y - KZ * t.H * 0.6, '#7ad8d0');
         sfx('snap', { x: t.x, y: t.y, vol: 0.8 });
         if (tr.caught.length >= tr.caps) break;
       }
@@ -376,7 +379,7 @@ function spawnBoss(def, cycle = 0) {
   };
   titans.push(t);
   game.boss = t;
-  game.banner = { text: def.name, sub: `Подрежь ${def.wp}, чтобы открыть затылок`, t: 3.4 };
+  game.banner = { text: def.name, sub: tr('Подрежь {0}, чтобы открыть затылок', def.wp), t: 3.4 };
   game.shake = 18;
   fireFlare(p.x + Math.cos(a) * 300, p.y + Math.sin(a) * 300, '#ff3a2a');
   sfx('horn', { vol: 0.9 });
@@ -418,7 +421,7 @@ function cutWeakPoint(t, w) {
   p.engageCd = 0.25;
   gainXp(2);
   const left = b.wp.filter(x => !x.cut).length;
-  if (left) { addText(`Подрезано: ${b.def.wp} ${2 - left}/2`, q.x, q.y - KZ * q.z - 30, '#ffd27a'); return; }
+  if (left) { addText(tr('Подрезано: {0} {1}/2', b.def.wp, 2 - left), q.x, q.y - KZ * q.z - 30, '#ffd27a'); return; }
   b.kneel = b.def.kneel;
   t.stun = b.kneel;
   t.state = 'walk';
@@ -430,7 +433,7 @@ function cutWeakPoint(t, w) {
   rings.push({ x: t.x, y: t.y, r: t.H * 0.6, life: 0.35, color: '#d8c8a0' });
   for (let i = 0; i < 24; i++) { const a = rand(0, TAU), s = rand(100, 320); particles.push({ x: t.x + rand(-30, 30), y: t.y, vx: Math.cos(a) * s, vy: Math.sin(a) * s * 0.6, life: 0.7, max: 0.7, size: 2, g: 0, kind: 'dust' }); }
   sfx('boom', { x: t.x, y: t.y, vol: 1, rate: 0.6 });
-  game.banner = { text: 'На колени!', sub: 'Затылок открыт — бей!', t: 1.6, win: true };
+  game.banner = { text: tr('На колени!'), sub: tr('Затылок открыт — бей!'), t: 1.6, win: true };
 }
 
 function bossRise(t) {
@@ -481,7 +484,7 @@ function updateBoss(t, dt) {
       for (let i = 0; i < 3; i++) rings.push({ x: t.x, y: t.y - 10, r: 160 + i * 110, life: 0.35 + i * 0.08, color: '#fff6e0' });
       game.shake = Math.max(game.shake, 8);
       for (let i = 0; i < 3; i++) { const a = rand(0, TAU); spawnTitan({ x: t.x + Math.cos(a) * 320, y: t.y + Math.sin(a) * 320 }, Math.random() < 0.5 ? 'small' : 'normal'); }
-      game.banner = { text: 'Зверь зовёт стаю!', sub: 'Титаны идут на рёв', t: 1.8 };
+      game.banner = { text: tr('Зверь зовёт стаю!'), sub: tr('Титаны идут на рёв'), t: 1.8 };
     }
   }
   if (b.kind === 'colossal') {
@@ -536,7 +539,7 @@ function updateBoss(t, dt) {
         b.act = 'walk';
         b.cd = rand(5, 7);
         t.stun = 1.8;
-        addText('Застрял!', t.x, t.y - KZ * t.H * 0.9, '#ffd27a');
+        addText(tr('Застрял!'), t.x, t.y - KZ * t.H * 0.9, '#ffd27a');
         sfx('thud', { x: t.x, y: t.y, vol: 0.9 });
       }
       return true;
@@ -640,7 +643,7 @@ function bossHit(t) {
     killTitan(t);
     gainXp(25 + game.bossKills * 10);
     if (player.hp < stats.maxHp) player.hp++;
-    game.banner = { text: b.name, sub: 'Повержен! Награда — улучшение', t: 2.6, win: true };
+    game.banner = { text: b.name, sub: tr('Повержен! Награда — улучшение'), t: 2.6, win: true };
     sfx('victory', { vol: 0.7 });
     pendingLevels++;
     if (state === 'play') openLevelUp();
@@ -649,7 +652,7 @@ function bossHit(t) {
   bossRise(t);
   b.harden = 1.6;
   sfx('crystal', { x: t.x, y: t.y, vol: 0.8 });
-  addText(`Есть! Осталось ${b.hp}/${b.max}`, n.x, n.y - KZ * n.z - 40, '#9fe8ff');
+  addText(tr('Есть! Осталось {0}/{1}', b.hp, b.max), n.x, n.y - KZ * n.z - 40, '#9fe8ff');
   gainXp(6);
   if (b.kind === 'female') { b.act = 'flee'; b.actT = 2.4; }
 }

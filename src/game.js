@@ -43,6 +43,9 @@ const CHARS = [
   { id: 'mikasa', name: 'Микаса', rarity: 5, hair: '#151214', look: 'scarf', ability: 'Облёт +35%, после убийства сразу летит к следующему' },
   { id: 'levi', name: 'Леви', rarity: 5, hair: '#121014', look: 'undercut', ability: 'Сильнейший: вихрь клинков с начала, быстрее во всём' },
 ];
+trFields(FACTIONS, ['name', 'diff', 'desc']);
+trFields(Object.values(RARITY), ['name']);
+trFields(CHARS, ['name', 'ability']);
 const charById = id => CHARS.find(c => c.id === id) || CHARS[0];
 
 
@@ -99,6 +102,9 @@ let player, stats, game, cam;
 let choices = [], pendingLevels = 0, sel = 1;
 const SAVE_KEY = 'aot-td-save';
 let save = loadSave();
+LANG = pickLang(save);
+document.documentElement.lang = LANG;
+document.title = tr('Атака титанов: Survivors');
 factionSel = clamp(save.faction || 0, 0, 2);
 
 function loadSave() {
@@ -571,7 +577,7 @@ function titanHit(t) {
   slashes.push({ x: n.x, y: n.y - KZ * n.z, ang: t.face + Math.PI, life: 0.22 });
   sfx('slash', { vol: 1 });
   sfx('cut', { vol: 0.9, rate: 0.7 });
-  addText('Ещё удар!', n.x, n.y - KZ * n.z - 40, '#ffd27a');
+  addText(tr('Ещё удар!'), n.x, n.y - KZ * n.z - 40, '#ffd27a');
   if (p.target === t) {
     p.mode = 'fly';
     p.target = null;
@@ -697,7 +703,7 @@ function hurtPlayer(t) {
     game.revives--;
     p.hp = Math.min(2, stats.maxHp);
     p.inv = 3;
-    game.banner = { text: 'Второе дыхание!', sub: 'Вставай, солдат!', t: 2.2, win: true };
+    game.banner = { text: tr('Второе дыхание!'), sub: tr('Вставай, солдат!'), t: 2.2, win: true };
     for (const o of titans) if (!o.dying && Math.hypot(o.x - p.x, o.y - p.y) < 450) stunTitan(o, 2, 'flash');
     rings.push({ x: p.x, y: p.y, r: 450, life: 0.35, color: '#fff6c8' });
     sfx('levelup', { vol: 0.8 });
@@ -735,7 +741,7 @@ function killTitan(t) {
   game.lastKill = game.time;
   if (stats.rage && game.combo === 3 && player.hp < stats.maxHp) {
     player.hp++;
-    addText('ЯРОСТЬ! +1 ♥', player.x, player.y - KZ * player.z - 60, '#ff6b4a');
+    addText(tr('ЯРОСТЬ! +1 ♥'), player.x, player.y - KZ * player.z - 60, '#ff6b4a');
   }
   if (stats.stun) {
     for (const o of titans) {
@@ -753,7 +759,7 @@ function killTitan(t) {
   steam(n.x, n.y - KZ * n.z, 10);
   slashes.push({ x: n.x, y: n.y - KZ * n.z, ang: t.face + Math.PI, life: 0.22 });
   splatDecal(t.x + Math.cos(t.face) * t.H * 0.55, t.y + Math.sin(t.face) * t.H * 0.3, Math.max(6, Math.round(t.Hp * 0.12)));
-  addText(game.combo > 1 ? `КОМБО x${game.combo}` : 'ЗАТЫЛОК!', n.x, n.y - KZ * n.z - 40, game.combo > 1 ? '#ffd27a' : '#ffffff');
+  addText(game.combo > 1 ? tr('КОМБО x{0}', game.combo) : tr('ЗАТЫЛОК!'), n.x, n.y - KZ * n.z - 40, game.combo > 1 ? '#ffd27a' : '#ffffff');
   if (player.target === t || game.slowT > 0) texts[texts.length - 1].big = true;
   game.healCount++;
   if (game.healCount >= stats.healEvery) {
@@ -818,7 +824,7 @@ function engage() {
   }
   p.wp = foundWp;
   if (!found) {
-    addText(tooLow ? 'Слишком низко! Набери высоту' : hard ? 'Затылок затвердел — подожди!' : 'Рядом нет титанов', p.x, p.y - KZ * p.z - 40, tooLow ? '#ffb347' : hard ? '#9fe8ff' : '#e9e4da');
+    addText(tooLow ? tr('Слишком низко! Набери высоту') : hard ? tr('Затылок затвердел — подожди!') : tr('Рядом нет титанов'), p.x, p.y - KZ * p.z - 40, tooLow ? '#ffb347' : hard ? '#9fe8ff' : '#e9e4da');
     sfx('tick', { vol: 0.6 });
     if (tooLow) p.lowT = 0.8;
     return;
@@ -1024,7 +1030,7 @@ function updateTitans(dt) {
       t.stun -= dt;
       if (t.boss) {
         t.boss.harden = Math.max(0, t.boss.harden - dt);
-        if (t.boss.kneel > 0 && (t.boss.kneel -= dt) <= 0) { bossRise(t); addText('Сухожилия срослись!', t.x, t.y - KZ * t.H * 0.9, '#9fe8ff'); }
+        if (t.boss.kneel > 0 && (t.boss.kneel -= dt) <= 0) { bossRise(t); addText(tr('Сухожилия срослись!'), t.x, t.y - KZ * t.H * 0.9, '#9fe8ff'); }
       }
       continue;
     }
@@ -1960,7 +1966,7 @@ function drawMenu() {
   if (resetQueued) {
     ctx.textAlign = 'center';
     ctx.font = font(UP * 9);
-    shadowText('Строим карту…', W / 2, H / 2 + UP * 4, '#ffd27a');
+    shadowText(tr('Строим карту…'), W / 2, H / 2 + UP * 4, '#ffd27a');
   }
   if (menuMsgT > 0) {
     ctx.textAlign = 'center';
@@ -2432,7 +2438,7 @@ function drawLoading() {
   ctx.fillRect(0, 0, W, H);
   ctx.textAlign = 'center';
   ctx.font = font(UP * 10);
-  shadowText('АТАКА ТИТАНОВ', W / 2, H / 2 - UP * 12, '#e8c45a');
+  shadowText(tr('АТАКА ТИТАНОВ'), W / 2, H / 2 - UP * 12, '#e8c45a');
   ctx.fillStyle = '#0e140a';
   ctx.fillRect(W / 2 - UP * 60, H / 2, UP * 120, UP * 5);
   ctx.fillStyle = '#7cc84a';

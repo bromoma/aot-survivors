@@ -1,15 +1,15 @@
 'use strict';
 
 const TRAINING = [
-  { id: 'hp', name: 'Выносливость', icon: 3, max: 3, cost: [300, 800, 1800], text: l => `+${l} к здоровью в начале забега`, apply: (s, l) => { s.maxHp += l; } },
-  { id: 'speed', name: 'Лебёдка', icon: 0, max: 5, cost: [150, 300, 550, 900, 1400], text: l => `Полёт на ${l * 4}% быстрее`, apply: (s, l) => { s.speed *= 1 + l * 0.04; } },
-  { id: 'gas', name: 'Газовые баллоны', icon: 6, max: 5, cost: [150, 300, 550, 900, 1400], text: l => `Планируешь вниз на ${l * 8}% медленнее`, apply: (s, l) => { s.glide *= 1 - l * 0.08; } },
-  { id: 'xp', name: 'Строевая подготовка', icon: 11, max: 5, cost: [200, 400, 700, 1100, 1600], text: l => `+${l * 6}% опыта`, apply: (s, l) => { s.xp *= 1 + l * 0.06; } },
-  { id: 'greed', name: 'Жалованье', icon: 12, max: 5, cost: [250, 500, 900, 1400, 2000], text: l => `+${l * 10}% жетонов за забег` },
-  { id: 'heal', name: 'Полевой госпиталь', icon: 5, max: 3, cost: [300, 700, 1300], text: l => `Лечение за убийства на ${l * 2} раньше`, apply: (s, l) => { s.healEvery -= l * 2; } },
-  { id: 'reroll', name: 'Запасной план', icon: 13, max: 3, cost: [400, 900, 1600], text: l => `${l} ${l === 1 ? 'переброс' : 'переброса'} карточек уровня за забег (клавиша R)` },
-  { id: 'start', name: 'Боевой опыт', icon: 15, max: 1, cost: [1500], text: () => 'Начинаешь забег со случайным умением 1 уровня' },
-  { id: 'revive', name: 'Второе дыхание', icon: 14, max: 1, cost: [2500], text: () => 'Один раз за забег встаёшь после смерти с 2 сердцами' },
+  { id: 'hp', name: 'Выносливость', icon: 3, max: 3, cost: [300, 800, 1800], text: l => tr('+{0} к здоровью в начале забега', l), apply: (s, l) => { s.maxHp += l; } },
+  { id: 'speed', name: 'Лебёдка', icon: 0, max: 5, cost: [150, 300, 550, 900, 1400], text: l => tr('Полёт на {0}% быстрее', l * 4), apply: (s, l) => { s.speed *= 1 + l * 0.04; } },
+  { id: 'gas', name: 'Газовые баллоны', icon: 6, max: 5, cost: [150, 300, 550, 900, 1400], text: l => tr('Планируешь вниз на {0}% медленнее', l * 8), apply: (s, l) => { s.glide *= 1 - l * 0.08; } },
+  { id: 'xp', name: 'Строевая подготовка', icon: 11, max: 5, cost: [200, 400, 700, 1100, 1600], text: l => tr('+{0}% опыта', l * 6), apply: (s, l) => { s.xp *= 1 + l * 0.06; } },
+  { id: 'greed', name: 'Жалованье', icon: 12, max: 5, cost: [250, 500, 900, 1400, 2000], text: l => tr('+{0}% жетонов за забег', l * 10) },
+  { id: 'heal', name: 'Полевой госпиталь', icon: 5, max: 3, cost: [300, 700, 1300], text: l => tr('Лечение за убийства на {0} раньше', l * 2), apply: (s, l) => { s.healEvery -= l * 2; } },
+  { id: 'reroll', name: 'Запасной план', icon: 13, max: 3, cost: [400, 900, 1600], text: l => tr(l === 1 ? '{0} переброс карточек уровня за забег (клавиша R)' : '{0} переброса карточек уровня за забег (клавиша R)', l) },
+  { id: 'start', name: 'Боевой опыт', icon: 15, max: 1, cost: [1500], text: () => tr('Начинаешь забег со случайным умением 1 уровня') },
+  { id: 'revive', name: 'Второе дыхание', icon: 14, max: 1, cost: [2500], text: () => tr('Один раз за забег встаёшь после смерти с 2 сердцами') },
 ];
 
 const RANKS = [
@@ -17,6 +17,8 @@ const RANKS = [
   { at: 12, name: 'Командир отделения' }, { at: 18, name: 'Капитан' }, { at: 25, name: 'Командор' },
 ];
 
+trFields(TRAINING, ['name']);
+trFields(RANKS, ['name']);
 const FACTION_WIN_NAMES = { mp: 'Военная полиция', garrison: 'Гарнизон', scouts: 'Разведкорпус' };
 const BOSS_NAMES = { female: 'Женская особь', armored: 'Бронированный', beast: 'Звероподобный', colossal: 'Колоссальный' };
 
@@ -24,29 +26,29 @@ function stat(k) { return (save.stats && save.stats[k]) || 0; }
 function trainingTotal() { return Object.values(save.meta || {}).reduce((a, b) => a + b, 0); }
 
 const ACHIEVEMENTS = [
-  ...[[50, 50], [250, 100], [1000, 200], [3000, 400], [10000, 800]].map(([n, r], i) => ({ id: 'kills' + i, name: 'Охотник на титанов ' + ['I', 'II', 'III', 'IV', 'V'][i], text: `Убей ${n} титанов за всё время`, goal: n, reward: r, get: () => stat('kills') })),
-  ...[[1, 30], [10, 100], [50, 300]].map(([n, r], i) => ({ id: 'runs' + i, name: ['Первая вылазка', 'Ветеран', 'Живая легенда'][i], text: `Сыграй ${n} ${n === 1 ? 'забег' : 'забегов'}`, goal: n, reward: r, get: () => stat('runs') })),
-  ...Object.entries(BOSS_NAMES).map(([k, nm], i) => ({ id: 'boss_' + k, name: nm + ' повержен' + (k === 'female' ? 'а' : ''), text: `Победи шифтера «${nm}»`, goal: 1, reward: [150, 200, 250, 400][i], get: () => (save.stats && save.stats.bosses && save.stats.bosses[k]) || 0 })),
-  { id: 'boss_all', name: 'Охота на шифтеров', text: 'Победи всех четырёх шифтеров за один забег', goal: 4, reward: 600, get: () => stat('maxBossRun') },
-  ...Object.entries(FACTION_WIN_NAMES).map(([k, nm], i) => ({ id: 'win_' + k, name: ['Порядок в столице', 'Шиганшина отбита', 'Вылазка за стену'][i], text: `Продержись 10 минут: ${nm}`, goal: 1, reward: [200, 300, 500][i], get: () => (save.stats && save.stats.winsBy && save.stats.winsBy[k]) || 0 })),
-  ...[[10, 60], [20, 150], [30, 300]].map(([n, r], i) => ({ id: 'lvl' + i, name: ['Быстро учусь', 'Опытный боец', 'Элита'][i], text: `Достигни ${n} уровня за один забег`, goal: n, reward: r, get: () => stat('bestLevel') })),
-  ...[[10, 60], [30, 150], [60, 300]].map(([n, r], i) => ({ id: 'combo' + i, name: ['Комбо', 'Вихрь', 'Ураган'][i], text: `Сделай комбо x${n}`, goal: n, reward: r, get: () => stat('maxCombo') })),
-  ...[[3, 80], [6, 200], [9, 500]].map(([n, r], i) => ({ id: 'squad' + i, name: ['Своя команда', 'Отряд Леви', 'Весь отряд'][i], text: `Открой ${n} бойцов`, goal: n, reward: r, get: () => Object.keys(save.chars).length })),
-  { id: 'skill5', name: 'Мастер умения', text: 'Прокачай умение до 5 уровня', goal: 5, reward: 100, get: () => stat('maxSkill') },
-  { id: 'arsenal', name: 'Полный арсенал', text: 'Возьми все 5 умений за один забег', goal: 5, reward: 250, get: () => stat('maxSkillsRun') },
-  { id: 'train5', name: 'Новобранец', text: 'Купи 5 уровней тренировок', goal: 5, reward: 100, get: trainingTotal },
-  { id: 'train20', name: 'Учебка пройдена', text: 'Купи 20 уровней тренировок', goal: 20, reward: 300, get: trainingTotal },
-  { id: 'saver', name: 'Защитник города', text: 'Продержись 10 минут за Военную полицию, потеряв не больше 3 горожан', goal: 1, reward: 300, get: () => stat('cleanCity') },
+  ...[[50, 50], [250, 100], [1000, 200], [3000, 400], [10000, 800]].map(([n, r], i) => ({ id: 'kills' + i, get name() { return tr('Охотник на титанов {0}', ['I', 'II', 'III', 'IV', 'V'][i]); }, get text() { return tr('Убей {0} титанов за всё время', n); }, goal: n, reward: r, get: () => stat('kills') })),
+  ...[[1, 30], [10, 100], [50, 300]].map(([n, r], i) => ({ id: 'runs' + i, get name() { return tr(['Первая вылазка', 'Ветеран', 'Живая легенда'][i]); }, get text() { return tr(n === 1 ? 'Сыграй {0} забег' : 'Сыграй {0} забегов', n); }, goal: n, reward: r, get: () => stat('runs') })),
+  ...Object.entries(BOSS_NAMES).map(([k, nm], i) => ({ id: 'boss_' + k, get name() { return tr(nm + ' повержен' + (k === 'female' ? 'а' : '')); }, get text() { return tr('Победи шифтера «{0}»', tr(nm)); }, goal: 1, reward: [150, 200, 250, 400][i], get: () => (save.stats && save.stats.bosses && save.stats.bosses[k]) || 0 })),
+  { id: 'boss_all', get name() { return tr('Охота на шифтеров'); }, get text() { return tr('Победи всех четырёх шифтеров за один забег'); }, goal: 4, reward: 600, get: () => stat('maxBossRun') },
+  ...Object.entries(FACTION_WIN_NAMES).map(([k, nm], i) => ({ id: 'win_' + k, get name() { return tr(['Порядок в столице', 'Шиганшина отбита', 'Вылазка за стену'][i]); }, get text() { return tr('Продержись 10 минут: {0}', tr(nm)); }, goal: 1, reward: [200, 300, 500][i], get: () => (save.stats && save.stats.winsBy && save.stats.winsBy[k]) || 0 })),
+  ...[[10, 60], [20, 150], [30, 300]].map(([n, r], i) => ({ id: 'lvl' + i, get name() { return tr(['Быстро учусь', 'Опытный боец', 'Элита'][i]); }, get text() { return tr('Достигни {0} уровня за один забег', n); }, goal: n, reward: r, get: () => stat('bestLevel') })),
+  ...[[10, 60], [30, 150], [60, 300]].map(([n, r], i) => ({ id: 'combo' + i, get name() { return tr(['Комбо', 'Вихрь', 'Ураган'][i]); }, get text() { return tr('Сделай комбо x{0}', n); }, goal: n, reward: r, get: () => stat('maxCombo') })),
+  ...[[3, 80], [6, 200], [9, 500]].map(([n, r], i) => ({ id: 'squad' + i, get name() { return tr(['Своя команда', 'Отряд Леви', 'Весь отряд'][i]); }, get text() { return tr('Открой {0} бойцов', n); }, goal: n, reward: r, get: () => Object.keys(save.chars).length })),
+  { id: 'skill5', get name() { return tr('Мастер умения'); }, get text() { return tr('Прокачай умение до 5 уровня'); }, goal: 5, reward: 100, get: () => stat('maxSkill') },
+  { id: 'arsenal', get name() { return tr('Полный арсенал'); }, get text() { return tr('Возьми все 5 умений за один забег'); }, goal: 5, reward: 250, get: () => stat('maxSkillsRun') },
+  { id: 'train5', get name() { return tr('Новобранец'); }, get text() { return tr('Купи {0} уровней тренировок', 5); }, goal: 5, reward: 100, get: trainingTotal },
+  { id: 'train20', get name() { return tr('Учебка пройдена'); }, get text() { return tr('Купи {0} уровней тренировок', 20); }, goal: 20, reward: 300, get: trainingTotal },
+  { id: 'saver', get name() { return tr('Защитник города'); }, get text() { return tr('Продержись 10 минут за Военную полицию, потеряв не больше 3 горожан'); }, goal: 1, reward: 300, get: () => stat('cleanCity') },
 ];
 
 const DAILY_POOL = [
-  { type: 'kills', goals: [100, 200, 300], reward: 120, text: n => `Убей ${n} титанов` },
-  { type: 'boss', goals: [1], reward: 150, text: () => 'Победи любого шифтера' },
-  { type: 'level', goals: [12, 15, 18], reward: 120, text: n => `Достигни ${n} уровня за забег` },
-  { type: 'combo', goals: [10, 15], reward: 120, text: n => `Сделай комбо x${n}` },
-  { type: 'time', goals: [300, 600], reward: 100, text: n => `Продержись в боях ${n / 60} мин суммарно` },
-  { type: 'faction', goals: [1], reward: 100, text: (n, f) => `Сыграй забег от 3 минут: ${FACTION_WIN_NAMES[f]}` },
-  { type: 'pull', goals: [1], reward: 80, text: () => 'Призови бойца' },
+  { type: 'kills', goals: [100, 200, 300], reward: 120, text: n => tr('Убей {0} титанов', n) },
+  { type: 'boss', goals: [1], reward: 150, text: () => tr('Победи любого шифтера') },
+  { type: 'level', goals: [12, 15, 18], reward: 120, text: n => tr('Достигни {0} уровня за забег', n) },
+  { type: 'combo', goals: [10, 15], reward: 120, text: n => tr('Сделай комбо x{0}', n) },
+  { type: 'time', goals: [300, 600], reward: 100, text: n => tr('Продержись в боях {0} мин суммарно', n / 60) },
+  { type: 'faction', goals: [1], reward: 100, text: (n, f) => tr('Сыграй забег от 3 минут: {0}', tr(FACTION_WIN_NAMES[f])) },
+  { type: 'pull', goals: [1], reward: 80, text: () => tr('Призови бойца') },
 ];
 
 function todayKey() {

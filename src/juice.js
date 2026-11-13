@@ -178,7 +178,7 @@ function updateTitanSpecial(t, dt) {
       for (let i = 0; i < 3; i++) rings.push({ x: t.x, y: t.y - 10, r: 120 + i * 90, life: 0.35 + i * 0.08, color: '#fff6e0' });
       for (const o of titans) if (o !== t && !o.dying && !o.boss && Math.hypot(o.x - t.x, o.y - t.y) < 520) o.rageT = 3.5;
       t.rageT = 3.5;
-      if (Math.hypot(p.x - t.x, p.y - t.y) < 520) addText('Рёв!', t.x, t.y - KZ * t.H * 0.9, '#ff9a6a');
+      if (Math.hypot(p.x - t.x, p.y - t.y) < 520) addText(tr('Рёв!'), t.x, t.y - KZ * t.H * 0.9, '#ff9a6a');
     }
     if (t.spT >= 1.0) t.state = 'walk';
     return true;
