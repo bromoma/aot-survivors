@@ -13,7 +13,7 @@ const SND = (() => {
     ruins: ['ruins_lament', 'ruins_rising_moon'],
     field: ['field_fouler_horizon', 'field_kings_feast'],
   };
-  const LIMIT = { boom: 0.06, snap: 0.08, crystal: 0.3, horn: 1, rumble: 0.5, steamburst: 1, flashbang: 0.3, gas: 0.22, rope: 0.12, step: 0.09, swing: 0.2, hiss: 0.25, cut: 0.05, chime: 0.05, click: 0.03, flare: 0.3, chomp: 0.4, tick: 0.25 };
+  const LIMIT = { roar: 0.8, boom: 0.06, snap: 0.08, crystal: 0.3, horn: 1, rumble: 0.5, steamburst: 1, flashbang: 0.3, gas: 0.22, rope: 0.12, step: 0.09, swing: 0.2, hiss: 0.25, cut: 0.05, chime: 0.05, click: 0.03, flare: 0.3, chomp: 0.4, tick: 0.25 };
 
   let ac = null, master, sfxBus, comp, noiseBuf = null, unlocked = false, muted = false;
   const buffers = {};
@@ -245,6 +245,11 @@ const SND = (() => {
     steamburst(out, t) {
       noise(out, t, 2.2, 'highpass', 1400, 700, 0.6, 0.7, 0.08);
       tone(out, t, 0.8, 'sine', 70, 40, 0.5, 0.02);
+    },
+    roar(out, t) {
+      tone(out, t, 1.1, 'sawtooth', 160, 70, 0.16, 0.06);
+      tone(out, t, 1.1, 'sawtooth', 118, 52, 0.12, 0.06);
+      noise(out, t, 1.0, 'bandpass', 600, 220, 1.1, 0.5, 0.08);
     },
     rumble(out, t) {
       noise(out, t, 1.0, 'lowpass', 220, 90, 0.8, 0.8, 0.05);

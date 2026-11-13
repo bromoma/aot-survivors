@@ -36,6 +36,7 @@ if (!only || only === 'sprites') {
     fs.copyFileSync(path.join(root, 'assets/sprites/tall_tower.png'), path.join(root, 'assets/sprites/house_tower.png'));
     for (const k of ['a', 'b', 'c', 'tower']) fs.unlinkSync(path.join(root, `assets/sprites/tall_${k}.png`));
   }
+  for (const t of ['normal', 'lanky', 'fat', 'aberrant']) if (fs.existsSync(raw(`aot_titan_${t}_grab.png`))) for (const h of [110, 140, 170, 200]) run('cut.js', [raw(`aot_titan_${t}_grab.png`), `titan_${t}_${h}_grab`, String(h), DIRS, 'assets/sprites']);
   for (const [k, h] of [['female', 170], ['armored', 190], ['beast', 210], ['colossal', 300]]) if (fs.existsSync(raw(`aot_boss_${k}.png`))) run('cut.js', [raw(`aot_boss_${k}.png`), `boss_${k}`, String(h), DIRS, 'assets/sprites']);
   if (fs.existsSync(raw('aot_ruins.png'))) run('cut.js', [raw('aot_ruins.png'), 'ruin', '110', 'r1,r2,r3,r4', 'assets/sprites']);
   if (fs.existsSync(raw('aot_wall.png'))) run('cut.js', [raw('aot_wall.png'), 'wall', '96', 'a', 'assets/sprites']);

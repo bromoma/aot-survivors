@@ -1,0 +1,249 @@
+'use strict';
+
+let trail = [], xslashes = [];
+
+function juiceReset() {
+  trail = [];
+  xslashes = [];
+  game.slowT = 0;
+  game.zoomT = 0;
+  game.zoomAt = null;
+  game.trailT = 0;
+  game.kickT = 0;
+}
+
+function drawSprite(img, footX, footY, o = {}) {
+  const sxk = o.sx ?? 1, syk = o.sy ?? 1, sh = o.shear ?? 0;
+  if (sxk === 1 && syk === 1 && !sh) {
+    bctx.drawImage(img, Math.round(footX - img.width / 2), Math.round(footY - img.height));
+    return;
+  }
+  bctx.save();
+  bctx.translate(Math.round(footX), Math.round(footY));
+  bctx.transform(sxk, 0, -sh, syk, 0, 0);
+  bctx.drawImage(img, -Math.round(img.width / 2), -img.height);
+  bctx.restore();
+}
+
+function titanPoseFx(t) {
+  const now = performance.now() / 1000;
+  const o = { sx: 1, sy: 1, shear: 0, ox: 0, oy: 0 };
+  if (t.stun > 0) { o.shear = Math.sin(now * 18 + t.x) * 0.05; return o; }
+  const st = t.state;
+  if (st === 'walk') {
+    const s = Math.sin(t.phase);
+    o.shear = s * 0.045 * (t.aberrant ? 1.8 : 1);
+    o.sy = 1 - Math.abs(s) * 0.025;
+    o.sx = 1 + Math.abs(s) * 0.015;
+    o.oy = -Math.round(Math.abs(s) * 3);
+    if (t.rageT > 0) o.shear *= 1.6;
+  } else if (st === 'grab' || st === 'recover') {
+    const k = st === 'grab' ? Math.min(1, t.grabT / grabWind(t)) : 1 - Math.min(1, t.grabT / 0.5);
+    const c = Math.cos(t.grabAng);
+    if (st === 'grab' && k < 0.35) { o.shear = -c * 0.1 * (k / 0.35); o.sy = 1 + 0.04 * (k / 0.35); }
+    else { o.shear = c * 0.2 * k; o.sy = 1 - 0.05 * k; o.ox = Math.round(c * k * 10); o.oy = Math.round(Math.sin(t.grabAng) * k * 6 - k * 2); }
+  } else if (st === 'stomp') {
+    const k = t.spT / 0.7;
+    if (t.spPhase === 'wind') { o.sy = 1 + 0.07 * Math.min(1, k); o.sx = 1 - 0.03 * Math.min(1, k); o.shear = Math.sin(now * 30) * 0.015; }
+    else { const r = Math.min(1, t.spT / 0.45); o.sy = 0.88 + 0.12 * r; o.sx = 1.08 - 0.08 * r; }
+  } else if (st === 'leap') {
+    if (t.spPhase === 'crouch') { const k = Math.min(1, t.spT / 0.35); o.sy = 1 - 0.12 * k; o.sx = 1 + 0.06 * k; }
+    else if (t.spPhase === 'air') { o.sy = 1.08; o.sx = 0.95; o.shear = Math.cos(t.face) * 0.12; o.oy = -Math.round(t.jz / ART); }
+    else { const r = Math.min(1, t.spT / 0.4); o.sy = 0.86 + 0.14 * r; o.sx = 1.1 - 0.1 * r; }
+  } else if (st === 'roar') {
+    const k = Math.min(1, t.spT / 0.25);
+    o.sy = 1 + 0.06 * k;
+    o.shear = Math.sin(now * 40) * 0.02 * k;
+  } else if (st === 'eat') {
+    o.sy = 1 + Math.sin(t.grabT * 9) * 0.02;
+  }
+  return o;
+}
+
+function startTitanSpecial(t, kind) {
+  t.state = kind;
+  t.spT = 0;
+  t.hand = null;
+  if (kind === 'stomp') {
+    t.spPhase = 'wind';
+    marks.push({ x: t.x, y: t.y, r: stompR(t), life: 0.7, max: 0.7, kind: 'rock' });
+    sfx('rumble', { x: t.x, y: t.y, vol: 0.6, tag: 'stompwind' });
+  } else if (kind === 'leap') {
+    t.spPhase = 'crouch';
+    const p = player;
+    const lead = 0.55;
+    t.leapFrom = { x: t.x, y: t.y };
+    t.leapTo = { x: clamp(p.x + p.vx * lead, BORDER + 60, WORLD - BORDER - 60), y: clamp(p.y + p.vy * lead, BORDER + 60, WORLD - BORDER - 60) };
+    const d = Math.hypot(t.leapTo.x - t.x, t.leapTo.y - t.y);
+    if (d > 650) { const k = 650 / d; t.leapTo.x = t.x + (t.leapTo.x - t.x) * k; t.leapTo.y = t.y + (t.leapTo.y - t.y) * k; }
+    t.face = Math.atan2(t.leapTo.y - t.y, t.leapTo.x - t.x);
+    t.jz = 0;
+    marks.push({ x: t.leapTo.x, y: t.leapTo.y, r: 150, life: 1.05, max: 1.05, kind: 'rock' });
+  } else if (kind === 'roar') {
+    sfx('roar', { x: t.x, y: t.y, vol: 0.9 });
+  }
+}
+
+const stompR = t => 150 + t.H * 0.3;
+
+function updateTitanSpecial(t, dt) {
+  const p = player, pd = Math.hypot(p.x - t.x, p.y - t.y);
+  if (t.rageT > 0) t.rageT -= dt;
+  if (t.state === 'walk') {
+    t.spCd = (t.spCd ?? rand(3, 6)) - dt;
+    if (t.spCd > 0 || t.prey) return false;
+    if (t.aberrant && pd > 260 && pd < 820) { t.spCd = rand(4, 6.5); startTitanSpecial(t, 'leap'); return true; }
+    if (!t.aberrant && t.H >= 300 && pd < stompR(t) + 40 && Math.random() < 0.6) { t.spCd = rand(4, 7); startTitanSpecial(t, 'stomp'); return true; }
+    if (pd < 750 && Math.random() < 0.2) { t.spCd = rand(10, 16); startTitanSpecial(t, 'roar'); return true; }
+    t.spCd = rand(0.8, 1.6);
+    return false;
+  }
+  if (t.state === 'stomp') {
+    t.spT += dt;
+    if (t.spPhase === 'wind' && t.spT >= 0.7) {
+      t.spPhase = 'slam';
+      t.spT = 0;
+      const R = stompR(t);
+      rings.push({ x: t.x, y: t.y, r: R, life: 0.35, color: '#d8c8a0' });
+      rings.push({ x: t.x, y: t.y, r: R * 0.6, life: 0.3, color: '#ffffff' });
+      for (let i = 0; i < 26; i++) { const a = rand(0, TAU), s = rand(120, 380); particles.push({ x: t.x + Math.cos(a) * 30, y: t.y + Math.sin(a) * 20, vx: Math.cos(a) * s, vy: Math.sin(a) * s * 0.6, life: 0.7, max: 0.7, size: 2, g: 0, kind: 'dust' }); }
+      game.shake = Math.max(game.shake, 10);
+      sfx('boom', { x: t.x, y: t.y, vol: 1, rate: 0.6, tag: 'stomp' });
+      if (pd < R && p.z < 110) hurtPlayer(t);
+      for (const c of civs) if (Math.hypot(c.x - t.x, c.y - t.y) < R * 0.7) c.panic = 1;
+    } else if (t.spPhase === 'slam' && t.spT >= 0.45) { t.state = 'walk'; t.grabCd = Math.max(t.grabCd, 0.6); }
+    return true;
+  }
+  if (t.state === 'leap') {
+    t.spT += dt;
+    if (t.spPhase === 'crouch' && t.spT >= 0.35) { t.spPhase = 'air'; t.spT = 0; sfx('swing', { x: t.x, y: t.y, vol: 0.8, rate: 0.7, tag: 'leap' }); }
+    else if (t.spPhase === 'air') {
+      const k = Math.min(1, t.spT / 0.7);
+      t.x = lerp(t.leapFrom.x, t.leapTo.x, k);
+      t.y = lerp(t.leapFrom.y, t.leapTo.y, k);
+      t.jz = Math.sin(k * Math.PI) * (160 + t.H * 0.3);
+      t.phase += dt * 4;
+      if (k >= 1) {
+        t.spPhase = 'land';
+        t.spT = 0;
+        t.jz = 0;
+        rings.push({ x: t.x, y: t.y, r: 150, life: 0.35, color: '#d8c8a0' });
+        for (let i = 0; i < 18; i++) { const a = rand(0, TAU), s = rand(100, 300); particles.push({ x: t.x, y: t.y, vx: Math.cos(a) * s, vy: Math.sin(a) * s * 0.6, life: 0.6, max: 0.6, size: 2, g: 0, kind: 'dust' }); }
+        game.shake = Math.max(game.shake, 9);
+        sfx('boom', { x: t.x, y: t.y, vol: 0.9, rate: 0.75, tag: 'land' });
+        if (Math.hypot(p.x - t.x, p.y - t.y) < 150 && p.z < t.H * 0.45) hurtPlayer(t);
+      }
+    } else if (t.spPhase === 'land' && t.spT >= 0.4) t.state = 'walk';
+    clampTitan(t);
+    return true;
+  }
+  if (t.state === 'roar') {
+    t.spT += dt;
+    if (t.spT > 0.2 && t.spT - dt <= 0.2) {
+      game.shake = Math.max(game.shake, 5);
+      for (let i = 0; i < 3; i++) rings.push({ x: t.x, y: t.y - 10, r: 120 + i * 90, life: 0.35 + i * 0.08, color: '#fff6e0' });
+      for (const o of titans) if (o !== t && !o.dying && !o.boss && Math.hypot(o.x - t.x, o.y - t.y) < 520) o.rageT = 3.5;
+      t.rageT = 3.5;
+      if (Math.hypot(p.x - t.x, p.y - t.y) < 520) addText('Рёв!', t.x, t.y - KZ * t.H * 0.9, '#ff9a6a');
+    }
+    if (t.spT >= 1.0) t.state = 'walk';
+    return true;
+  }
+  return false;
+}
+
+function titanShadowLift(t) {
+  return t.state === 'leap' && t.spPhase === 'air' ? Math.max(0.4, 1 - t.jz / 400) : 1;
+}
+
+function pushTrail() {
+  const p = player;
+  game.trailT -= 1 / 60;
+  const fast = p.mode === 'attack' || Math.hypot(p.vx, p.vy) > 470;
+  if (!fast || game.trailT > 0) return;
+  game.trailT = p.mode === 'attack' ? 0.022 : 0.04;
+  const hgt = p.z - floorZ(p.x, p.y);
+  trail.push({ x: p.x, y: p.y, z: p.z, dir: dir4(p.dir), fly: hgt > 8 || p.mode === 'attack', t: 0, cut: p.phase === 'cut' });
+  if (trail.length > 14) trail.shift();
+}
+
+function updateJuice(dt) {
+  for (const g of trail) g.t += dt;
+  trail = trail.filter(g => g.t < 0.24);
+  for (const x of xslashes) x.t += dt;
+  xslashes = xslashes.filter(x => x.t < 0.32);
+  if (game.zoomT > 0) game.zoomT = Math.max(0, game.zoomT - dt);
+}
+
+function drawTrail() {
+  const p = player;
+  for (const g of trail) {
+    const img = heroImg(p.char, g.dir, g.fly);
+    if (!img) continue;
+    const a = 0.5 * (1 - g.t / 0.24);
+    bctx.globalAlpha = a;
+    bctx.drawImage(variant(img, 'ghost'), sx(g.x) - (img.width >> 1), sy(g.y, g.z) - img.height);
+  }
+  bctx.globalAlpha = 1;
+}
+
+function drawOrbitTrail() {
+  const p = player, t = p.target;
+  if (p.mode !== 'attack' || !t || t.dying) return;
+  const R = orbitR(t);
+  if (p.phase === 'orbit') {
+    const dir = Math.sign(wrapAngle(t.face + Math.PI - p.ang)) || 1;
+    for (let i = 1; i < 22; i++) {
+      const a = p.ang - dir * i * 0.07;
+      const x = sx(t.x + Math.cos(a) * R), y = sy(t.y + Math.sin(a) * R, p.z) - 8;
+      const k = 1 - i / 22;
+      bctx.globalAlpha = 0.85 * k;
+      rect(bctx, x, y, i < 6 ? 2 : 1, 1, i % 3 ? '#ffffff' : '#9fe8ff');
+      if (i % 4 === 0) rect(bctx, x, y + 3, 1, 1, '#dfe8f0');
+    }
+    bctx.globalAlpha = 1;
+  }
+}
+
+function epicKill(t) {
+  const n = nape(t);
+  game.slowT = 0.3;
+  game.zoomT = 0.42;
+  game.zoomAt = { x: n.x, y: n.y, z: n.z };
+  game.hitstop = Math.max(game.hitstop, 0.05);
+  game.kickT = 0.1;
+  xslashes.push({ x: n.x, y: n.y - KZ * n.z, ang: t.face + Math.PI / 2 + rand(-0.3, 0.3), t: 0 });
+  const back = t.face + Math.PI;
+  for (let i = 0; i < 70; i++) {
+    const a = back + rand(-0.9, 0.9), s = rand(200, 620);
+    particles.push({ x: n.x, y: n.y - KZ * n.z, vx: Math.cos(a) * s, vy: Math.sin(a) * s * 0.7 - rand(80, 260), life: rand(0.6, 1.3), max: 1.3, size: Math.random() < 0.4 ? 4 : 3, color: pick(['#d8283a', '#b3122e', '#8a0e20', '#ff4a4a']), g: 900, kind: 'px' });
+  }
+  steam(n.x, n.y - KZ * n.z, 16, 36);
+}
+
+function drawXSlashes() {
+  for (const s of xslashes) {
+    const k = s.t / 0.32, grow = Math.min(1, s.t / 0.07), L = 46 * grow, fade = k < 0.6 ? 1 : 1 - (k - 0.6) / 0.4;
+    const x = sx(s.x), y = sy(s.y, 0);
+    bctx.globalAlpha = fade;
+    for (const da of [0, 1.15]) {
+      const a = s.ang + da, cx = Math.cos(a), cy = Math.sin(a) * 0.8;
+      const x0 = x - cx * L, y0 = y - cy * L, x1 = x + cx * L, y1 = y + cy * L;
+      const steps = Math.ceil(L * 2);
+      for (let i = 0; i <= steps; i++) {
+        const q = i / steps, th = Math.sin(q * Math.PI) * 3.4 * (1 - k * 0.6);
+        const px = lerp(x0, x1, q), py = lerp(y0, y1, q);
+        for (let j = -th; j <= th; j++) rect(bctx, px - cy * j * 0.7, py + cx * j * 0.7, 1, 1, Math.abs(j) < th * 0.45 ? '#ffffff' : '#9fdcff');
+      }
+    }
+    bctx.globalAlpha = 1;
+  }
+}
+
+function zoomTransform() {
+  if (!(game.zoomT > 0) || !game.zoomAt) return null;
+  const k = game.zoomT / 0.42;
+  const z = 1 + 0.16 * Math.sin(k * Math.PI * 0.5) * (k > 0.8 ? (1 - k) / 0.2 : 1);
+  const fx = (sx(game.zoomAt.x) - camFrac.x) * PX, fy = (sy(game.zoomAt.y, game.zoomAt.z) - camFrac.y) * PX;
+  return { z, fx, fy };
+}

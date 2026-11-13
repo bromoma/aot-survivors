@@ -4,6 +4,7 @@ const DIR_KEYS = ['down', 'left', 'right', 'up'];
 const HERO_IDS = ['cadet', 'connie', 'sasha', 'jean', 'eren', 'armin', 'hange', 'mikasa', 'levi'];
 const TITAN_TYPES = ['normal', 'lanky', 'fat', 'aberrant'];
 const TITAN_SIZES = [110, 140, 170, 200];
+const GRAB_TYPES = ['normal', 'lanky', 'fat', 'aberrant'];
 const BOSS_KINDS = ['female', 'armored', 'beast', 'colossal'];
 const TR_PROPS = ['oak', 'apple_tree', 'pine1', 'pine2', 'pine3', 'well', 'hay_bales', 'cart', 'flower_pots', 'rain_barrel', 'lamp_post_wood',
   'bush1', 'bush_berry', 'bush0', 'bush2', 'log_mossy', 'rock_mossy', 'statue', 'bench', 'woodpile', 'flowers_wild', 'flowers_blue', 'grass_tall'];
@@ -23,6 +24,7 @@ function assetList() {
       L[`herofly_${id}_${d}`] = `assets/sprites/herofly_${id}_${d}.png`;
     }
     for (const t of TITAN_TYPES) for (const h of TITAN_SIZES) L[`titan_${t}_${h}_${d}`] = `assets/sprites/titan_${t}_${h}_${d}.png`;
+    for (const t of GRAB_TYPES) for (const h of TITAN_SIZES) L[`titan_${t}_${h}_grab_${d}`] = `assets/sprites/titan_${t}_${h}_grab_${d}.png`;
   }
   for (const k of ['house_h1', 'house_h2', 'house_h3', 'house_tower', 'ruin_r1', 'ruin_r2', 'ruin_r3', 'ruin_r4', 'wall_a']) L[k] = `assets/sprites/${k}.png`;
   for (const k of TR_GROUND.concat(TR_PROPS)) L[k] = `assets/tradisea/${k}.png`;
@@ -50,6 +52,10 @@ function loadAssets(onProgress) {
     for (const t of TITAN_TYPES) for (const h of TITAN_SIZES) {
       const up = SPR[`titan_${t}_${h}_up`];
       if (up) { NAPE[`${t}_${h}`] = findNape(up); scrubRed(up); }
+      const gl = SPR[`titan_${t}_${h}_grab_left`];
+      if (gl) SPR[`titan_${t}_${h}_grab_right`] = variant(gl, 'flip');
+      const gup = SPR[`titan_${t}_${h}_grab_up`];
+      if (gup) scrubRed(gup);
       for (const d of DIR_KEYS) { const s = SPR[`titan_${t}_${h}_${d}`]; if (s) { variant(s, 'white'); variant(s, 'tint'); } }
     }
     for (const d of DIR_KEYS) { const s = SPR[`boss_colossal_${d}`]; if (s) unpink(s); }
@@ -160,7 +166,7 @@ function variant(img, kind) {
   } else {
     g.drawImage(img, 0, 0);
     g.globalCompositeOperation = 'source-in';
-    g.fillStyle = kind === 'white' ? '#ffffff' : kind === 'tint' ? '#8a2a22' : '#000000';
+    g.fillStyle = kind === 'white' ? '#ffffff' : kind === 'tint' ? '#8a2a22' : kind === 'ghost' ? '#bfeaff' : '#000000';
     g.fillRect(0, 0, img.width, img.height);
   }
   m[kind] = c;

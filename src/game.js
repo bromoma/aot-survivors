@@ -51,18 +51,27 @@ const charById = id => CHARS.find(c => c.id === id) || CHARS[0];
 const difficulty = () => clamp((game.time - 90) / 360, 0, 1);
 
 const shadowLayer = makeCanvas(1, 1), steamLayer = makeCanvas(1, 1), smokeLayer = makeCanvas(1, 1);
-let W = 0, H = 0, PX = 2, UP = 3, bw = 0, bh = 0;
+let W = 0, H = 0, PX = 2, UP = 3, bw = 0, bh = 0, DPR = 1;
+const VIEW_SHORT = 520;
 function resize() {
-  W = Math.max(320, innerWidth);
-  H = Math.max(240, innerHeight);
+  DPR = clamp(window.devicePixelRatio || 1, 1, 2);
+  const cw = Math.max(320, innerWidth), ch = Math.max(240, innerHeight);
+  W = Math.round(cw * DPR);
+  H = Math.round(ch * DPR);
   canvas.width = W;
   canvas.height = H;
-  canvas.style.width = W + 'px';
-  canvas.style.height = H + 'px';
-  PX = clamp(Math.round(Math.min(W, H) / 370), 2, 5);
-  UP = clamp(Math.round(Math.min(W, H) / 280), 2, 5);
-  bw = Math.ceil(W / PX);
-  bh = Math.ceil(H / PX);
+  canvas.style.width = cw + 'px';
+  canvas.style.height = ch + 'px';
+  const short = Math.min(W, H);
+  let best = 2, bd = Infinity;
+  for (let p = 1; p <= 8; p++) {
+    const d = Math.abs(short / p - VIEW_SHORT);
+    if (d <= bd) { bd = d; best = p; }
+  }
+  PX = Math.max(DPR >= 2 ? 2 : 1, best);
+  UP = clamp(Math.round(Math.min(cw, ch) / 280), 2, 5) * DPR;
+  bw = Math.ceil(W / PX) + 2;
+  bh = Math.ceil(H / PX) + 2;
   buf.width = bw;
   buf.height = bh;
   for (const [c] of [shadowLayer, steamLayer, smokeLayer]) { c.width = bw; c.height = bh; }
@@ -71,8 +80,8 @@ addEventListener('resize', resize);
 resize();
 
 
-const viewW = () => bw * ART;
-const viewH = () => bh * ART;
+const viewW = () => (bw - 2) * ART;
+const viewH = () => (bh - 2) * ART;
 const keys = {};
 const mouse = { x: 0, y: 0 };
 
@@ -374,48 +383,11 @@ function houseProps(b) {
 }
 
 function genCity() {
-  const c = WORLD / 2;
-  for (let gx = BORDER + 80; gx < WORLD - BORDER - 220; gx += 260) {
-    for (let gy = BORDER + 160; gy < WORLD - BORDER - 160; gy += 230) {
-      if (Math.hypot(gx + 100 - c, gy + 75 - c) < 280) continue;
-      const r = Math.random();
-      if (r < 0.07) addBuilding('tower', 'house_tower', gx + rand(30, 120), gy + rand(10, 50));
-      else if (r < 0.8) {
-        const key = pick(['house_h1', 'house_h2', 'house_h3']), w = (SPR[key] ? SPR[key].width : 100) * ART;
-        houseProps(addBuilding('house', key, gx + rand(0, Math.max(1, 210 - w)), gy + rand(0, 60)));
-      } else if (r < 0.94) {
-        const n = 2 + Math.floor(Math.random() * 2);
-        for (let i = 0; i < n; i++) addTree(gx + rand(20, 200), gy + rand(60, 170), pick(TREE_KEYS));
-        if (Math.random() < 0.6) addProp(gx + rand(30, 180), gy + rand(60, 170), pick(['bush_berry', 'flowers_blue', 'bench']));
-      } else {
-        addProp(gx + 100, gy + 120, 'well');
-        for (let i = 0; i < 3; i++) addProp(gx + rand(20, 200), gy + rand(40, 180), pick(['flowers_wild', 'bush0', 'grass_tall']));
-      }
-    }
-  }
-  addProp(c, c + 10, 'statue');
-  for (let a = 0; a < TAU; a += TAU / 6) addProp(c + Math.cos(a) * 190, c + Math.sin(a) * 190, 'lamp_post_wood');
-  for (let a = 0.5; a < TAU; a += TAU / 4) addProp(c + Math.cos(a) * 120, c + Math.sin(a) * 120 + 10, 'bench');
+  genTown('city');
 }
 
 function genRuins() {
-  const c = WORLD / 2;
-  const ruinKeys = ['ruin_r1', 'ruin_r2', 'ruin_r3', 'ruin_r4'].filter(k => SPR[k]);
-  for (let gx = BORDER + 80; gx < WORLD - BORDER - 220; gx += 260) {
-    for (let gy = BORDER + 160; gy < WORLD - BORDER - 160; gy += 230) {
-      if (Math.hypot(gx + 100 - c, gy + 75 - c) < 220) continue;
-      const r = Math.random();
-      if (r < 0.05) addBuilding('tower', 'house_tower', gx + rand(30, 120), gy + rand(10, 50));
-      else if (r < 0.88) {
-        const ruin = ruinKeys.length && Math.random() < 0.6;
-        const key = ruin ? pick(ruinKeys) : pick(['house_h1', 'house_h2', 'house_h3']);
-        const w = (SPR[key] ? SPR[key].width : 100) * ART;
-        const b = addBuilding(ruin ? 'ruin' : 'house', key, gx + rand(0, Math.max(1, 210 - w)), gy + rand(0, 60));
-        if (!ruin) houseProps(b);
-        else if (Math.random() < 0.6) addProp(b.x + rand(10, b.w - 10), b.y + b.d + rand(6, 18), pick(['rock_mossy', 'woodpile', 'cart', 'rain_barrel', 'log_mossy']));
-      } else addTree(gx + rand(20, 200), gy + rand(60, 170), pick(['oak', 'pine1', 'pine2']));
-    }
-  }
+  genTown('ruins');
 }
 
 function genField() {
@@ -450,19 +422,8 @@ function streetMask(kind) {
     }
     return (X, Y) => (Math.abs(Y - R1[X]) < W1[X] || Math.abs(X - R2[Y]) < W2[Y] ? 2 : 0);
   }
-  const b0 = BORDER / ART, b1 = (WORLD - BORDER) / ART;
-  const cols = new Uint8Array(n), rows = new Uint8Array(n);
-  for (let i = 0; i < n; i++) {
-    const w = i * ART;
-    cols[i] = (((w - (BORDER + 35)) % 260) + 260) % 260 < 42 ? 1 : 0;
-    rows[i] = (((w - (BORDER + 115)) % 230) + 230) % 230 < 42 ? 1 : 0;
-  }
-  const pc = WORLD / 2 / ART, pr2 = (250 / ART) ** 2, plaza = kind === 'city';
-  return (X, Y) => {
-    if (X < b0 || Y < b0 || X > b1 || Y > b1) return 0;
-    if (cols[X] || rows[Y]) return 1;
-    return plaza && (X - pc) * (X - pc) + (Y - pc) * (Y - pc) < pr2 ? 1 : 0;
-  };
+  const N = n - 1;
+  return (X, Y) => (townMask ? townMask[Y * N + X] : 0);
 }
 
 function texturedMask(n, test, tex, darken) {
@@ -556,6 +517,14 @@ function buildGround(kind) {
     const patch = texturedMask(n, (x, y) => PG[(y >> 2) * m + (x >> 2)], SPR.grass3);
     g.drawImage(patch.canvas, 0, 0);
   }
+  if (kind === 'ruins') {
+    g.save();
+    g.globalCompositeOperation = 'multiply';
+    g.globalAlpha = 0.55;
+    g.fillStyle = '#b8a07a';
+    g.fillRect(0, 0, n, n);
+    g.restore();
+  }
   const mask = streetMask(kind);
   if (kind === 'field') {
     const road = texturedMask(n, mask, SPR.path);
@@ -563,7 +532,10 @@ function buildGround(kind) {
     g.drawImage(road.canvas, 0, 0);
   } else {
     const tex = SPR[pick(['paving_a', 'paving_b'])] || SPR.paving_a;
-    const st = texturedMask(n, mask, tex);
+    const lane = texturedMask(n, (x, y) => mask(x, y) === 2, SPR.path);
+    const st = texturedMask(n, (x, y) => mask(x, y) === 1, tex);
+    darkenEdges(g, n, lane.flags, 0.8);
+    g.drawImage(lane.canvas, 0, 0);
     darkenEdges(g, n, st.flags, 0.7);
     g.drawImage(st.canvas, 0, 0);
     if (kind === 'ruins') {
@@ -588,7 +560,7 @@ function genWorld() {
   props = [];
   if (faction.map === 'city') genCity();
   else if (faction.map === 'ruins') genRuins();
-  else genField();
+  else { townMask = null; townRoads = []; genField(); }
   anchors = [];
   for (const b of buildings) {
     if (b.kind === 'tower') anchors.push({ x: b.x + b.w / 2, y: b.y + b.d / 2, z: b.h });
@@ -691,6 +663,7 @@ function reset() {
   pendingLevels = 0;
   game = { time: 0, kills: 0, lost: 0, xp: 0, level: 1, need: 5, spawnT: 2, shake: 0, hitstop: 0, combo: 0, lastKill: -10, healCount: 0, spinT: 3, endless: false, civT: 0, flareT: 15, paidKills: 0, paidTime: 0, reward: 0 };
   combatReset();
+  juiceReset();
   if (hero.id === 'levi') stats.skills.spin = 1;
   if (hero.id === 'hange') stats.skills.trap = 1;
   metaRunStart();
@@ -912,7 +885,7 @@ function hurtPlayer(t) {
 function killTitan(t) {
   const n = nape(t);
   t.dying = 0.001;
-  t.flash = 0.1;
+  t.flash = 0.035;
   t.fallDir = Math.cos(t.face) >= 0 ? 1 : -1;
   t.deathKey = dir4(t.face);
   t.fallSide = Math.cos(t.face) >= 0 ? 1 : -1;
@@ -953,6 +926,7 @@ function killTitan(t) {
   slashes.push({ x: n.x, y: n.y - KZ * n.z, ang: t.face + Math.PI, life: 0.22 });
   splatDecal(t.x + Math.cos(t.face) * t.H * 0.55, t.y + Math.sin(t.face) * t.H * 0.3, Math.max(6, Math.round(t.Hp * 0.12)));
   addText(game.combo > 1 ? `КОМБО x${game.combo}` : 'ЗАТЫЛОК!', n.x, n.y - KZ * n.z - 40, game.combo > 1 ? '#ffd27a' : '#ffffff');
+  if (player.target === t || game.slowT > 0) texts[texts.length - 1].big = true;
   game.healCount++;
   if (game.healCount >= stats.healEvery) {
     game.healCount = 0;
@@ -1149,6 +1123,7 @@ function updateAttack(dt) {
       p.vx = Math.cos(t.face) * 300;
       p.vy = Math.sin(t.face) * 300;
       p.engageCd = stats.cd;
+      epicKill(t);
       if (t.boss) { bossHit(t); return; }
       killTitan(t);
       if (stats.chain && game.time - p.lastChain > 2 && state === 'play') {
@@ -1182,6 +1157,13 @@ function updateTitans(dt) {
     t.flash = Math.max(0, t.flash - dt);
     if (t.dying) {
       t.dying += dt;
+      if (!t.landed && t.dying >= 0.6) {
+        t.landed = true;
+        const fx = t.x + Math.cos(t.face) * t.H * 0.45, fy = t.y + Math.sin(t.face) * t.H * 0.25;
+        rings.push({ x: fx, y: fy, r: t.H * 0.55, life: 0.35, color: '#d8c8a0' });
+        for (let i = 0; i < 20; i++) { const a = rand(0, TAU), sp = rand(80, 300); particles.push({ x: fx + rand(-30, 30), y: fy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp * 0.5, life: 0.7, max: 0.7, size: 2, g: 0, kind: 'dust' }); }
+        game.shake = Math.max(game.shake, 4 + t.H / 80);
+      }
       if (t.dying > 0.6 && Math.random() < dt * 34) {
         const k = rand(0.1, 0.95);
         steam(t.x + Math.cos(t.face) * t.H * k, t.y + Math.sin(t.face) * t.H * k * KY - rand(0, 24), 1, 12);
@@ -1194,6 +1176,7 @@ function updateTitans(dt) {
       continue;
     }
     if (t.boss && updateBoss(t, dt)) continue;
+    if (!t.boss && updateTitanSpecial(t, dt)) continue;
     const pd = Math.hypot(p.x - t.x, p.y - t.y);
     t.preyT -= dt;
     if (t.preyT <= 0 && t.state === 'walk') {
@@ -1212,7 +1195,7 @@ function updateTitans(dt) {
     const dx = tx - t.x, dy = ty - t.y, d = Math.hypot(dx, dy) || 1;
     const to = Math.atan2(dy, dx);
     const turn = (t.aberrant ? lerp(1.8, 3.4, diff) : lerp(0.9, 2.4, diff)) * faction.turn * (t.state === 'grab' ? 0.3 : 1);
-    const speed = t.speed * (1 + diff * 0.6) * (t.prey ? 1.3 : 1);
+    const speed = t.speed * (1 + diff * 0.6) * (t.prey ? 1.3 : 1) * (t.rageT > 0 ? 1.5 : 1);
     if (t.state !== 'eat') t.face += clamp(wrapAngle(to - t.face), -turn * dt, turn * dt);
     const reach = reachOf(t);
     const pto = Math.atan2(p.y - t.y, p.x - t.x);
@@ -1473,14 +1456,19 @@ function updateFx(dt) {
 
 function updateCamera(dt) {
   const vw = viewW(), vh = viewH();
-  const k = 1 - Math.exp(-dt * 5);
-  cam.x = clamp(lerp(cam.x, player.x - vw / 2, k), 0, Math.max(0, WORLD - vw));
-  cam.y = clamp(lerp(cam.y, player.y - KZ * player.z * 0.5 - vh / 2 - 40, k), 0, Math.max(0, WORLD - vh));
+  const k = 1 - Math.exp(-dt * 4.2);
+  const p = player, la = p.mode === 'attack' ? 0.08 : 0.22;
+  cam.lx = lerp(cam.lx || 0, clamp(p.vx * la, -220, 220), 1 - Math.exp(-dt * 2.5));
+  cam.ly = lerp(cam.ly || 0, clamp(p.vy * la, -160, 160), 1 - Math.exp(-dt * 2.5));
+  cam.x = clamp(lerp(cam.x, p.x + cam.lx - vw / 2, k), 0, Math.max(0, WORLD - vw));
+  cam.y = clamp(lerp(cam.y, p.y + cam.ly - KZ * p.z * 0.5 - vh / 2 - 40, k), 0, Math.max(0, WORLD - vh));
 }
 
 function update(dt) {
   if (state === 'play') {
+    updateJuice(dt);
     if (game.hitstop > 0) { game.hitstop -= dt; return; }
+    if (game.slowT > 0) { game.slowT -= dt; dt *= 0.3; }
     game.time += dt;
     if (!game.endless && game.time >= WIN_TIME) {
       state = 'win';
@@ -1491,6 +1479,7 @@ function update(dt) {
     if (player.mode === 'attack') updateAttack(dt);
     else updateFly(dt);
     player.inv = Math.max(0, player.inv - dt);
+    pushTrail();
     player.runPhase += dt * Math.hypot(player.vx, player.vy) * 0.05;
     player.engageCd = Math.max(0, player.engageCd - dt);
     updateTitans(dt);
@@ -1549,6 +1538,14 @@ const CLOUD_SPR = [0, 1, 2].map(i => {
 });
 
 function titanImg(t, dir) {
+  if (!t.boss && !t.dying && t.set) {
+    let grabPose = false;
+    if (t.state === 'grab') grabPose = t.grabT / grabWind(t) > 0.3;
+    else if (t.state === 'recover') grabPose = t.grabT < 0.3;
+    else if (t.state === 'eat') grabPose = t.grabT < 0.6;
+    else if (t.state === 'stomp' || t.state === 'roar') grabPose = true;
+    if (grabPose) { const g = SPR[`titan_${t.set}_${t.size}_grab_${dir}`]; if (g) return g; }
+  }
   if (t.boss) return SPR['boss_' + t.boss.kind + '_' + dir] || SPR['titan_normal_200_' + dir];
   const set = t.set || (t.set = titanSet(t));
   return set ? SPR[`titan_${set}_${t.size}_${dir}`] : null;
@@ -1606,20 +1603,12 @@ function drawTitan(t) {
     bctx.restore();
     return;
   }
-  let ox = 0, oy = 0;
-  if (t.state === 'walk' && t.stun <= 0) {
-    oy = -Math.round(Math.abs(Math.sin(t.phase)) * 3);
-    ox = Math.sin(t.phase) > 0 ? 1 : 0;
-  }
-  if (t.state === 'grab' || t.state === 'recover') {
-    const k = t.state === 'grab' ? Math.min(1, t.grabT / grabWind(t)) : 1 - Math.min(1, t.grabT / 0.5);
-    ox += Math.round(Math.cos(t.grabAng) * k * 9);
-    oy += Math.round(Math.sin(t.grabAng) * k * 5 - k * 2);
-  }
-  if (t.stun > 0) ox += Math.floor(performance.now() / 70) % 2 ? 1 : -1;
+  const pose = titanPoseFx(t);
+  const ox = pose.ox, oy = pose.oy;
   const dx = Math.round(x - img.width / 2 + ox), dy = y - img.height + oy;
   drawBoundCables(t, dx, dy, img);
-  bctx.drawImage(t.flash > 0 ? variant(img, 'white') : img, dx, dy);
+  drawSprite(t.flash > 0 ? variant(img, 'white') : img, x + ox, y + oy, pose);
+  if (t.rageT > 0 && Math.floor(performance.now() / 90) % 3 === 0) { bctx.globalAlpha = 0.25; drawSprite(variant(img, 'tint'), x + ox, y + oy, pose); bctx.globalAlpha = 1; }
   if (t.stun > 0) drawStunStars(dx + img.width / 2, dy - 3, t.boss ? 4 : 3);
   if (t.boss && t.boss.harden > 0 && dir !== 'down') {
     const n = napeScreen(t, dir, img, dx, dy), on = Math.floor(performance.now() / 120) % 2;
@@ -1691,9 +1680,12 @@ function drawPlayer() {
   const img = heroImg(p.char, dir, flying);
   if (!img) return;
   let oy = 0;
-  if (!flying && Math.hypot(p.vx, p.vy) > 40) oy = -Math.round(Math.abs(Math.sin(p.runPhase * Math.PI)) * 2);
-  if (flying) oy = Math.round(Math.sin(now * 6));
-  bctx.drawImage(p.inv > 1.6 ? variant(img, 'white') : img, sx(p.x) - (img.width >> 1), sy(p.y, p.z) - img.height + oy);
+  const o = { shear: 0, sx: 1, sy: 1 };
+  if (!flying && Math.hypot(p.vx, p.vy) > 40) { oy = -Math.round(Math.abs(Math.sin(p.runPhase * Math.PI)) * 2); o.sy = 1 - Math.abs(Math.sin(p.runPhase * Math.PI)) * 0.05; }
+  if (flying) { oy = Math.round(Math.sin(now * 6)); o.shear = clamp(p.vx / 1800, -0.28, 0.28); }
+  if (p.mode === 'attack' && p.phase === 'cut') { o.sx = 1.15; o.sy = 1.15; }
+  drawTrail();
+  drawSprite(p.inv > 1.6 ? variant(img, 'white') : img, sx(p.x), sy(p.y, p.z) + oy, o);
 }
 
 function drawRope(a, alpha, grow) {
@@ -1777,7 +1769,7 @@ function drawWorld() {
   shg.clearRect(0, 0, bw, bh);
   const vis = titans.filter(t => inView(t.x, t.y, t.H + 120));
   const sh = (x, y, rx, ry) => disc(shg, x, y, rx, ry, '#000');
-  for (const t of vis) if (!t.dying || t.dying < 1.5) sh(sx(t.x) + 2, sy(t.y, 0), Math.round(t.size * 0.17), Math.max(3, Math.round(t.size * 0.045)));
+  for (const t of vis) if (!t.dying || t.dying < 1.5) { const L = titanShadowLift(t); sh(sx(t.x) + 2, sy(t.y, 0), Math.round(t.size * 0.17 * L), Math.max(2, Math.round(t.size * 0.045 * L))); }
   for (const c of civs) if (inView(c.x, c.y, 40)) sh(sx(c.x), sy(c.y, 0), 6, 2);
   for (const r of riders) if (inView(r.x, r.y, 60)) sh(sx(r.x), sy(r.y, 0), 13, 3);
   for (const p of props) if (inView(p.x, p.y, 40)) sh(sx(p.x) + 1, sy(p.y, 0), Math.max(3, Math.round(p.img.width * 0.38)), Math.max(1, Math.round(p.img.width * 0.1)));
@@ -1822,9 +1814,11 @@ function drawWorld() {
     if (player.mode === 'fly' && player.anchor) drawRope(player.anchor, 1, grow);
     if (player.mode === 'attack' && player.target) drawRope(nape(player.target), 1, grow);
   }
+  drawOrbitTrail();
   drawParticles();
   drawCombatAir();
   drawSlashes();
+  drawXSlashes();
   for (const f of flocks) {
     for (const b of f.birds) {
       const x = sx(f.x + b.ox), y = sy(f.y + b.oy, f.z);
@@ -1872,10 +1866,15 @@ function shadowText(text, x, y, color = '#fff') {
 
 function drawWorldTexts() {
   ctx.textAlign = 'center';
-  ctx.font = font(UP * 7);
+  const zt = zoomTransform();
   for (const t of texts) {
+    const age = 1.1 - t.life, big = t.big ? 1.5 : 1;
+    const pop = age < 0.12 ? 1.7 - age / 0.12 * 0.7 : 1;
+    ctx.font = font(Math.round(UP * 7 * big * pop));
     ctx.globalAlpha = Math.min(1, t.life * 2);
-    shadowText(t.text, sx(t.x) * PX, sy(t.y, 0) * PX, t.color);
+    let x = (sx(t.x) - camFrac.x) * PX, y = (sy(t.y, 0) - camFrac.y) * PX;
+    if (zt) { x = (x - zt.fx) * zt.z + zt.fx; y = (y - zt.fy) * zt.z + zt.fy; }
+    shadowText(t.text, x, y, t.color);
   }
   ctx.globalAlpha = 1;
 }
@@ -2343,17 +2342,25 @@ function drawWin() {
 }
 
 
+const camFrac = { x: 0, y: 0 };
 function render() {
-  camA.x = Math.round(cam.x / ART);
-  camA.y = Math.round(cam.y / ART);
+  camA.x = Math.floor(cam.x / ART);
+  camA.y = Math.floor(cam.y / ART);
+  camFrac.x = cam.x / ART - camA.x;
+  camFrac.y = cam.y / ART - camA.y;
   const shakeOn = !save.settings || save.settings.shake !== false;
-  shk.x = game.shake && shakeOn ? Math.round((Math.random() * 2 - 1) * game.shake / ART) : 0;
-  shk.y = game.shake && shakeOn ? Math.round((Math.random() * 2 - 1) * game.shake / ART) : 0;
+  const tt = performance.now() / 1000;
+  shk.x = game.shake && shakeOn ? Math.round((Math.sin(tt * 61) * 0.7 + Math.sin(tt * 37 + 1) * 0.3) * game.shake / ART) : 0;
+  shk.y = game.shake && shakeOn ? Math.round((Math.sin(tt * 53 + 2) * 0.7 + Math.sin(tt * 29) * 0.3) * game.shake / ART) : 0;
   bctx.imageSmoothingEnabled = false;
   drawWorld();
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(buf, 0, 0, bw * PX, bh * PX);
+  const zt = zoomTransform();
+  if (zt) {
+    const ox = -camFrac.x * PX, oy = -camFrac.y * PX;
+    ctx.drawImage(buf, Math.round((ox - zt.fx) * zt.z + zt.fx), Math.round((oy - zt.fy) * zt.z + zt.fy), Math.round(bw * PX * zt.z), Math.round(bh * PX * zt.z));
+  } else ctx.drawImage(buf, -Math.round(camFrac.x * PX), -Math.round(camFrac.y * PX), bw * PX, bh * PX);
   drawWorldTexts();
   if (state === 'play' || state === 'levelup') drawArrows();
   if (game.flashT > 0) {
@@ -2550,7 +2557,7 @@ function frame(now) {
   if (resetQueued && --resetQueued === 0) reset();
   const dt = clamp((now - last) / 1000, 0, 0.05);
   last = now;
-  update(dt);
+  if (!window.FREEZE) update(dt);
   render();
   if (typeof UI !== 'undefined') UI.sync(dt);
   requestAnimationFrame(frame);

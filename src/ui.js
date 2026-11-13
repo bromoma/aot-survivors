@@ -786,6 +786,56 @@ const UI = (() => {
   function debugScreen(q) {
     if (['battle', 'squad', 'gacha', 'records', 'settings', 'training', 'missions'].includes(q)) { go(q); return; }
     if (q === 'pull') { save.tokens += 900; doPull(10); revealIdx = 3; showReveal(); return; }
+    if (q === 'grab') {
+      start();
+      for (let i = 0; i < 30; i++) update(1 / 60);
+      titans.length = 0; game.spawnT = 99;
+      const types = ['normal', 'lanky', 'fat', 'aberrant'];
+      types.forEach((ty, i) => { spawnTitan({ x: player.x - 450 + i * 300, y: player.y + 60 }); const t = titans[titans.length - 1]; t.art = ty; t.set = titanSet(t); t.face = i % 2 ? Math.PI : 0; t.state = 'grab'; t.grabT = grabWind(t) * 0.8; t.grabAng = t.face; });
+      cam.x = player.x - viewW() / 2; cam.y = player.y - viewH() / 2;
+      window.FREEZE = true; sync(0); return;
+    }
+    if (q === 'kill' || q === 'orbit' || q === 'stomp' || q === 'leap' || q === 'roar') {
+      start();
+      for (let i = 0; i < 30; i++) update(1 / 60);
+      titans.length = 0;
+      game.spawnT = 99;
+      if (q === 'stomp') {
+        spawnTitan({ x: player.x + 160, y: player.y - 40 });
+        const t = titans[titans.length - 1];
+        Object.assign(t, { H: 400, size: 200, Hp: 200 }); t.set = titanSet(t); t.napeZ = t.H * 0.8;
+        player.z = 0;
+        startTitanSpecial(t, 'stomp');
+        for (let i = 0; i < 50; i++) update(1 / 60);
+      } else if (q === 'leap') {
+        spawnTitan({ x: player.x + 420, y: player.y - 60 });
+        const t = titans[titans.length - 1];
+        t.aberrant = true; t.art = 'aberrant'; t.set = titanSet(t);
+        startTitanSpecial(t, 'leap');
+        for (let i = 0; i < 45; i++) update(1 / 60);
+      } else if (q === 'roar') {
+        spawnTitan({ x: player.x + 200, y: player.y - 30 });
+        spawnTitan({ x: player.x - 260, y: player.y + 60 });
+        startTitanSpecial(titans[0], 'roar');
+        for (let i = 0; i < 18; i++) update(1 / 60);
+      } else {
+        spawnTitan({ x: player.x + 220, y: player.y - 20 });
+        const t = titans[titans.length - 1];
+        t.face = q === 'orbit' ? Math.PI : 0;
+        t.speed = 0;
+        player.z = 300;
+        engage();
+        for (let i = 0; i < 600; i++) {
+          update(1 / 60);
+          if (q === 'orbit' && player.phase === 'orbit' && (game.orbF = (game.orbF || 0) + 1) > 7) break;
+          if (q === 'kill' && game.slowT > 0 && game.slowT < 0.22) break;
+        }
+      }
+      cam.x = player.x - viewW() / 2; cam.y = player.y - KZ * player.z * 0.5 - viewH() / 2 - 40;
+      window.FREEZE = true;
+      sync(0);
+      return;
+    }
     if (q.startsWith('boss_')) {
       start();
       const def = BOSSES.find(b => b.kind === q.slice(5)) || BOSSES[0];
