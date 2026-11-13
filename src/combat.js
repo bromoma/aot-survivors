@@ -361,9 +361,9 @@ function bossSchedule() {
 function spawnBoss(def, cycle = 0) {
   const p = player;
   const a = rand(0, TAU), dist = Math.hypot(viewW(), viewH()) / 2 + 200;
-  let x = clamp(p.x + Math.cos(a) * dist, BORDER + 120, WORLD - BORDER - 120);
-  let y = clamp(p.y + Math.sin(a) * dist, BORDER + 120, WORLD - BORDER - 120);
-  if (def.kind === 'colossal') { x = clamp(p.x, BORDER + 300, WORLD - BORDER - 300); y = BORDER + 160; }
+  let x = p.x + Math.cos(a) * dist;
+  let y = p.y + Math.sin(a) * dist;
+  if (def.kind === 'colossal') { x = p.x + rand(-200, 200); y = p.y - 950; }
   const H = def.size * ART;
   const fi = FACTIONS.indexOf(faction);
   const hp = Math.max(2, def.hp + (fi === 0 ? -1 : 0) + cycle);
@@ -443,8 +443,8 @@ function updateBoss(t, dt) {
       const n = 3 + Math.floor(difficulty() * 3);
       for (let i = 0; i < n; i++) {
         const lead = 0.8;
-        const tx = clamp(p.x + p.vx * lead + rand(-150, 150), BORDER + 40, WORLD - BORDER - 40);
-        const ty = clamp(p.y + p.vy * lead + rand(-150, 150), BORDER + 40, WORLD - BORDER - 40);
+        const tx = p.x + p.vx * lead + rand(-150, 150);
+        const ty = p.y + p.vy * lead + rand(-150, 150);
         const dur = 1.15 + i * 0.12;
         rocks.push({ x0: t.x, y0: t.y, z0: t.H * 0.85, tx, ty, t: 0, dur });
         marks.push({ x: tx, y: ty, r: 75, life: dur, max: dur, kind: 'rock' });
@@ -501,8 +501,6 @@ function updateBoss(t, dt) {
 }
 
 function clampTitan(t) {
-  t.x = clamp(t.x, BORDER + 40, WORLD - BORDER - 40);
-  t.y = clamp(t.y, BORDER + 40, WORLD - BORDER - 40);
 }
 
 function bossHit(t) {

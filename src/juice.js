@@ -74,7 +74,7 @@ function startTitanSpecial(t, kind) {
     const p = player;
     const lead = 0.55;
     t.leapFrom = { x: t.x, y: t.y };
-    t.leapTo = { x: clamp(p.x + p.vx * lead, BORDER + 60, WORLD - BORDER - 60), y: clamp(p.y + p.vy * lead, BORDER + 60, WORLD - BORDER - 60) };
+    t.leapTo = { x: p.x + p.vx * lead, y: p.y + p.vy * lead };
     const d = Math.hypot(t.leapTo.x - t.x, t.leapTo.y - t.y);
     if (d > 650) { const k = 650 / d; t.leapTo.x = t.x + (t.leapTo.x - t.x) * k; t.leapTo.y = t.y + (t.leapTo.y - t.y) * k; }
     t.face = Math.atan2(t.leapTo.y - t.y, t.leapTo.x - t.x);

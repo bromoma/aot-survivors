@@ -853,8 +853,8 @@ const UI = (() => {
       for (let i = 0; i < 60; i++) update(1 / 60);
       spawnBoss(def);
       const B = game.boss;
-      B.x = clamp(player.x + 260, BORDER + 100, WORLD - BORDER - 100);
-      B.y = clamp(player.y - 40, BORDER + 100, WORLD - BORDER - 100);
+      B.x = player.x + 260;
+      B.y = player.y - 40;
       B.boss.cd = 0.4;
       player.z = 200;
       for (let i = 0; i < 70; i++) update(1 / 60);
