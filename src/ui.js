@@ -281,7 +281,7 @@ const UI = (() => {
     const n = claimableCount();
     const bd = $('#mis-badge');
     if (bd) { bd.textContent = n || ''; bd.style.display = n ? '' : 'none'; }
-    const hints = { hub: tr('↑↓ — выбрать, Enter — открыть'), battle: tr('← → — фракция, ↑↓ — угроза, Enter — в бой, Esc — назад'), squad: tr('Стрелки — выбрать, Enter — взять в бой, Esc — назад'), gacha: tr('1 — один призыв, 0 — десять, F — бесплатный, Tab — баннер, Esc — назад'), records: tr('Esc — назад'), settings: tr('Esc — назад'), training: tr('Клик — купить уровень, Esc — назад'), missions: tr('Клик — забрать награду, Esc — назад') };
+    const hints = { hub: tr('↑↓ — выбрать, Enter — открыть'), battle: tr('← → — фракция, ↑↓ — угроза, Enter — в бой, Esc — назад'), squad: tr('Стрелки — выбрать, Enter — взять в бой, Esc — назад'), gacha: tr('1 — один призыв, 0 — десять, F — бесплатный, T — билет, Tab — баннер, Esc — назад'), records: tr('Esc — назад'), settings: tr('Esc — назад'), training: tr('Клик — купить уровень, Esc — назад'), missions: tr('Клик — забрать награду, Esc — назад') };
     $('#menu-hint').textContent = hints[screen] || '';
   }
 
@@ -400,12 +400,13 @@ const UI = (() => {
     const B = bannerInfo(), ev = gBanner === 'event', g = gachaState();
     const tabs = $('#g-tabs');
     tabs.innerHTML = '';
-    for (const [k, label] of [['event', tr('Особый призыв')], ['standard', tr('Стандартный')]]) {
+    for (const [k, label] of [['event', tr('Особый призыв')], ['standard', tr('Стандартный')], ['shop', tr('Обмен')]]) {
       const b = el('button', 'k-btn gt' + (k === gBanner ? ' sel' : ''), label);
       b.addEventListener('click', () => { gBanner = k; snd('click', { vol: 0.6 }); refreshGacha(); });
       tabs.appendChild(b);
     }
     const st = $('#g-stage');
+    if (gBanner === 'shop') { refreshShop(); return; }
     st.className = 'g-stage ' + (ev ? 'ev' : 'std');
     let sp = '';
     for (let i = 0; i < 18; i++) sp += `<i style="left:${(i * 53) % 100}%;animation-delay:${(i * 0.37) % 3}s;animation-duration:${2.4 + (i % 5) * 0.5}s"></i>`;
@@ -419,6 +420,7 @@ const UI = (() => {
         <div class="g-kicker">${tr('Особый призыв')}</div>
         <div class="g-name">${tr(B.title)}</div>
         <div class="g-sub r5">${c.name} · ${RARITY[5].name}</div>
+        <div class="g-quote">«${tr(QUOTES[c.id] || '')}»</div>
         <div class="g-up">${tr('Шанс ×2: каждый второй легендарный — {0}', c.name)}</div>
         <div class="g-fours" id="g-fours"></div>
         <div class="g-timer">${tr('Смена баннера через {0}', fmtDur(B.endsIn))}</div></div>`);
@@ -439,15 +441,21 @@ const UI = (() => {
     $('#g-info').innerHTML = `<div class="pity"><span class="r5">5★</span><div class="pbar"><i style="width:${Math.round(p5 / PITY5 * 100)}%"></i></div><span>${tr('гарантия через {0}', PITY5 - p5)}</span></div>
       <div class="pity"><span class="r4">4★</span><div class="pbar p4"><i style="width:${Math.round(p4 / PITY4 * 100)}%"></i></div><span>${tr('гарантия через {0}', PITY4 - p4)}</span></div>
       ${ev && g.guar ? '<div class="guar">' + tr('Следующий легендарный — точно {0}!', charById(B.five).name) + '</div>' : ''}
-      <div class="muted small">${tr('Шансы: 5★ 3% · 4★ 18% · 3★ 79% (бойцы и наставления)')} · <a class="lnk" id="g-hist-btn">${tr('История')}</a></div>`;
+      <div class="muted small">${tr('Шансы: 5★ 3% · 4★ 18% · 3★ 79% (бойцы и наставления)')} · <a class="lnk" id="g-hist-btn">${tr('История')}</a></div>
+      <div class="g-wallet"><span><img src="assets/ui/ribbon.png" alt="">${tr('Перья: {0}', feathers())}</span><span><img src="assets/ui/pearl.png" alt="">${tr('Билеты: {0}', tickets())}</span></div>`;
     $('#g-hist-btn').addEventListener('click', () => { $('#g-history').classList.toggle('hid'); refreshHistory(); });
     const bb = $('#g-btns');
     bb.innerHTML = '';
     if (freeAvailable()) {
       const fb = el('button', 'k-btn big free', `${img('pearl')} ${tr('Бесплатно')}`);
       fb.title = tr('Один бесплатный призыв каждый день');
-      fb.addEventListener('click', () => doPull(1, true));
+      fb.addEventListener('click', () => doPull(1, 'free'));
       bb.appendChild(fb);
+    }
+    if (tickets() > 0) {
+      const tb = el('button', 'k-btn big free', `${img('pearl')} ${tr('Билет')} (${tickets()})`);
+      tb.addEventListener('click', () => doPull(1, 'ticket'));
+      bb.appendChild(tb);
     }
     const b1 = el('button', 'k-btn big' + (save.tokens < PULL_COST ? ' off' : ''), `${img('coin')} ×1 — ${PULL_COST}`);
     b1.addEventListener('click', () => doPull(1));
@@ -456,6 +464,51 @@ const UI = (() => {
     b10.addEventListener('click', () => doPull(10));
     bb.appendChild(b1);
     bb.appendChild(b10);
+    refreshFooter();
+  }
+
+  let shopPick = null;
+  function refreshShop() {
+    const st = $('#g-stage');
+    st.className = 'g-stage shop';
+    st.innerHTML = '<div class="shop-grid" id="shop-grid"></div>';
+    const grid = $('#shop-grid', st);
+    for (const it of SHOP) {
+      const d = el('div', 'shop-it k-card' + (feathers() < it.cost ? ' poor' : '') + (shopPick === it.id ? ' sel' : ''));
+      d.innerHTML = `<img src="assets/ui/${it.icon}.png" alt=""><div class="sn">${tr(it.name)}</div><div class="muted small">${tr(it.text)}</div><div class="sc"><img src="assets/ui/ribbon.png" alt="">${it.cost}</div>`;
+      d.addEventListener('click', () => {
+        if (feathers() < it.cost) { toast(tr('Не хватает перьев — они даются за каждый призыв')); snd('error', { vol: 0.6 }); return; }
+        if (it.id === 'pick4' || it.id === 'pick5') { shopPick = shopPick === it.id ? null : it.id; refreshShop(); return; }
+        if (buyShop(it.id)) { snd('confirm', { vol: 0.8 }); toast(tr('Куплено: {0}', tr(it.name))); refreshGacha(); }
+      });
+      grid.appendChild(d);
+    }
+    if (shopPick) {
+      const rar = shopPick === 'pick4' ? 4 : 5;
+      const row = el('div', 'shop-pick');
+      row.insertAdjacentHTML('beforeend', `<div class="sec">${tr('Выбери героя')}</div>`);
+      const fl = el('div', 'row');
+      for (const c of CHARS.filter(x => x.rarity === rar)) {
+        const h = el('div', 'hero-card k-card');
+        h.appendChild(face(c.id));
+        h.insertAdjacentHTML('beforeend', `<div class="hn">${c.name}</div><div class="r${rar}">${save.chars[c.id] ? starsHTML(save.chars[c.id]) : tr('Новый!')}</div>`);
+        h.addEventListener('click', () => {
+          const r = buyShop(shopPick, c.id);
+          if (!r) return;
+          shopPick = null;
+          r.feathers = 0;
+          pullRes = [r];
+          pullRes.feathers = 0;
+          state = 'pull';
+          rvDirect();
+        });
+        fl.appendChild(h);
+      }
+      row.appendChild(fl);
+      st.appendChild(row);
+    }
+    $('#g-info').innerHTML = `<div class="g-wallet big"><span><img src="assets/ui/ribbon.png" alt="">${tr('Перья: {0}', feathers())}</span><span><img src="assets/ui/pearl.png" alt="">${tr('Билеты: {0}', tickets())}</span></div><div class="muted small">${tr('Перья даются за каждый призыв, за повторы — вдвое больше')}</div>`;
+    $('#g-btns').innerHTML = '';
     refreshFooter();
   }
 
@@ -623,9 +676,12 @@ const UI = (() => {
   }
 
   let rv = null;
-  function doPull(n, free) {
-    const res = gachaPull(n, gBanner, free);
-    if (!res) { toast(tr('Не хватает жетонов — сыграй забег')); snd('error', { vol: 0.6 }); return; }
+  const FX = { parts: [], raf: 0, cv: null, g: null, w: 0, h: 0, last: 0 };
+  const RCOL = { 3: ['#8fd0ff', '#4a8cff', '#ffffff'], 4: ['#e0b0ff', '#a24aff', '#ffffff', '#ff9ad8'], 5: ['#fff2b0', '#ffcf3a', '#ffffff', '#ff9a3a'] };
+
+  function doPull(n, mode) {
+    const res = gachaPull(n, gBanner === 'standard' ? 'standard' : 'event', mode);
+    if (!res) { toast(mode === 'ticket' ? tr('Нет билетов') : tr('Не хватает жетонов — сыграй забег')); snd('error', { vol: 0.6 }); return; }
     pullRes = res;
     state = 'pull';
     refreshFooter();
@@ -637,90 +693,345 @@ const UI = (() => {
   function rvBg() {
     let st = '';
     for (let i = 0; i < 46; i++) st += `<i style="left:${(i * 37 + 11) % 100}%;top:${(i * 23 + 7) % 62}%;animation-delay:${(i % 7) * 0.3}s"></i>`;
-    return `<div class="rv-sky"></div><div class="rv-stars">${st}</div><div class="rv-wall"></div>`;
+    return `<div class="rv-sky"></div><div class="rv-stars">${st}</div>`;
+  }
+  function rvNext(t) { const n = $('#rv-next', layers.reveal); if (n) n.textContent = t; }
+  function rvDim(a) { const d = $('#rv-dim', layers.reveal); if (d) d.style.opacity = a; }
+
+  function fxInit(L) {
+    FX.cv = $('#rv-fx', L);
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    FX.w = innerWidth; FX.h = innerHeight;
+    FX.cv.width = Math.round(FX.w * dpr); FX.cv.height = Math.round(FX.h * dpr);
+    FX.g = FX.cv.getContext('2d');
+    FX.g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    FX.parts = [];
+    FX.last = performance.now();
+    if (!FX.raf) FX.raf = requestAnimationFrame(fxLoop);
+    if (!FX.iv) FX.iv = setInterval(() => {
+      if (state !== 'pull' || !rv) { clearInterval(FX.iv); FX.iv = 0; return; }
+      if (performance.now() - FX.last > 120) fxStep();
+    }, 60);
+  }
+
+  function fxLoop() {
+    FX.raf = 0;
+    if (state !== 'pull' || !FX.g || !rv) return;
+    fxStep();
+    FX.raf = requestAnimationFrame(fxLoop);
+  }
+
+  function fxStep() {
+    if (!FX.g || !rv) return;
+    const tn = performance.now(), dt = Math.min(0.05, Math.max(0, (tn - FX.last) / 1000));
+    FX.last = tn;
+    if (rv.phase === 'aim' && rv.charging) {
+      rv.charge = Math.min(1, rv.charge + dt / 0.7);
+      const ring = $('#rv-ring', layers.reveal);
+      if (ring) ring.style.height = Math.round(rv.charge * 100) + '%';
+      if (Math.random() < 0.6) fxBurst(FX.w / 2 + (Math.random() - 0.5) * 30, FX.h * 0.82, 1, ['#ffe9a8', '#ffffff'], 60, 0.5, -60, 2);
+      if (rv.charge >= 1) { rv.ignoreClick = true; rvAimDone(); }
+    } else if (rv.phase === 'aim' && rv.charge > 0) {
+      rv.charge = Math.max(0, rv.charge - dt);
+      const ring = $('#rv-ring', layers.reveal);
+      if (ring) ring.style.height = Math.round(rv.charge * 100) + '%';
+    }
+    if (rv.flare) flareStep(dt);
+    const g = FX.g;
+    g.clearRect(0, 0, FX.w, FX.h);
+    g.globalCompositeOperation = 'lighter';
+    for (const p of FX.parts) {
+      p.vy += p.gr * dt;
+      p.vx *= p.drag; p.vy *= p.drag;
+      p.x += p.vx * dt; p.y += p.vy * dt;
+      p.life -= dt;
+      const a = Math.max(0, p.life / p.max);
+      g.globalAlpha = p.fade === false ? Math.min(1, a * 4) : a;
+      g.fillStyle = p.c;
+      const s = p.s * (p.grow ? 1 + (1 - a) * p.grow : 1);
+      g.fillRect(Math.round(p.x - s / 2), Math.round(p.y - s / 2), Math.ceil(s), Math.ceil(s));
+    }
+    g.globalAlpha = 1;
+    g.globalCompositeOperation = 'source-over';
+    FX.parts = FX.parts.filter(p => p.life > 0 && p.y < FX.h + 40);
+    if (FX.parts.length > 1800) FX.parts.splice(0, FX.parts.length - 1800);
+  }
+
+  function fxBurst(x, y, n, cols, sp = 420, life = 1.4, gr = 260, size = 3) {
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * TAU, v = sp * (0.25 + Math.random() * 0.85);
+      FX.parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, gr, drag: 0.985, life: life * (0.6 + Math.random() * 0.6), max: life, c: cols[i % cols.length], s: size * (0.6 + Math.random() * 0.9) });
+    }
+  }
+  function fxRain(cols, n) {
+    for (let i = 0; i < n; i++) FX.parts.push({ x: Math.random() * FX.w, y: -20 - Math.random() * FX.h * 0.9, vx: (Math.random() - 0.5) * 30, vy: 70 + Math.random() * 130, gr: 30, drag: 1, life: 5, max: 5, fade: false, c: cols[i % cols.length], s: 2 + Math.random() * 3 });
+  }
+
+  function flareStep(dt) {
+    const f = rv.flare;
+    f.t += dt * f.speed;
+    const k = Math.min(1, f.t / f.dur), e = 1 - Math.pow(1 - k, 2.2);
+    f.x = FX.w / 2 + Math.sin(k * 6) * 8;
+    f.y = FX.h * 0.8 - e * FX.h * 0.56;
+    if (!f.s1 && k > 0.42) { f.s1 = true; f.col = rv.max >= 4 ? 4 : 3; snd('crack', { vol: 0.6 }); fxBurst(f.x, f.y, 26, RCOL[f.col], 200, 0.6, 100, 2); }
+    if (!f.s2 && k > 0.72 && (rv.max === 5 || rv.tease)) { f.s2 = true; f.speed = 0.3; rvDim(0.7); snd('heartbeat', { vol: 0.9 }); f.flick = true; f.flt = 0; }
+    if (f.flick) {
+      f.flt += dt;
+      if (f.flt > 1.15) {
+        f.flick = false; f.speed = 1; rvDim(0);
+        if (rv.max === 5) { f.col = 5; snd('crack', { vol: 0.9 }); fxBurst(f.x, f.y, 70, RCOL[5], 320, 0.8, 120, 3); }
+        else snd('tick', { vol: 0.5 });
+      }
+    }
+    const col = f.flick ? (Math.floor(f.flt * 12) % 2 ? 5 : 4) : f.col;
+    const cs = col ? RCOL[col] : ['#ffffff', '#fff6d6'];
+    for (let i = 0; i < 3; i++) FX.parts.push({ x: f.x + (Math.random() - 0.5) * 5, y: f.y + 6, vx: (Math.random() - 0.5) * 40, vy: 40 + Math.random() * 60, gr: 140, drag: 0.97, life: 0.7, max: 0.7, c: cs[i % 2], s: 2 + Math.random() * 2 });
+    FX.parts.push({ x: f.x, y: f.y + 10, vx: (Math.random() - 0.5) * 16, vy: 10 + Math.random() * 20, gr: -6, drag: 0.98, life: 1.1, max: 1.1, c: 'rgba(120,110,140,0.35)', s: 4, grow: 3 });
+    FX.parts.push({ x: f.x, y: f.y, vx: 0, vy: 0, gr: 0, drag: 1, life: 0.04, max: 0.04, c: cs[0], s: 12 });
+    FX.parts.push({ x: f.x, y: f.y, vx: 0, vy: 0, gr: 0, drag: 1, life: 0.04, max: 0.04, c: '#ffffff', s: 6 });
+    if (k >= 1) { rv.flare = null; rvBurst(f.x, f.y); }
   }
 
   function rvStart() {
     const L = layers.reveal, max = Math.max(...pullRes.map(r => r.rarity));
     rvClear();
-    rv = { phase: 'launch', timers: [], max };
-    L.innerHTML = `${rvBg()}<div class="rv-rocket m${max}"><i class="trail"></i><b></b></div><div class="rv-burst m${max}"></div><div class="rv-flash m${max}"></div><div class="next wood-text">${tr('Клик — пропустить')}</div>`;
-    snd('flare', { vol: 0.9 });
-    rvLater(950, () => { const r = $('.rv-rocket', L); if (r) r.classList.add('lit'); if (max === 5) snd('bong', { vol: 0.9 }); else if (max === 4) snd('chime5', { vol: 0.7, tag: 'chime' }); });
-    rvLater(1450, () => { const b = $('.rv-burst', L), f = $('.rv-flash', L); if (b) b.classList.add('on'); if (f) f.classList.add('on'); snd('boom', { vol: 0.8, rate: max === 5 ? 0.7 : 1 }); });
-    rvLater(1800, () => (pullRes.length === 1 ? rvCard(0) : rvGrid()));
+    rv = { phase: 'aim', timers: [], max, tease: max === 4 && Math.random() < 0.3, anomaly: !!pullRes.anomaly, charge: 0, charging: false };
+    L.innerHTML = `${rvBg()}<canvas class="rv-fx" id="rv-fx"></canvas><div class="rv-dim" id="rv-dim"></div><div class="rv-flash" id="rv-flash"></div><div class="rv-stage" id="rv-stage"></div>
+      <div class="rv-aim" id="rv-aim"><div class="ring"><i id="rv-ring"></i><b>✦</b></div><div class="wood-text">${tr('Зажми, чтобы выпустить ракету')}</div></div><div class="next wood-text" id="rv-next">${tr('Esc — пропустить')}</div>`;
+    fxInit(L);
+    rvLater(4500, () => rvAimDone());
   }
 
-  function rvCard(i, fromGrid) {
+  function rvDirect() {
+    const L = layers.reveal, r = pullRes[0];
     rvClear();
-    rv.phase = 'card';
-    rv.fromGrid = !!fromGrid;
-    const r = pullRes[i], L = layers.reveal;
-    L.innerHTML = `${rvBg()}<div class="rv-rays m${r.rarity}"></div><div class="rv-card r${r.rarity}" id="rv-card"></div><div class="next wood-text">${fromGrid ? tr('Клик — назад') : tr('Enter или клик — дальше')}</div>`;
-    const card = $('#rv-card', L);
+    rv = { phase: 'card', timers: [], max: r.rarity, charge: 0 };
+    L.innerHTML = `${rvBg()}<canvas class="rv-fx" id="rv-fx"></canvas><div class="rv-dim" id="rv-dim"></div><div class="rv-flash" id="rv-flash"></div><div class="rv-stage" id="rv-stage"></div><div class="next wood-text" id="rv-next"></div>`;
+    fxInit(L);
+    rvBurst(FX.w / 2, FX.h * 0.3);
+  }
+
+  function rvAimDone() {
+    if (!rv || rv.phase !== 'aim') return;
+    const a = $('#rv-aim', layers.reveal);
+    if (a) a.classList.add('gone');
+    rv.charging = false;
+    if (rv.anomaly) rvAnomaly(); else rvLaunch();
+  }
+
+  function rvLaunch() {
+    rv.phase = 'launch';
+    rv.flare = { t: 0, dur: 1.5, speed: 1, col: 0 };
+    rvNext(tr('Клик — пропустить'));
+    snd('flare', { vol: 0.9 });
+    snd('rise', { vol: 0.7 });
+  }
+
+  function rvAnomaly() {
+    rv.phase = 'anomaly';
+    const L = layers.reveal, st = $('#rv-stage', L);
+    const set = pick(['normal', 'aberrant', 'lanky']);
+    const img = SPR[`titan_${set}_200_up`] || SPR.titan_normal_200_up;
+    const nap = NAPE[`${set}_200`] || { fx: 0.5, fy: 0.2 };
+    const box = el('div', 'rv-titan');
+    box.style.left = (25 + Math.random() * 50) + '%';
+    const c = cv(img);
+    box.appendChild(c);
+    const tgt = el('button', 'rv-nape', '');
+    tgt.style.left = (nap.fx * 100) + '%';
+    tgt.style.top = (nap.fy * 100) + '%';
+    box.appendChild(tgt);
+    st.appendChild(box);
+    st.insertAdjacentHTML('beforeend', `<div class="rv-alert">${tr('Аномалия! Титан у стены — бей в затылок!')}</div>`);
+    snd('roar', { vol: 0.8 });
+    snd('horn', { vol: 0.5 });
+    rvNext('');
+    let done = false;
+    const finish = ok => {
+      if (done) return;
+      done = true;
+      const al = $('.rv-alert', st);
+      if (ok) {
+        const r = tgt.getBoundingClientRect();
+        fxBurst(r.left + r.width / 2, r.top + r.height / 2, 90, ['#ff4a3a', '#ffffff', '#ffd36e'], 380, 1, 300, 3);
+        snd('slash', { vol: 1 });
+        snd('cut', { vol: 0.9 });
+        anomalyReward();
+        box.classList.add('slain');
+        if (al) al.textContent = tr('Отбито! +1 билет призыва и 10 перьев');
+      } else {
+        box.classList.add('away');
+        if (al) al.textContent = tr('Титан скрылся…');
+      }
+      rvLater(1300, () => { box.remove(); if (al) al.remove(); rvLaunch(); });
+    };
+    tgt.addEventListener('pointerdown', e => { e.stopPropagation(); finish(true); });
+    rvLater(2300, () => finish(false));
+  }
+
+  function rvBurst(x, y) {
+    const m = rv.max;
+    rv.phase = 'burst';
+    fxBurst(x, y, m === 5 ? 280 : m === 4 ? 180 : 120, RCOL[m], m === 5 ? 600 : 460, 1.7, 230, 3);
+    for (let i = 0; i < (m - 2) * 2; i++) rvLater(260 + i * 170, () => { fxBurst(x + (Math.random() - 0.5) * 300, y + (Math.random() - 0.5) * 180, 44, RCOL[m], 230, 1, 160, 2); snd('crack', { vol: 0.4 }); });
+    if (m === 5) { fxRain(RCOL[5], 170); snd('choir', { vol: 0.8 }); }
+    else if (m === 4) snd('shimmer', { vol: 0.7 });
+    snd('boom', { vol: 0.8, rate: m === 5 ? 0.7 : 1 });
+    const fl = $('#rv-flash', layers.reveal);
+    if (fl) { fl.className = 'rv-flash m' + m; void fl.offsetWidth; fl.classList.add('on'); }
+    if (m === 5) { layers.reveal.classList.add('shake'); setTimeout(() => layers.reveal.classList.remove('shake'), 450); }
+    rvLater(m === 5 ? 1000 : 750, () => (pullRes.length === 1 ? rvShow(0) : rvDeal()));
+  }
+
+  function rvStars(r) {
+    let s = '';
+    for (let k = 0; k < 5; k++) s += `<span class="st${k < r.stars ? ' on' : ''}" style="animation-delay:${0.5 + k * 0.13}s">★</span>`;
+    return s;
+  }
+
+  function rvShow(i, detail) {
+    const r = pullRes[i], st = $('#rv-stage', layers.reveal);
+    rv.phase = detail ? 'detail' : 'card';
+    rvNext(detail ? tr('Клик — назад') : tr('Enter или клик — дальше'));
+    if (r.rarity === 5 && !r.item) { rvCinema(r, st, false); return; }
+    st.innerHTML = `<div class="rv-rays m${r.rarity}"></div><div class="rv-card r${r.rarity}" id="rv-card"></div>`;
+    const card = $('#rv-card', st);
     if (r.item) {
-      card.insertAdjacentHTML('beforeend', `<img class="rv-item" src="assets/ui/scroll.png" alt=""><div class="rname r3">${tr('Наставление')}</div><div class="rv-txt">${tr('+{0} опыта любому герою — используй в «Отряде»', MANUAL_XP)}</div>`);
+      card.insertAdjacentHTML('beforeend', `<img class="rv-item" src="assets/ui/scroll.png" alt=""><div class="rname r3">${tr('Наставление')}</div><div class="rv-txt">${tr('+{0} опыта любому герою — используй в «Отряде»', MANUAL_XP)}</div><div class="rv-fe">+${r.feathers} ${tr('перьев')}</div>`);
       snd('chime3', { vol: 0.6, tag: 'chime' });
       return;
     }
-    card.appendChild(body(r.c.id));
-    let stars = '';
-    for (let k = 0; k < 5; k++) stars += `<span class="st${k < r.stars ? ' on' : ''}" style="animation-delay:${0.25 + k * 0.12}s">★</span>`;
+    const c = body(r.c.id);
+    c.classList.add('sil');
+    card.appendChild(c);
     card.insertAdjacentHTML('beforeend', `${r.isNew ? '<div class="stamp">' + tr('Новый!') + '</div>' : ''}${r.featured ? '<div class="feat">' + tr('Шанс ×2') + '</div>' : ''}
-      <div class="rname r${r.rarity}">${r.c.name}</div><div class="rrar r${r.rarity}">${RARITY[r.rarity].name}</div><div class="rstars">${stars}</div>
-      <div class="rv-txt">${r.isNew ? r.c.ability : r.refund ? tr('Уже 5★ — возвращено {0} жетонов', r.refund) : tr('Повтор: +1 звезда')}</div>`);
-    if (r.rarity >= 5) snd('victory', { vol: 0.8 });
-    else if (r.rarity === 4) { snd('bong', { vol: 0.7 }); snd('chime6', { vol: 0.6, tag: 'chime' }); }
+      <div class="rname r${r.rarity}">${r.c.name}</div><div class="rrar r${r.rarity}">${RARITY[r.rarity].name}</div><div class="rstars">${rvStars(r)}</div>
+      <div class="rv-txt">${r.isNew ? r.c.ability : r.refund ? tr('Уже 5★ — возвращено {0} жетонов', r.refund) : tr('Повтор: +1 звезда')}</div>
+      <div class="rv-quote">«${tr(QUOTES[r.c.id] || QUOTES.cadet)}»</div><div class="rv-fe">+${r.feathers} ${tr('перьев')}</div>`);
+    setTimeout(() => { c.classList.remove('sil'); }, 420);
+    if (r.rarity === 4) { snd('bong', { vol: 0.7 }); snd('chime6', { vol: 0.6, tag: 'chime' }); }
     else snd('chime3', { vol: 0.6, tag: 'chime' });
   }
 
-  function rvGrid(instant) {
-    rvClear();
-    rv.phase = 'grid';
-    const L = layers.reveal;
-    L.innerHTML = `${rvBg()}<div class="rv-grid" id="rv-grid"></div><div class="next wood-text" id="rv-next">${tr('Клик — открыть все')}</div>`;
-    const gr = $('#rv-grid', L);
+  function rvCinema(r, host, overlay) {
+    const box = overlay ? el('div', 'cine-over') : host;
+    if (!overlay) host.innerHTML = '';
+    const q = '«' + tr(QUOTES[r.c.id] || QUOTES.cadet) + '»';
+    box.insertAdjacentHTML('beforeend', `<div class="cine"><div class="cine-black"></div><div class="cine-rays"></div><div class="cine-emblem" id="ce"></div><div class="cine-cables"><i></i><i></i></div><div class="cine-hero" id="chero"></div>
+      <div class="cine-text"><div class="cine-kick">${tr('Легендарный боец')}</div><div class="cine-name">${r.c.name}</div><div class="rstars">${rvStars(r)}</div><div class="cine-quote" id="cq"></div>
+      <div class="cine-sub">${r.isNew ? '<b>' + tr('Новый!') + '</b> ' + r.c.ability : r.refund ? tr('Уже 5★ — возвращено {0} жетонов', r.refund) : tr('Повтор: +1 звезда')}</div><div class="rv-fe">+${r.feathers} ${tr('перьев')}</div></div></div>`);
+    if (overlay) host.appendChild(box);
+    const em = $('#ce', box);
+    em.appendChild(emblem('scouts'));
+    $('#chero', box).appendChild(body(r.c.id));
+    snd('horn', { vol: 0.45 });
+    rvLater(650, () => { snd('choir', { vol: 0.7 }); snd('rope', { vol: 0.7 }); fxRain(RCOL[5], 120); });
+    const qe = $('#cq', box);
+    for (let k = 1; k <= q.length; k++) rvLater(1500 + k * 38, () => { qe.textContent = q.slice(0, k); if (k % 3 === 0) snd('tick', { vol: 0.15 }); });
+    return box;
+  }
+
+  function rvDeal() {
+    rv.phase = 'deal';
+    const st = $('#rv-stage', layers.reveal);
+    st.innerHTML = '<div class="rv-grid" id="rv-grid"></div>';
+    const gr = $('#rv-grid', st);
     rv.cards = pullRes.map((r, i) => {
-      const d = el('div', 'rv-c r' + r.rarity + (instant ? ' open' : ''));
+      const d = el('div', 'rv-c r' + r.rarity);
       d.innerHTML = '<div class="back"></div><div class="front"></div>';
       const fr = $('.front', d);
       if (r.item) fr.insertAdjacentHTML('beforeend', `<img src="assets/ui/scroll.png" alt=""><div class="hn">${tr('Наставление')}</div>`);
       else { fr.appendChild(face(r.c.id)); fr.insertAdjacentHTML('beforeend', `<div class="hn">${r.c.name}</div><div class="r${r.rarity} small">${r.isNew ? tr('Новый!') : r.refund ? '+' + r.refund : starsHTML(r.stars)}</div>`); }
-      d.addEventListener('click', e => { if (!d.classList.contains('open')) return; e.stopPropagation(); rvCard(i, true); });
+      d.addEventListener('click', e => { if (!d.classList.contains('open') || rv.phase !== 'done') return; e.stopPropagation(); rvDetail(i); });
       gr.appendChild(d);
       return d;
     });
-    if (instant) { rv.phase = 'done'; $('#rv-next', L).textContent = tr('Клик по карточке — подробнее, Enter — готово'); return; }
-    let t = 250;
-    pullRes.forEach((r, i) => {
-      t += r.rarity >= 4 ? 520 : 170;
-      rvLater(t, () => {
-        rv.cards[i].classList.add('open');
-        if (r.rarity === 5) { snd('victory', { vol: 0.7 }); L.classList.add('shake'); setTimeout(() => L.classList.remove('shake'), 400); }
-        else if (r.rarity === 4) snd('bong', { vol: 0.6 });
-        else snd('tick', { vol: 0.5 });
-      });
+    const cx = FX.w / 2, cy = FX.h * 0.25;
+    rv.cards.forEach((d, i) => {
+      const b = d.getBoundingClientRect();
+      d.style.transition = 'none';
+      d.style.transform = `translate(${cx - (b.left + b.width / 2)}px, ${cy - (b.top + b.height / 2)}px) scale(0.2) rotate(${(Math.random() - 0.5) * 120}deg)`;
+      d.style.opacity = '0';
     });
-    rvLater(t + 200, () => { rv.phase = 'done'; const n = $('#rv-next', L); if (n) n.textContent = tr('Клик по карточке — подробнее, Enter — готово'); });
+    void gr.offsetWidth;
+    rv.cards.forEach((d, i) => rvLater(i * 70, () => { d.style.transition = 'transform 0.42s cubic-bezier(.2,.9,.3,1.2), opacity 0.2s'; d.style.transform = ''; d.style.opacity = '1'; snd('whoosh', { vol: 0.35 }); }));
+    rvNext(tr('Клик — открыть все'));
+    rvLater(rv.cards.length * 70 + 450, () => { rv.phase = 'grid'; flipNext(0); });
+  }
+
+  function flipNext(i) {
+    if (!rv || rv.phase !== 'grid') return;
+    if (i >= rv.cards.length) { rvGridDone(); return; }
+    const r = pullRes[i], d = rv.cards[i];
+    d.classList.add('open');
+    const b = d.getBoundingClientRect(), x = b.left + b.width / 2, y = b.top + b.height / 2;
+    if (r.rarity === 5) {
+      fxBurst(x, y, 80, RCOL[5], 300, 1, 160, 3);
+      snd('choir', { vol: 0.6 });
+      rv.phase = 'cine-grid';
+      rv.resume = () => { rv.phase = 'grid'; flipNext(i + 1); };
+      rvLater(500, () => { if (rv.phase === 'cine-grid') { rv.over = rvCinema(r, $('#rv-stage', layers.reveal), true); rvNext(tr('Клик — дальше')); } });
+      return;
+    }
+    if (r.rarity === 4) { fxBurst(x, y, 50, RCOL[4], 240, 0.9, 140, 3); snd('shimmer', { vol: 0.5 }); }
+    else { fxBurst(x, y, 12, RCOL[3], 120, 0.6, 100, 2); snd('tick', { vol: 0.4 }); }
+    rvLater(r.rarity === 4 ? 480 : 180, () => flipNext(i + 1));
+  }
+
+  function rvGridDone() {
+    rv.phase = 'done';
+    rvNext(tr('Клик по карточке — подробнее, Enter — готово') + ' · +' + (pullRes.feathers || 0) + ' ' + tr('перьев'));
+  }
+
+  function rvDetail(i) {
+    const st = $('#rv-stage', layers.reveal);
+    rv.grid = st.innerHTML;
+    rv.gridCards = rv.cards;
+    rv.phase = 'detail';
+    const ov = el('div', 'cine-over detail');
+    st.appendChild(ov);
+    const r = pullRes[i];
+    if (r.rarity === 5 && !r.item) rvCinema(r, ov, false);
+    else {
+      ov.innerHTML = `<div class="rv-rays m${r.rarity}"></div><div class="rv-card r${r.rarity}"></div>`;
+      const card = $('.rv-card', ov);
+      if (r.item) card.insertAdjacentHTML('beforeend', `<img class="rv-item" src="assets/ui/scroll.png" alt=""><div class="rname r3">${tr('Наставление')}</div>`);
+      else { card.appendChild(body(r.c.id)); card.insertAdjacentHTML('beforeend', `<div class="rname r${r.rarity}">${r.c.name}</div><div class="rrar r${r.rarity}">${RARITY[r.rarity].name}</div><div class="rstars">${rvStars(r)}</div><div class="rv-txt">${r.c.ability}</div><div class="rv-quote">«${tr(QUOTES[r.c.id] || QUOTES.cadet)}»</div>`); }
+    }
+    rv.detailEl = ov;
+    rvNext(tr('Клик — назад'));
   }
 
   function rvFlipAll() {
     rvClear();
     for (const c of rv.cards || []) c.classList.add('open');
-    rv.phase = 'done';
-    const n = $('#rv-next', layers.reveal);
-    if (n) n.textContent = tr('Клик по карточке — подробнее, Enter — готово');
+    rvGridDone();
+  }
+
+  function rvClose() {
+    rvClear();
+    const fe = pullRes.feathers;
+    rv = null;
+    state = 'menu';
+    go('gacha');
+    if (fe) toast(tr('+{0} перьев', fe));
   }
 
   function nextReveal() {
     if (!rv) { state = 'menu'; go('gacha'); return; }
-    if (rv.phase === 'launch') { rvClear(); if (pullRes.length === 1) rvCard(0); else rvGrid(true); return; }
-    if (rv.phase === 'grid') { rvFlipAll(); return; }
-    if (rv.phase === 'card' && rv.fromGrid) { rvGrid(true); return; }
-    rvClear();
-    rv = null;
-    state = 'menu';
-    go('gacha');
+    const ph = rv.phase;
+    if (ph === 'aim') { rvAimDone(); return; }
+    if (ph === 'anomaly' || ph === 'burst') return;
+    if (ph === 'launch') { rv.flare = null; rvClear(); rvDim(0); if (pullRes.length === 1) rvShow(0); else { rvDeal(); rvClear(); rvFlipAllNow(); } return; }
+    if (ph === 'deal' || ph === 'grid') { rvClear(); for (const d of rv.cards) { d.style.transition = 'none'; d.style.transform = ''; d.style.opacity = '1'; } rvFlipAll(); return; }
+    if (ph === 'cine-grid') { rvClear(); if (rv.over) { rv.over.remove(); rv.over = null; } const res = rv.resume; rv.phase = 'grid'; rvNext(tr('Клик — открыть все')); res(); return; }
+    if (ph === 'detail') { rvClear(); if (rv.detailEl) rv.detailEl.remove(); rv.phase = 'done'; rvGridDone(); return; }
+    rvClose();
+  }
+
+  function rvFlipAllNow() {
+    for (const d of rv.cards) { d.style.transition = 'none'; d.style.transform = ''; d.style.opacity = '1'; }
+    rvFlipAll();
   }
 
   function buildLevelUp() {
@@ -904,7 +1215,7 @@ const UI = (() => {
     if (c === 'KeyM') { toggleMute(); return state === 'menu' || state === 'pull'; }
     if (state === 'pull') {
       if (c === 'Enter' || c === 'Space') nextReveal();
-      if (c === 'Escape') { rvClear(); rv = null; state = 'menu'; go('gacha'); }
+      if (c === 'Escape') rvClose();
       return true;
     }
     if (state !== 'menu') return false;
@@ -930,7 +1241,8 @@ const UI = (() => {
     } else if (screen === 'gacha') {
       if (c === 'Digit1' || c === 'Enter') doPull(1);
       if (c === 'Digit0') doPull(10);
-      if (c === 'KeyF' && freeAvailable()) doPull(1, true);
+      if (c === 'KeyF' && freeAvailable()) doPull(1, 'free');
+      if (c === 'KeyT' && tickets() > 0) doPull(1, 'ticket');
       if (c === 'Tab' || c === 'KeyQ' || c === 'KeyE') { gBanner = gBanner === 'event' ? 'standard' : 'event'; refreshGacha(); }
     }
     return true;
@@ -940,7 +1252,9 @@ const UI = (() => {
     build();
     applyAudio();
     root.addEventListener('click', e => { if (e.target.closest('.k-btn:not(.off), .faction, .hero-card, .up-card, .k-icon')) snd('click', { vol: 0.7 }); }, true);
-    layers.reveal.addEventListener('click', nextReveal);
+    layers.reveal.addEventListener('click', () => { if (rv && rv.ignoreClick) { rv.ignoreClick = false; return; } nextReveal(); });
+    layers.reveal.addEventListener('pointerdown', () => { if (rv && rv.phase === 'aim') rv.charging = true; });
+    layers.reveal.addEventListener('pointerup', () => { if (rv) rv.charging = false; });
     go('hub');
     sync(0);
     const P = new URLSearchParams(location.search);
@@ -959,6 +1273,17 @@ const UI = (() => {
     if (['battle', 'squad', 'gacha', 'records', 'settings', 'training', 'missions'].includes(q)) { go(q); return; }
     if (q === 'pull') { save.tokens += 900; go('gacha'); doPull(10); return; }
     if (q === 'pull1') { save.tokens += 100; go('gacha'); doPull(1); return; }
+    if (q === 'shop') { const g = gachaState(); g.feathers = (g.feathers || 0) + 200; g.tickets = (g.tickets || 0) + 2; gBanner = 'shop'; shopPick = 'pick4'; go('gacha'); return; }
+    if (q === 'pull5' || q === 'pull10x' || q === 'anomaly') {
+      const U = new URLSearchParams(location.search);
+      save.tokens += 900;
+      save.pity5 = PITY5 - 1;
+      window.FORCE_ANOMALY = q === 'anomaly';
+      go('gacha');
+      doPull(q === 'pull10x' ? 10 : 1);
+      if (U.get('skipaim')) rvAimDone();
+      return;
+    }
     if (q === 'walk') {
       start();
       for (let i = 0; i < 30; i++) update(1 / 60);
@@ -1052,5 +1377,5 @@ const UI = (() => {
     if (q === 'win') { state = 'win'; finishRun(true); }
   }
 
-  return { init, sync, key, go, toast };
+  return { init, sync, key, go, toast, rvPhase: () => (rv ? rv.phase : null), rvFlare: () => (rv && rv.flare ? rv.flare.t : null) };
 })();

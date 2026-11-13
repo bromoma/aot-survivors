@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Атака титанов: Survivors</title>
+<link rel="stylesheet" href="../../src/ui.css">
+<style>
+  html, body { margin: 0; height: 100%; background: #0b0d14; overflow: hidden; }
+  canvas { display: block; image-rendering: pixelated;  }
+  body::after { content: ''; position: fixed; inset: 0; pointer-events: none; background: radial-gradient(ellipse at center, rgba(6, 4, 10, 0) 52%, rgba(6, 4, 10, 0.42) 100%); }
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<script>window.ASSET_BASE="../";window.ERRS=[];window.onerror=(m,s,l,c)=>{ERRS.push(m+" @"+l+":"+c)};</script>
+<script src="../src/core.js"></script>
+<script src="../src/i18n.js"></script>
+<script src="../src/terrain.js"></script>
+<script src="../src/fx.js"></script>
+<script src="../src/assets.js"></script>
+<script src="../src/audio.js"></script>
+<script src="../src/combat.js"></script>
+<script src="../src/meta.js"></script>
+<script src="../src/heroes.js"></script>
+<script src="../src/gacha.js"></script>
+<script src="../src/world.js"></script>
+<script src="../src/juice.js"></script>
+<script src="../src/game.js"></script>
+<script src="../src/ui.js"></script>
+</body>
+</html>
+<script>
+const T0 = performance.now(), LOG = [];
+const iv = setInterval(() => {
+  if (typeof UI === 'undefined' || !UI.rvPhase) return;
+  LOG.push(Math.round(performance.now() - T0) + ':' + UI.rvPhase() + ':' + (UI.rvFlare() ?? '-'));
+  if (LOG.length > 60) {
+    clearInterval(iv);
+    const o = document.createElement('pre'); o.id = 'log'; o.textContent = LOG.join(' ') + ' | ERR ' + ERRS.join(' ; '); document.body.appendChild(o);
+    const fx = document.getElementById('rv-fx');
+    const p = document.createElement('pre'); p.id = 'snap'; p.textContent = fx ? fx.toDataURL() : document.getElementById('game').toDataURL(); document.body.appendChild(p);
+  }
+}, 250);
+</script>

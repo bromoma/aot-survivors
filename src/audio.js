@@ -13,7 +13,7 @@ const SND = (() => {
     ruins: ['ruins_lament', 'ruins_rising_moon'],
     field: ['field_fouler_horizon', 'field_kings_feast'],
   };
-  const LIMIT = { roar: 0.8, boom: 0.06, snap: 0.08, crystal: 0.3, horn: 1, rumble: 0.5, steamburst: 1, flashbang: 0.3, gas: 0.22, rope: 0.12, step: 0.09, swing: 0.2, hiss: 0.25, cut: 0.05, chime: 0.05, click: 0.03, flare: 0.3, chomp: 0.4, tick: 0.25 };
+  const LIMIT = { roar: 0.8, boom: 0.06, snap: 0.08, crystal: 0.3, horn: 1, rumble: 0.5, steamburst: 1, flashbang: 0.3, gas: 0.22, rope: 0.12, step: 0.09, swing: 0.2, hiss: 0.25, cut: 0.05, chime: 0.05, click: 0.03, flare: 0.3, chomp: 0.4, tick: 0.25, whoosh: 0.04, crack: 0.1 };
 
   let ac = null, master, sfxBus, comp, noiseBuf = null, unlocked = false, muted = false;
   const buffers = {};
@@ -167,6 +167,28 @@ const SND = (() => {
   }
 
   const SYNTH = {
+    rise(out, t) {
+      noise(out, t, 1.5, 'bandpass', 300, 3800, 2.2, 0.22, 0.4);
+      tone(out, t, 1.5, 'sine', 180, 980, 0.1, 0.5);
+      tone(out, t, 1.5, 'triangle', 90, 420, 0.06, 0.6);
+    },
+    crack(out, t) {
+      for (let i = 0; i < 7; i++) noise(out, t + i * 0.035 + Math.random() * 0.02, 0.05, 'highpass', 4000, 2500, 0.6, 0.35, 0.002);
+    },
+    shimmer(out, t) {
+      [1047, 1319, 1568, 2093, 2637].forEach((f, i) => tone(out, t + i * 0.06, 0.6, 'triangle', f, f, 0.08, 0.01));
+    },
+    choir(out, t) {
+      [220, 277, 330, 440, 554].forEach((f, i) => { tone(out, t + i * 0.04, 2.6, 'sawtooth', f, f, 0.035, 0.45); tone(out, t + i * 0.04, 2.6, 'triangle', f * 2, f * 2, 0.03, 0.5); });
+      tone(out, t, 2.4, 'sine', 110, 110, 0.25, 0.3);
+      [1760, 2217, 2637].forEach((f, i) => tone(out, t + 0.5 + i * 0.12, 1.2, 'sine', f, f, 0.05, 0.01));
+    },
+    heartbeat(out, t) {
+      for (let i = 0; i < 2; i++) { tone(out, t + i * 0.55, 0.18, 'sine', 70, 40, 0.8, 0.005); tone(out, t + i * 0.55 + 0.17, 0.16, 'sine', 60, 38, 0.55, 0.005); }
+    },
+    whoosh(out, t) {
+      noise(out, t, 0.18, 'bandpass', 2000, 600, 1.3, 0.25, 0.02);
+    },
     rope(out, t) {
       noise(out, t, 0.16, 'bandpass', 900, 4200, 2.5, 0.5);
       tone(out, t + 0.1, 0.05, 'square', 2600, 1800, 0.06);
