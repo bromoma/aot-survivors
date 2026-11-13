@@ -658,6 +658,7 @@ function reset() {
   if (hero.id === 'levi') { stats.speed *= 1.15; stats.orbit *= 1.2; stats.cd = 0.15; }
   stats.speed *= 1 + (stars - 1) * 0.03;
   stats.orbit *= 1 + (stars - 1) * 0.03;
+  metaApply(stats);
   const start = faction.map === 'city' ? { x: WORLD / 2, y: WORLD / 2 + 120 } : { x: WORLD / 2, y: WORLD / 2 };
   player = {
     x: start.x, y: start.y, z: 0, vx: 0, vy: 0, hp: 5, inv: 0, face: 1,
@@ -692,6 +693,7 @@ function reset() {
   combatReset();
   if (hero.id === 'levi') stats.skills.spin = 1;
   if (hero.id === 'hange') stats.skills.trap = 1;
+  metaRunStart();
   cam = { x: player.x - viewW() / 2, y: player.y - viewH() / 2 - 60 };
   for (let i = 0; i < faction.base; i++) spawnTitan();
 }
@@ -852,7 +854,8 @@ function saveBest() {
 
 function finishRun(won) {
   const mul = [1, 1.5, 2][FACTIONS.indexOf(faction)];
-  const earned = Math.round(((game.kills - game.paidKills) * 2 + Math.floor((game.time - game.paidTime) / 10) + (won ? 300 : 0) + (game.bossKills - (game.paidBoss || 0)) * 60) * mul);
+  const greed = 1 + ((save.meta && save.meta.greed) || 0) * 0.1;
+  const earned = Math.round(((game.kills - game.paidKills) * 2 + Math.floor((game.time - game.paidTime) / 10) + (won ? 300 : 0) + (game.bossKills - (game.paidBoss || 0)) * 60) * mul * greed);
   game.paidBoss = game.bossKills;
   game.paidKills = game.kills;
   game.paidTime = game.time;
@@ -869,6 +872,7 @@ function finishRun(won) {
   game.statKills = game.kills;
   game.statTime = game.time;
   save.stats.bestLevel = Math.max(save.stats.bestLevel, game.level);
+  metaRunEnd(won);
   saveBest();
 }
 
@@ -888,6 +892,16 @@ function hurtPlayer(t) {
   game.shake = 14;
   burst(p.x, p.y - KZ * p.z, 18, '#c0392b');
   addText('-1 ♥', p.x, p.y - KZ * p.z - 30, '#ff6b6b');
+  if (p.hp <= 0 && game.revives > 0) {
+    game.revives--;
+    p.hp = Math.min(2, stats.maxHp);
+    p.inv = 3;
+    game.banner = { text: 'Второе дыхание!', sub: 'Вставай, солдат!', t: 2.2, win: true };
+    for (const o of titans) if (!o.dying && Math.hypot(o.x - p.x, o.y - p.y) < 450) stunTitan(o, 2, 'flash');
+    rings.push({ x: p.x, y: p.y, r: 450, life: 0.35, color: '#fff6c8' });
+    sfx('levelup', { vol: 0.8 });
+    return;
+  }
   if (p.hp <= 0) {
     state = 'over';
     finishRun(false);
@@ -911,6 +925,7 @@ function killTitan(t) {
   }
   game.kills++;
   game.combo = game.time - game.lastKill < 4 ? game.combo + 1 : 1;
+  if (game.combo > (game.maxCombo || 0)) game.maxCombo = game.combo;
   sfx('slash', { vol: 0.9 });
   sfx('cut', { vol: 0.8, rate: 0.85 });
   sfx('chime' + Math.min(7, game.combo - 1), { vol: 0.55, tag: 'chime' });
@@ -947,7 +962,7 @@ function killTitan(t) {
       addText('+1 ♥', player.x, player.y - KZ * player.z - 50, '#7cfc9a');
     }
   }
-  gainXp(Math.round((t.H / 60 + (t.aberrant ? 2 : 0)) * (1 + 0.25 * (game.combo - 1)) * stats.xp));
+  gainXp(Math.round((t.H / 60 + (t.aberrant ? 2 : 0)) * Math.min(4, 1 + 0.2 * (game.combo - 1)) * stats.xp));
 }
 
 function gainXp(n) {
@@ -966,6 +981,13 @@ function openLevelUp() {
   sel = 1;
   if (state !== 'levelup') sfx('levelup', { vol: 0.7 });
   state = 'levelup';
+}
+
+function rerollChoices() {
+  if (state !== 'levelup' || !(game.rerolls > 0)) return;
+  game.rerolls--;
+  choices = rollChoices(3);
+  sfx('cast', { vol: 0.5, rate: 1.3 });
 }
 
 function choose(i) {
@@ -2182,6 +2204,7 @@ function pull(n) {
     pullRes.push({ c, isNew: !had, stars: save.chars[c.id], refund: had >= 5 ? 20 * r : 0 });
   }
   save.pulls += n;
+  dailyProgress('pull', n);
   persist();
   pullIdx = 0;
   pullT = 0;
@@ -2441,6 +2464,7 @@ addEventListener('keydown', e => {
   }
   if (state === 'levelup') {
     if (['Digit1', 'Digit2', 'Digit3'].includes(e.code)) return choose(+e.code.slice(5) - 1);
+    if (e.code === 'KeyR') return rerollChoices();
     if (e.code === 'ArrowLeft' || e.code === 'KeyA') sel = (sel + 2) % 3;
     if (e.code === 'ArrowRight' || e.code === 'KeyD') sel = (sel + 1) % 3;
     if (confirm) choose(sel);

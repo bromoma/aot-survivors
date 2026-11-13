@@ -262,3 +262,35 @@
 #hud .banner.win .bt { color: #ffd36e; }
 #hud .banner .bs { font-size: 32px; color: var(--wood-text); text-shadow: 3px 3px 0 var(--shadow); }
 .up-card .lvl-tag { margin-bottom: 4px; }
+
+.hub-menu { gap: 7px; top: 22%; }
+.hub-menu .k-btn { font-size: 28px; position: relative; }
+.badge { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); min-width: 26px; height: 26px; padding: 0 6px; background: #c8302a; color: #fff; border: 2px solid #3a0a06; font-size: 16px; line-height: 22px; text-align: center; text-shadow: 1px 1px 0 #3a0a06; }
+.rank-plate { font-size: 16px !important; color: var(--ink); }
+.rank-plate img { width: calc(10px * var(--u)) !important; height: calc(14px * var(--u)) !important; }
+.train-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.train { text-align: center; padding: 2px 6px; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.train canvas { width: calc(16px * var(--u)); height: calc(16px * var(--u)); }
+.train .tn { font-size: 20px; line-height: 1; }
+.train .pips { display: flex; gap: 4px; }
+.train .pips i { width: calc(6px * var(--u)); height: calc(6px * var(--u)); background: #c8b896; border: 2px solid #6b4630; }
+.train .pips i.on { background: #2e8c8a; border-color: #1e3a3a; }
+.train .ud { min-height: 40px; font-size: 16px; }
+.train .nx { font-size: 16px; }
+.train .k-btn { margin-top: auto; min-width: 70%; }
+.train .k-btn img, .mis .k-btn img { width: calc(10px * var(--u)); height: calc(10px * var(--u)); }
+.sec { font-size: 24px; margin: 8px 0 4px; color: var(--ink-muted); }
+.rank { margin-left: auto; margin-right: 12px; }
+.mis-list { display: flex; flex-direction: column; gap: 6px; }
+.mis { display: flex; align-items: center; gap: 12px; padding: 2px 6px; }
+.mis .mt { flex: 1; }
+.mis .mn { font-size: 20px; }
+.mis .bar { position: relative; height: calc(6px * var(--u)); margin-top: 3px; background: #d8c8a4; border: 2px solid #6b4630; max-width: 460px; }
+.mis .bar i { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(#b8f0c0, #4fae5a); }
+.mis .mv { width: 110px; text-align: right; color: var(--teal); }
+.mis .k-btn { min-width: 130px; }
+.mis.got { opacity: 0.6; }
+.newdone { margin-top: 10px; padding: 4px 12px; }
+#levelup .buttons .k-btn img { width: calc(12px * var(--u)); height: calc(12px * var(--u)); }
+@media (max-width: 900px) { .train-grid { grid-template-columns: repeat(2, 1fr); } }
+.train .k-btn { min-height: calc(20px * var(--u)); padding: 0 12px; }

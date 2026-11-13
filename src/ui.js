@@ -26,7 +26,9 @@ const UI = (() => {
   const HUB_ITEMS = [
     { id: 'battle', label: 'В бой', icon: 'play' },
     { id: 'squad', label: 'Отряд', icon: 'square' },
+    { id: 'training', label: 'Тренировки', icon: 'pearl' },
     { id: 'gacha', label: 'Призыв', icon: 'coin' },
+    { id: 'missions', label: 'Задания', icon: 'ribbon' },
     { id: 'records', label: 'Рекорды', icon: 'seal_green' },
     { id: 'settings', label: 'Настройки', icon: 'gear' },
   ];
@@ -84,6 +86,24 @@ const UI = (() => {
     } else if (i === 9) {
       for (let y = 0; y < 8; y++) { rect(g, 6 - y * 0.6, 3 + y, 1 + y * 0.6, 1, '#3f6fb5'); rect(g, 7, 3 + y, 1 + y * 0.6, 1, '#eef2f6'); }
       rect(g, 4, 11, 6, 1, '#2a4f86');
+    } else if (i === 11) {
+      rect(g, 3, 2, 8, 11, '#8a5a30'); rect(g, 4, 3, 6, 9, '#f2e4c4'); rect(g, 3, 2, 1, 11, '#5a3a20');
+      for (let k = 0; k < 4; k++) rect(g, 5, 5 + k * 2, 4, 1, '#8a7a60');
+      P(10, 1, '#ffd36e'); P(11, 2, '#ffd36e'); P(12, 1, '#fff2a8');
+    } else if (i === 12) {
+      for (let k = 0; k < 3; k++) { disc(g, 7, 11 - k * 3, 4, 1.5, '#b07a20'); disc(g, 7, 10 - k * 3, 4, 1.5, '#ffd36e'); }
+      P(5, 3, '#fff2a8');
+    } else if (i === 13) {
+      rect(g, 2, 2, 10, 10, '#f4f0e6'); rect(g, 2, 11, 10, 1, '#b8b0a0'); rect(g, 11, 2, 1, 10, '#c8c0b0');
+      for (const [x, y] of [[4, 4], [9, 4], [6, 7], [4, 9], [9, 9]]) rect(g, x, y, 1, 1, '#2a1c12');
+    } else if (i === 14) {
+      g.drawImage(HEART, 3, 5);
+      for (let k = 0; k < 4; k++) { P(2 - k * 0 + k, 4 - k, '#eef2f6'); P(12 - k, 4 - k, '#eef2f6'); }
+      rect(g, 0, 6, 3, 1, '#c8d4dc'); rect(g, 11, 6, 3, 1, '#c8d4dc');
+    } else if (i === 15) {
+      pline(g, 3, 12, 11, 2, 1, '#e6eef2'); pline(g, 4, 12, 12, 2, 1, '#9aaab4');
+      rect(g, 2, 11, 3, 2, '#6b4630');
+      P(11, 6, '#ffd36e'); P(10, 7, '#ffd36e'); P(12, 7, '#ffd36e'); P(11, 8, '#ffd36e'); P(11, 7, '#fff2a8');
     } else {
       for (let a = 0; a < 6; a++) {
         const x = Math.round(7 + Math.cos(a * 1.047) * 5), y = Math.round(7 + Math.sin(a * 1.047) * 4);
@@ -177,6 +197,18 @@ const UI = (() => {
           <button class="k-btn big" id="pull10">${img('coin')} 10 — 900</button>
         </div>
       </div></div></div>
+      <div class="screen" data-s="training"><div class="panel-wrap"><div class="panel k-frame" style="width:min(1000px,94vw)">
+        <div class="head"><span class="h2">Тренировки кадетского корпуса</span><button class="k-icon" data-back>${img('close')}</button></div>
+        <div class="muted" style="margin-bottom:8px">Постоянные улучшения за жетоны — действуют в каждом забеге</div>
+        <div class="train-grid" id="training"></div>
+      </div></div></div>
+      <div class="screen" data-s="missions"><div class="panel-wrap"><div class="panel k-frame" style="width:min(820px,94vw)">
+        <div class="head"><span class="h2">Задания</span><span class="rank" id="rank"></span><button class="k-icon" data-back>${img('close')}</button></div>
+        <div class="sec">Сегодня</div>
+        <div class="mis-list" id="daily"></div>
+        <div class="sec">Достижения</div>
+        <div class="mis-list" id="achievements"></div>
+      </div></div></div>
       <div class="screen" data-s="records"><div class="panel-wrap"><div class="panel k-frame">
         <div class="head"><span class="h2">Рекорды</span><button class="k-icon" data-back>${img('close')}</button></div>
         <div class="list" id="records"></div>
@@ -186,13 +218,13 @@ const UI = (() => {
         <div id="settings"></div>
       </div></div></div>
       <div class="bottom-bar">
-        <div class="coins k-card"><img src="assets/ui/coin.png" alt=""><span id="tokens"></span></div>
+        <div class="row" style="gap:10px"><div class="coins k-card"><img src="assets/ui/coin.png" alt=""><span id="tokens"></span></div><div class="coins k-card rank-plate"><img src="assets/ui/ribbon.png" alt=""><span id="rank-foot"></span></div></div>
         <div class="hint" id="menu-hint"></div>
       </div>
       <div class="msg k-tip" id="msg"></div>`;
     const hm = $('#hub-menu', M);
     HUB_ITEMS.forEach((it, i) => {
-      const b = el('button', 'k-btn', `${img(it.icon, 'ico')} ${it.label}`);
+      const b = el('button', 'k-btn', `${img(it.icon, 'ico')} ${it.label}${it.id === 'missions' ? '<span class="badge" id="mis-badge"></span>' : ''}`);
       b.addEventListener('click', () => go(it.id));
       b.addEventListener('mouseenter', () => { hubSel = i; refreshHubFocus(); });
       hm.appendChild(b);
@@ -247,13 +279,20 @@ const UI = (() => {
     if (id === 'squad') refreshSquad();
     if (id === 'gacha') refreshGacha();
     if (id === 'records') refreshRecords();
+    if (id === 'training') refreshTraining();
+    if (id === 'missions') refreshMissions();
     if (id === 'settings') refreshSettings();
     refreshFooter();
   }
 
   function refreshFooter() {
     $('#tokens').textContent = save.tokens;
-    const hints = { hub: '↑↓ — выбрать, Enter — открыть', battle: '← → — фракция, Enter — в бой, Esc — назад', squad: 'Стрелки — выбрать, Enter — взять в бой, Esc — назад', gacha: '1 — один призыв, 0 — десять, Esc — назад', records: 'Esc — назад', settings: 'Esc — назад' };
+    const rk = rankInfo();
+    $('#rank-foot').textContent = rk.name;
+    const n = claimableCount();
+    const bd = $('#mis-badge');
+    if (bd) { bd.textContent = n || ''; bd.style.display = n ? '' : 'none'; }
+    const hints = { hub: '↑↓ — выбрать, Enter — открыть', battle: '← → — фракция, Enter — в бой, Esc — назад', squad: 'Стрелки — выбрать, Enter — взять в бой, Esc — назад', gacha: '1 — один призыв, 0 — десять, Esc — назад', records: 'Esc — назад', settings: 'Esc — назад', training: 'Клик — купить уровень, Esc — назад', missions: 'Клик — забрать награду, Esc — назад' };
     $('#menu-hint').textContent = hints[screen] || '';
   }
 
@@ -327,6 +366,56 @@ const UI = (() => {
     $('#pull1').classList.toggle('off', save.tokens < 100);
     $('#pull10').classList.toggle('off', save.tokens < 900);
     refreshFooter();
+  }
+
+  function refreshTraining() {
+    ensureMeta();
+    const box = $('#training');
+    box.innerHTML = '';
+    for (const t of TRAINING) {
+      const l = save.meta[t.id], cost = trainingCost(t);
+      const d = el('div', 'train k-card' + (cost === null ? ' sel' : ''));
+      d.appendChild(cv(upIcon(t.icon)));
+      const pips = Array.from({ length: t.max }, (_, i) => '<i class="' + (i < l ? 'on' : '') + '"></i>').join('');
+      d.insertAdjacentHTML('beforeend', `<div class="tn">${t.name}</div><div class="pips">${pips}</div>
+        <div class="ud">${cost === null ? t.text(l) : (l ? 'Ур. ' + (l + 1) + ': ' : '') + t.text(l + 1)}</div>`);
+      const b = el('button', 'k-btn' + (cost === null || save.tokens < cost ? ' off' : ''), cost === null ? 'Максимум' : `<img src="assets/ui/coin.png" alt=""> ${cost}`);
+      b.addEventListener('click', () => {
+        if (cost === null) return;
+        if (save.tokens < cost) { toast('Не хватает жетонов — сыграй забег'); snd('error', { vol: 0.6 }); return; }
+        if (buyTraining(t.id)) { snd('levelup', { vol: 0.6 }); toast(t.name + ': уровень ' + save.meta[t.id]); refreshTraining(); refreshFooter(); }
+      });
+      d.appendChild(b);
+      box.appendChild(d);
+    }
+  }
+
+  function misRow(name, text, value, goal, reward, done, claimed, onClaim) {
+    const row = el('div', 'mis k-card' + (done && !claimed ? ' sel' : '') + (claimed ? ' got' : ''));
+    const pct = Math.round(Math.min(1, value / goal) * 100);
+    row.innerHTML = `<div class="mt"><div class="mn">${name}</div><div class="muted">${text}</div>
+      <div class="bar"><i style="width:${pct}%"></i></div></div>
+      <div class="mv">${goal > 1 ? value + ' / ' + goal : ''}</div>`;
+    const b = el('button', 'k-btn' + (done && !claimed ? '' : ' off'), claimed ? 'Получено' : `<img src="assets/ui/coin.png" alt=""> ${reward}`);
+    b.addEventListener('click', () => {
+      if (!done || claimed) return;
+      const got = onClaim();
+      if (got) { snd('chime5', { vol: 0.7, tag: 'chime' }); snd('bong', { vol: 0.5 }); toast('+' + got + ' жетонов'); refreshMissions(); refreshFooter(); }
+    });
+    row.appendChild(b);
+    return row;
+  }
+
+  function refreshMissions() {
+    const rk = rankInfo();
+    $('#rank').innerHTML = `Звание: <b>${rk.name}</b>${rk.next ? ' · до «' + rk.next.name + '»: ' + (rk.next.at - rk.n) : ''}`;
+    const dbox = $('#daily');
+    dbox.innerHTML = '';
+    for (const t of dailyState()) dbox.appendChild(misRow('Задание дня', t.text, t.value, t.goal, t.reward, t.done, t.claimed, () => claimDaily(t.i)));
+    const abox = $('#achievements');
+    abox.innerHTML = '';
+    const list = achievementsState().sort((a, b) => ((b.done && !b.claimed) - (a.done && !a.claimed)) || (a.claimed - b.claimed));
+    for (const a of list) abox.appendChild(misRow(a.name, a.text, a.value, a.goal, a.reward, a.done, a.claimed, () => claimAchievement(a.id)));
   }
 
   function refreshRecords() {
@@ -474,7 +563,10 @@ const UI = (() => {
     L.innerHTML = `<div class="shade"></div><div class="panel-wrap"><div class="col" style="pointer-events:auto">
       <div class="big-title" style="color:#7cfc9a">Уровень ${game.level - pendingLevels + 1}!</div>
       <div class="cards" id="lv-cards"></div>
-      <div class="center wood-text" style="margin-top:10px">← → и Enter, клик или 1 / 2 / 3</div></div></div>`;
+      <div class="center wood-text" style="margin-top:10px">← → и Enter, клик или 1 / 2 / 3</div>
+      ${game.rerolls > 0 ? '<div class="buttons"><button class="k-btn" id="lv-reroll"><img src="assets/ui/dice.png" alt=""> Перебросить (' + game.rerolls + ') — R</button></div>' : ''}</div></div>`;
+    const rr = $('#lv-reroll', L);
+    if (rr) rr.addEventListener('click', () => rerollChoices());
     const box = $('#lv-cards', L);
     choices.forEach((c, i) => {
       const d = el('div', 'up-card k-card' + (i === sel ? ' sel' : ''));
@@ -485,7 +577,7 @@ const UI = (() => {
       d.addEventListener('click', () => choose(i));
       box.appendChild(d);
     });
-    cache.lvKey = choices.map(c => c.name).join('|') + game.level + pendingLevels;
+    cache.lvKey = choices.map(c => c.name).join('|') + game.level + pendingLevels + ':' + game.rerolls;
   }
 
   function markLevel() {
@@ -512,6 +604,7 @@ const UI = (() => {
       <div class="muted">${won ? faction.name + ' гордится тобой' : faction.name + ' · отдай своё сердце…'}</div>
       <div class="list">${rows.map(([k, v]) => `<div>${k}</div><div class="v">${v}</div>`).join('')}</div>
       <div class="reward"><img src="assets/ui/coin.png" alt="">+${game.reward}</div>
+      ${(game.newDone && game.newDone.length) || game.newDaily > 0 ? '<div class="newdone k-tip">Выполнено: ' + [...(game.newDone || []).map(n => '«' + n + '»'), ...(game.newDaily > 0 ? ['заданий дня: ' + game.newDaily] : [])].join(', ') + ' — забери награду в «Заданиях»</div>' : ''}
       <div class="buttons">
         ${won ? '<button class="k-btn big" id="rs-endless">Дальше без конца</button>' : ''}
         <button class="k-btn big" id="rs-again">Ещё раз</button>
@@ -541,7 +634,7 @@ const UI = (() => {
       if (layers.hud.classList.contains('on')) refreshHudStatic();
     }
     if (st === 'levelup') {
-      const key = choices.map(c => c.name).join('|') + game.level + pendingLevels;
+      const key = choices.map(c => c.name).join('|') + game.level + pendingLevels + ':' + game.rerolls;
       if (key !== cache.lvKey) buildLevelUp();
       else if (cache.lvSel !== sel) markLevel();
     }
@@ -681,6 +774,9 @@ const UI = (() => {
     const P = new URLSearchParams(location.search);
     const devHost = location.protocol === 'file:' || ['localhost', '127.0.0.1', ''].includes(location.hostname);
     if (!devHost) return;
+    if (P.get('tokens')) save.tokens = +P.get('tokens');
+    if (P.get('meta')) { ensureMeta(); for (const t of TRAINING) save.meta[t.id] = Math.min(t.max, +P.get('meta')); reset(); }
+    if (P.get('stats')) { ensureMeta(); Object.assign(save.stats, { kills: 1234, runs: 12, bestLevel: 22, maxCombo: 11 }); save.stats.bosses.female = 1; save.daily.tasks[0].progress = 999; save.claimed = { kills0: true, runs0: true, kills1: true, lvl0: true }; refreshFooter(); }
     if (P.get('all')) for (const c of CHARS) save.chars[c.id] = save.chars[c.id] || 1 + (c.id.length % 3);
     if (P.get('hero')) { save.chars[P.get('hero')] = save.chars[P.get('hero')] || 1; save.selected = P.get('hero'); reset(); go('hub'); }
     const q = P.get('ui');
@@ -688,7 +784,7 @@ const UI = (() => {
   }
 
   function debugScreen(q) {
-    if (['battle', 'squad', 'gacha', 'records', 'settings'].includes(q)) { go(q); return; }
+    if (['battle', 'squad', 'gacha', 'records', 'settings', 'training', 'missions'].includes(q)) { go(q); return; }
     if (q === 'pull') { save.tokens += 900; doPull(10); revealIdx = 3; showReveal(); return; }
     if (q.startsWith('boss_')) {
       start();

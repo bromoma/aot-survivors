@@ -525,6 +525,7 @@ function bossHit(t) {
   if (b.hp <= 0) {
     game.boss = null;
     game.bossKills++;
+    (game.bossKinds || (game.bossKinds = [])).push(b.kind);
     killTitan(t);
     gainXp(25 + game.bossKills * 10);
     if (player.hp < stats.maxHp) player.hp++;

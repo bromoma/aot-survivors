@@ -3,7 +3,7 @@
 <body><script>window.onerror=(m,s,l,c,e)=>{document.body.setAttribute('data-err',m+' @'+l+':'+c+' '+(e&&e.stack||'').slice(0,400))};window.requestAnimationFrame=()=>0;window.ASSET_BASE='../';window.addEventListener('unhandledrejection',e=>{document.body.setAttribute('data-err','REJ '+(e.reason&&(e.reason.message+' '+(e.reason.stack||'').slice(0,300))))});</script>
 <canvas id="game"></canvas>
 <script src="../src/core.js"></script><script src="../src/terrain.js"></script><script src="../src/fx.js"></script>
-<script src="../src/assets.js"></script><script src="../src/audio.js"></script><script src="../src/combat.js"></script><script src="../src/game.js"></script>
+<script src="../src/assets.js"></script><script src="../src/audio.js"></script><script src="../src/combat.js"></script><script src="../src/meta.js"></script><script src="../src/game.js"></script>
 <script>
 const LOG = []; let DEATHS = 0;
 const log = s => LOG.push(s);
@@ -55,9 +55,10 @@ function runTest() {
       update(1 / 60);
       upd += performance.now() - a;
       if (state === 'levelup') choose(0);
-      if (state === 'over') { DEATHS++; state = 'play'; player.hp = 5; }
+      if (state === 'over') { if (!DEATHS) log('FIRSTDEATH ' + game.time.toFixed(0) + ' lvl ' + game.level); DEATHS++; state = 'play'; player.hp = 5; }
       if (i % 3 === 0) { a = performance.now(); render(); const d = performance.now() - a; rnd += d; rn++; worst = Math.max(worst, d); if (d > 120) log(`slow ${d.toFixed(0)}ms t=${game.time.toFixed(1)} ` + JSON.stringify(Object.fromEntries(Object.entries(FP).filter(([k, v]) => v > 3).map(([k, v]) => [k, Math.round(v)])))); for (const k in FP) delete FP[k]; }
     }
+    if (HS.includes('meta')) { if (state === 'play') finishRun(false); log(`META tokens ${save.tokens} reward ${game.reward} state ${state} t ${game.time.toFixed(0)} | done ${achievementsState().filter(a => a.done).map(a => a.id).join(',')} | daily ${JSON.stringify(dailyState().map(t => t.value + '/' + t.goal))} | stats ${JSON.stringify(save.stats)}`); }
     log(`skills ${JSON.stringify(stats.skills)} pass ${JSON.stringify(stats.pass)} bossIdx ${game.bossIdx} bossKills ${game.bossKills} boss ${game.boss ? game.boss.boss.kind + ' hp' + game.boss.boss.hp : '-'} deaths ${DEATHS} hurt ${JSON.stringify(HURT)} | ${BOSSLOG.join(', ')}`); log(`sim: update ${(upd / N).toFixed(2)}ms, render avg ${(rnd / rn).toFixed(2)}ms worst ${worst.toFixed(0)}ms, titans ${titans.length}, kills ${game.kills}, snapAt ${snapAt}`);
     const a = performance.now();
     for (let i = 0; i < 20; i++) render();
