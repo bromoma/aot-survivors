@@ -152,6 +152,11 @@
 .faction .fname { font-size: 32px; line-height: 1; }
 .faction .diff { margin: 4px 0; }
 .faction .desc { color: var(--ink-muted); min-height: 60px; }
+.threat { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 10px; flex-wrap: wrap; pointer-events: auto; }
+.threat .tl { font-size: 22px; margin-right: 4px; }
+.threat .th { min-width: 46px; padding: 4px 8px; }
+.threat .th.sel { border-image-source: url('../assets/ui/hover.png'); color: var(--wood-hot); transform: translateY(-2px); }
+.threat .muted { margin-left: 8px; }
 
 .squad { display: grid; grid-template-columns: repeat(5, calc(56px * var(--u))); gap: 10px; }
 .hero-card { text-align: center; cursor: pointer; pointer-events: auto; padding: 2px; }

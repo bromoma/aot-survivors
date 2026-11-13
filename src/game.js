@@ -21,9 +21,9 @@ const SHIRTS = ['#5a6878', '#7a5048', '#5c6a4a', '#8a7650', '#665a70', '#a8a090'
 const PANTS = ['#5a4a3a', '#3e4a5a', '#6b5a48', '#4a4038'];
 
 const FACTIONS = [
-  { id: 'mp', name: 'Военная полиция', diff: 'Легко', color: '#7cfc9a', map: 'city', civs: 70, desc: 'Бескрайний город: улицы, площади и парки. Летай по крышам, титанов немного', base: 2, per: 1 / 60, cap: 8, spawn0: 6, spawnMin: 3, decay: 1 / 120, group: 1, abFrom: 300, abMax: 0.15, speed: 0.75, big: 0.1, heal: 8, grab: 1.35, turn: 0.8, req: 0.45 },
-  { id: 'garrison', name: 'Гарнизон', diff: 'Средне', color: '#ffd27a', map: 'ruins', civs: 35, desc: 'Руины Шиганшины во все стороны: пожары, обломки, рощи. Титанов много', base: 4, per: 1 / 24, cap: 18, spawn0: 3.5, spawnMin: 1.1, decay: 1 / 55, group: 3, abFrom: 120, abMax: 0.3, speed: 0.95, big: 0.25, heal: 10, grab: 1.15, turn: 0.95, req: 0.5 },
-  { id: 'scouts', name: 'Разведкорпус', diff: 'Сложно', color: '#ff6b6b', map: 'field', civs: 12, desc: 'Бескрайние поля, деревни и леса. Между рощами высоту набрать трудно', base: 4, per: 1 / 18, cap: 22, spawn0: 3.5, spawnMin: 0.9, decay: 1 / 45, group: 4, abFrom: 60, abMax: 0.45, speed: 1.15, big: 0.4, heal: 16, grab: 0.9, turn: 1.35, req: 0.6 },
+  { id: 'mp', name: 'Военная полиция', diff: 'Легко', color: '#7cfc9a', map: 'city', civs: 40, desc: 'Бескрайний город: улицы, площади и парки. Летай по крышам, титанов немного', base: 3, per: 1 / 45, cap: 11, spawn0: 5, spawnMin: 2.2, decay: 1 / 100, group: 2, abFrom: 240, abMax: 0.18, speed: 0.82, big: 0.12, heal: 10, grab: 1.25, turn: 0.85, req: 0.45 },
+  { id: 'garrison', name: 'Гарнизон', diff: 'Средне', color: '#ffd27a', map: 'ruins', civs: 22, desc: 'Руины Шиганшины во все стороны: пожары, обломки, рощи. Титанов много', base: 4, per: 1 / 20, cap: 22, spawn0: 3.2, spawnMin: 0.95, decay: 1 / 50, group: 3, abFrom: 100, abMax: 0.32, speed: 1, big: 0.25, heal: 12, grab: 1.08, turn: 1, req: 0.5 },
+  { id: 'scouts', name: 'Разведкорпус', diff: 'Сложно', color: '#ff6b6b', map: 'field', civs: 12, desc: 'Бескрайние поля, деревни и леса. Между рощами высоту набрать трудно', base: 4, per: 1 / 17, cap: 24, spawn0: 3.4, spawnMin: 0.85, decay: 1 / 45, group: 4, abFrom: 60, abMax: 0.42, speed: 1.12, big: 0.35, heal: 16, grab: 0.92, turn: 1.3, req: 0.6 },
 ];
 
 const RARITY = {
@@ -46,7 +46,15 @@ const CHARS = [
 const charById = id => CHARS.find(c => c.id === id) || CHARS[0];
 
 
-const difficulty = () => clamp((game.time - 90) / 360, 0, 1);
+const difficulty = () => clamp((game.time - 60) / 300, 0, 1);
+
+let threat = 1;
+const THREAT_NAMES = ['I', 'II', 'III', 'IV', 'V'];
+function threatMax(fi) { return clamp((save.threat && save.threat[FACTIONS[fi].id]) || 1, 1, 5); }
+function withThreat(f, k) {
+  const e = k - 1;
+  return { ...f, threat: k, cap: Math.round(f.cap * (1 + 0.25 * e)), base: Math.round(f.base * (1 + 0.25 * e)), per: f.per * (1 + 0.25 * e), spawn0: f.spawn0 * (1 - 0.1 * e), spawnMin: f.spawnMin * (1 - 0.12 * e), speed: f.speed * (1 + 0.08 * e), grab: f.grab * (1 - 0.07 * e), heal: f.heal + 3 * e, abMax: f.abMax + 0.05 * e };
+}
 
 const shadowLayer = makeCanvas(1, 1), steamLayer = makeCanvas(1, 1), smokeLayer = makeCanvas(1, 1);
 let W = 0, H = 0, PX = 2, UP = 3, bw = 0, bh = 0, DPR = 1;
@@ -368,7 +376,8 @@ function spawnCiv(x, y) {
 
 let worldFor = -1, worldUsed = false;
 function reset() {
-  faction = FACTIONS[factionSel];
+  threat = clamp(save.threatSel && save.threatSel[FACTIONS[factionSel].id] || 1, 1, threatMax(factionSel));
+  faction = withThreat(FACTIONS[factionSel], threat);
   if (worldFor !== factionSel || worldUsed) {
     genWorld();
     worldFor = factionSel;
@@ -466,30 +475,62 @@ function orbitR(t) {
 }
 
 function nape(t) {
-  return { x: t.x - Math.cos(t.face) * t.H * 0.06, y: t.y - Math.sin(t.face) * t.H * 0.06, z: t.napeZ };
+  const f = t.fwd ?? -0.06;
+  return { x: t.x + Math.cos(t.face) * t.H * f, y: t.y + Math.sin(t.face) * t.H * f, z: t.napeZ };
 }
 
 function reqZ(t) {
   let z = nape(t).z * faction.req;
   if (t.stun > 0) z *= 0.6;
   if (t.boss) z = Math.min(z, 210);
+  if (t.kind === 'giant') z = Math.min(z, 260);
   return z;
 }
 
 function grabWind(t) {
   if (t.boss) return (t.boss.kind === 'female' ? 0.65 : 0.75) * faction.grab;
-  return (t.aberrant ? lerp(0.6, 0.4, difficulty()) : lerp(0.85, 0.5, difficulty())) * faction.grab;
+  return (t.aberrant || t.kind === 'crawler' || t.kind === 'small' ? lerp(0.6, 0.4, difficulty()) : lerp(0.85, 0.5, difficulty())) * faction.grab * (t.kind === 'giant' ? 1.35 : 1);
 }
 
 function reachOf(t) {
-  return t.H * 0.45 + 30;
+  return t.H * (t.kind === 'giant' ? 0.36 : 0.45) + 30;
 }
 
-function spawnTitan(at) {
-  const t = game.time;
-  const aberrant = t > faction.abFrom && Math.random() < 0.08 + difficulty() * faction.abMax;
-  const big = !aberrant && Math.random() < Math.min(0.5, faction.big + t / 900);
-  const h = aberrant ? rand(220, 300) : big ? rand(300, 420) : rand(160, 250);
+const KINDS = {
+  normal: { h: [160, 250] },
+  lanky: { h: [170, 260] },
+  fat: { h: [160, 240] },
+  bighead: { art: 'normal', h: [160, 230] },
+  aberrant: { h: [220, 300], sp: [110, 150] },
+  crawler: { body: 'aberrant', h: [150, 230], sp: [85, 115], xp: 1, fwd: 0.3 },
+  small: { body: 'bighead', h: [110, 160], sp: [75, 100] },
+  thrower: { body: 'normal', h: [270, 390], xp: 2 },
+  giant: { body: 'normal', h: [470, 560], hp: 2, xp: 6 },
+};
+const kindReady = k => !!SPR[`titan_${k}_${sizesOf(k)[0]}_down`];
+
+function rollKind() {
+  const t = game.time, d = difficulty(), m = faction.map;
+  if (t > faction.abFrom && Math.random() < 0.08 + d * faction.abMax) return 'aberrant';
+  const opts = [
+    ['small', t > 40 ? 0.12 * (m === 'city' ? 1.4 : 1) : 0],
+    ['crawler', t > 70 ? (0.05 + 0.08 * d) * (m === 'field' ? 1.5 : 1) : 0],
+    ['thrower', t > 110 ? (0.04 + 0.08 * d) * (m === 'city' ? 0.6 : m === 'ruins' ? 1.3 : 1) : 0],
+    ['giant', t > 170 ? (0.025 + 0.05 * d) * (m === 'field' ? 1.5 : 1) : 0],
+  ];
+  let r = Math.random();
+  for (const [k, p] of opts) if (p && kindReady(k)) { if (r < p) return k; r -= p; }
+  if (Math.random() < Math.min(0.5, faction.big + t / 900)) return 'big';
+  return pick(['normal', 'normal', 'lanky', 'fat', 'bighead']);
+}
+
+function spawnTitan(at, kind) {
+  kind = kind || rollKind();
+  let type = kind, h;
+  if (kind === 'big') { type = pick(['normal', 'normal', 'lanky', 'fat']); h = rand(300, 420); }
+  const K = KINDS[type];
+  if (h === undefined) h = rand(K.h[0], K.h[1]);
+  const aberrant = type === 'aberrant';
   let x, y;
   if (at) { x = at.x; y = at.y; }
   else {
@@ -497,23 +538,54 @@ function spawnTitan(at) {
     x = player.x + Math.cos(a) * dist;
     y = player.y + Math.sin(a) * dist;
   }
-  const type = aberrant ? 'aberrant' : pick(['normal', 'normal', 'lanky', 'fat', 'bighead']);
-  const art = { normal: 'normal', lanky: 'lanky', fat: 'fat', bighead: 'normal', aberrant: 'aberrant' }[type];
-  let size = TITAN_SIZES[0];
-  for (const sz of TITAN_SIZES) if (Math.abs(sz - h / ART) < Math.abs(size - h / ART)) size = sz;
+  const art = K.art || type;
+  const sizes = sizesOf(art);
+  let size = sizes[0];
+  for (const sz of sizes) if (Math.abs(sz - h / ART) < Math.abs(size - h / ART)) size = sz;
   const tt = { art, size };
   const set = titanSet(tt);
   const nap = NAPE[`${set}_${size}`] || { fx: 0.5, fy: 0.2 };
   const H = size * ART;
   titans.push({
     x, y, H, Hp: size, size, art, set, napeZ: H * (1 - nap.fy), face: Math.atan2(player.y - y, player.x - x),
-    type, g: bodyOf(type),
-    speed: (aberrant ? rand(110, 150) : rand(35, 60) * Math.sqrt(250 / H)) * faction.speed,
+    type, kind: type, g: bodyOf(K.body || type), hp: K.hp || 1, fwd: K.fwd,
+    speed: (K.sp ? rand(K.sp[0], K.sp[1]) : rand(35, 60) * Math.sqrt(250 / H)) * faction.speed,
     aberrant, state: 'walk', grabT: 0, grabCd: rand(1, 2), grabAng: 0, hand: null, prey: null, preyT: 0, held: -1,
     stun: 0, lunge: 0, lungeCd: rand(2, 4), flash: 0,
     phase: Math.random() * 6, dying: 0, fallDir: 1, fallSide: 1, deathKey: 'down',
   });
-  return { x, y };
+  return { x, y, kind: type };
+}
+
+function titanHit(t) {
+  const p = player, n = nape(t);
+  t.hp--;
+  t.flash = 0.15;
+  t.stun = Math.max(t.stun, 1.4);
+  t.state = 'walk';
+  t.hand = null;
+  game.hitstop = 0.08;
+  game.shake = 12;
+  burst(n.x, n.y - KZ * n.z, 24, '#b3122e');
+  steam(n.x, n.y - KZ * n.z, 10);
+  slashes.push({ x: n.x, y: n.y - KZ * n.z, ang: t.face + Math.PI, life: 0.22 });
+  sfx('slash', { vol: 1 });
+  sfx('cut', { vol: 0.9, rate: 0.7 });
+  addText('Ещё удар!', n.x, n.y - KZ * n.z - 40, '#ffd27a');
+  if (p.target === t) {
+    p.mode = 'fly';
+    p.target = null;
+    p.vx = -Math.cos(t.face) * 420;
+    p.vy = -Math.sin(t.face) * 420;
+    p.engageCd = 0.35;
+  }
+  gainXp(2);
+}
+
+function cutTitan(t, ally) {
+  if (t.hp > 1) { titanHit(t); return false; }
+  killTitan(t, ally);
+  return true;
 }
 
 function spawnFlock(near) {
@@ -577,7 +649,12 @@ function saveBest() {
 }
 
 function finishRun(won) {
-  const mul = [1, 1.5, 2][FACTIONS.indexOf(faction)];
+  const mul = [1, 1.5, 2][factionSel] * (1 + 0.3 * (threat - 1));
+  if (won && threat < 5 && threatMax(factionSel) <= threat) {
+    save.threat = save.threat || {};
+    save.threat[faction.id] = threat + 1;
+    game.unlocked = threat + 1;
+  }
   const greed = 1 + ((save.meta && save.meta.greed) || 0) * 0.1;
   const earned = Math.round(((game.kills - game.paidKills) * 2 + Math.floor((game.time - game.paidTime) / 10) + (won ? 300 : 0) + (game.bossKills - (game.paidBoss || 0)) * 60) * mul * greed);
   game.paidBoss = game.bossKills;
@@ -681,13 +758,13 @@ function killTitan(t) {
   game.healCount++;
   if (game.healCount >= stats.healEvery) {
     game.healCount = 0;
-    stats.healEvery += 8;
+    stats.healEvery += 10;
     if (player.hp < stats.maxHp) {
       player.hp++;
       addText('+1 ♥', player.x, player.y - KZ * player.z - 50, '#7cfc9a');
     }
   }
-  gainXp(Math.round((t.H / 60 + (t.aberrant ? 2 : 0)) * Math.min(4, 1 + 0.2 * (game.combo - 1)) * stats.xp));
+  gainXp(Math.round((t.H / 60 + (t.aberrant ? 2 : 0) + ((KINDS[t.kind] && KINDS[t.kind].xp) || 0)) * Math.min(4, 1 + 0.2 * (game.combo - 1)) * stats.xp));
 }
 
 function gainXp(n) {
@@ -728,16 +805,18 @@ function engage() {
   const p = player;
   if (state !== 'play' || p.mode !== 'fly' || p.engageCd > 0) return;
   const inp = inputVec();
-  let found = null, bs = Infinity, tooLow = false, hard = false;
+  let found = null, foundWp = null, bs = Infinity, tooLow = false, hard = false;
   for (const t of titans) {
     if (t.dying) continue;
     const dx = t.x - p.x, dy = t.y - p.y, d = Math.hypot(dx, dy) || 1;
     if (d > stats.engage + t.H * 0.2) continue;
     if (t.boss && t.boss.harden > 0) { hard = true; continue; }
-    if (p.z < reqZ(t)) { tooLow = true; continue; }
-    const s = d - ((dx * inp.x + dy * inp.y) / d) * 150;
-    if (s < bs) { bs = s; found = t; }
+    const wp = t.boss && !(t.boss.kneel > 0) ? bossWeak(t) : null;
+    if (!wp && p.z < reqZ(t)) { tooLow = true; continue; }
+    const s = d - ((dx * inp.x + dy * inp.y) / d) * 150 - (wp ? 120 : 0);
+    if (s < bs) { bs = s; found = t; foundWp = wp; }
   }
+  p.wp = foundWp;
   if (!found) {
     addText(tooLow ? 'Слишком низко! Набери высоту' : hard ? 'Затылок затвердел — подожди!' : 'Рядом нет титанов', p.x, p.y - KZ * p.z - 40, tooLow ? '#ffb347' : hard ? '#9fe8ff' : '#e9e4da');
     sfx('tick', { vol: 0.6 });
@@ -835,6 +914,22 @@ function updateAttack(dt) {
   if (p.attackT > 5) {
     p.mode = 'fly';
     p.target = null;
+    p.wp = null;
+    return;
+  }
+  if (p.wp) {
+    if (p.wp.cut || !t.boss || t.boss.kneel > 0) { p.mode = 'fly'; p.target = null; p.wp = null; return; }
+    const w = wpPos(t, p.wp), dx = w.x - p.x, dy = w.y - p.y, d = Math.hypot(dx, dy) || 1, sp = stats.speed * 1.7;
+    p.z = lerp(p.z, w.z + 16, 1 - Math.exp(-6 * dt));
+    if (d < 28 && Math.abs(p.z - w.z) < 60) { cutWeakPoint(t, p.wp); return; }
+    const step = Math.min(d, sp * dt);
+    p.vx = dx / d * sp;
+    p.vy = dy / d * sp;
+    p.x += dx / d * step;
+    p.y += dy / d * step;
+    if (Math.random() < 0.5) particles.push({ x: p.x, y: p.y - KZ * p.z + 4, vx: -p.vx * 0.2, vy: -p.vy * 0.2, life: 0.3, max: 0.3, size: rand(1, 2), g: 0, kind: 'gas' });
+    if (Math.abs(p.vx) > 20) p.face = Math.sign(p.vx);
+    p.dir = Math.atan2(p.vy, p.vx);
     return;
   }
   const R = orbitR(t);
@@ -881,7 +976,7 @@ function updateAttack(dt) {
       p.engageCd = stats.cd;
       epicKill(t);
       if (t.boss) { bossHit(t); return; }
-      killTitan(t);
+      if (!cutTitan(t)) return;
       if (stats.chain && game.time - p.lastChain > 2 && state === 'play') {
         let next = null, bd = stats.engage;
         for (const o of titans) {
@@ -890,6 +985,7 @@ function updateAttack(dt) {
           if (d < bd) { bd = d; next = o; }
         }
         if (next) {
+          p.wp = null;
           p.lastChain = game.time;
           p.mode = 'attack';
           p.target = next;
@@ -926,7 +1022,10 @@ function updateTitans(dt) {
     }
     if (t.stun > 0) {
       t.stun -= dt;
-      if (t.boss) t.boss.harden = Math.max(0, t.boss.harden - dt);
+      if (t.boss) {
+        t.boss.harden = Math.max(0, t.boss.harden - dt);
+        if (t.boss.kneel > 0 && (t.boss.kneel -= dt) <= 0) { bossRise(t); addText('Сухожилия срослись!', t.x, t.y - KZ * t.H * 0.9, '#9fe8ff'); }
+      }
       continue;
     }
     if (t.boss && updateBoss(t, dt)) continue;
@@ -1251,6 +1350,7 @@ function update(dt) {
       for (let i = 0; i < Math.min(room, group); i++) {
         const pos = spawnTitan(first && { x: first.x + rand(-200, 200), y: first.y + rand(-200, 200) });
         if (!first) first = pos;
+        if (pos.kind === 'small') for (let k = 0, n = 2 + Math.floor(Math.random() * 3); k < n; k++) spawnTitan({ x: pos.x + rand(-170, 170), y: pos.y + rand(-170, 170) }, 'small');
       }
       if (first && (faction.map === 'field' || stats.warn)) {
         const a = Math.atan2(first.y - player.y, first.x - player.x), r = Math.min(viewW(), viewH()) * 0.42;
@@ -1383,6 +1483,15 @@ function drawTitan(t) {
   drawSprite(t.flash > 0 ? variant(img, 'white') : img, x + ox, y + oy, pose);
   if (t.rageT > 0 && Math.floor(performance.now() / 90) % 3 === 0) { bctx.globalAlpha = 0.25; drawSprite(variant(img, 'tint'), x + ox, y + oy, pose); bctx.globalAlpha = 1; }
   if (t.stun > 0) drawStunStars(dx + img.width / 2, dy - 3, t.boss ? 4 : 3);
+  if (t.boss && !(t.boss.kneel > 0)) {
+    const on = Math.floor(performance.now() / 160) % 2;
+    for (const w of t.boss.wp) {
+      if (w.cut) continue;
+      const q = wpPos(t, w), qx = sx(q.x), qy = sy(q.y, q.z), tg = player.wp === w;
+      const c = tg ? '#ffffff' : on ? '#ffb347' : '#ffd36e';
+      for (const [a, b2] of [[0, -3], [-1, -2], [0, -2], [1, -2], [-2, -1], [-1, -1], [0, -1], [1, -1], [2, -1], [-1, 0], [0, 0], [1, 0], [0, 1]]) rect(bctx, qx + a, qy + b2 - 4, 1, 1, c);
+    }
+  }
   if (t.boss && t.boss.harden > 0 && dir !== 'down') {
     const n = napeScreen(t, dir, img, dx, dy), on = Math.floor(performance.now() / 120) % 2;
     for (const [ox2, oy2] of [[0, -3], [-2, 0], [0, 0], [2, 0], [0, 3], [-1, -1], [1, -1], [-1, 1], [1, 1]]) rect(bctx, n.x + ox2, n.y + oy2, 1, 1, on ? '#dff8ff' : '#7ad8f0');
@@ -1398,7 +1507,7 @@ function drawTitan(t) {
     const on = Math.floor(performance.now() / 150) % 2 === 0;
     if (player.target === t || on) {
       const n = napeScreen(t, dir, img, dx, dy), nm = Math.max(5, Math.round(img.width * 0.12));
-      bctx.strokeStyle = player.target === t ? '#ffffff' : player.z >= reqZ(t) ? '#ffd36e' : '#8a8296';
+      bctx.strokeStyle = player.target === t ? '#ffffff' : player.z >= reqZ(t) && !(t.boss && !(t.boss.kneel > 0)) ? '#ffd36e' : '#8a8296';
       bctx.lineWidth = 1;
       bctx.strokeRect(Math.round(n.x - nm / 2) + 0.5, Math.round(n.y - nm / 2) + 0.5, nm, nm);
     }
@@ -1595,7 +1704,7 @@ function drawWorld() {
     if (player.prevAnchor && player.prevT > 0) drawRope(player.prevAnchor, player.prevT / 0.25 * 0.6, 1);
     const grow = Math.min(1, player.ropeT / 0.08);
     if (player.mode === 'fly' && player.anchor) drawRope(player.anchor, 1, grow);
-    if (player.mode === 'attack' && player.target) drawRope(nape(player.target), 1, grow);
+    if (player.mode === 'attack' && player.target) drawRope(player.wp ? wpPos(player.target, player.wp) : nape(player.target), 1, grow);
   }
   drawOrbitTrail();
   drawParticles();
@@ -1750,7 +1859,7 @@ function drawHud() {
     ctx.lineTo(ex + Math.cos(a + 2.4) * (s + UP), ey + Math.sin(a + 2.4) * (s + UP));
     ctx.lineTo(ex + Math.cos(a - 2.4) * (s + UP), ey + Math.sin(a - 2.4) * (s + UP));
     ctx.fill();
-    ctx.fillStyle = t.aberrant ? '#ffb347' : '#e5484d';
+    ctx.fillStyle = t.kind === 'giant' ? '#c58cff' : t.aberrant || t.kind === 'crawler' ? '#ffb347' : '#e5484d';
     ctx.beginPath();
     ctx.moveTo(ex + Math.cos(a) * s, ey + Math.sin(a) * s);
     ctx.lineTo(ex + Math.cos(a + 2.4) * s, ey + Math.sin(a + 2.4) * s);
@@ -2167,7 +2276,7 @@ function drawArrows() {
     ctx.lineTo(ex + Math.cos(a + 2.4) * (s + 3), ey + Math.sin(a + 2.4) * (s + 3));
     ctx.lineTo(ex + Math.cos(a - 2.4) * (s + 3), ey + Math.sin(a - 2.4) * (s + 3));
     ctx.fill();
-    ctx.fillStyle = t.aberrant ? '#ffb347' : '#e5484d';
+    ctx.fillStyle = t.kind === 'giant' ? '#c58cff' : t.aberrant || t.kind === 'crawler' ? '#ffb347' : '#e5484d';
     ctx.beginPath();
     ctx.moveTo(ex + Math.cos(a) * s, ey + Math.sin(a) * s);
     ctx.lineTo(ex + Math.cos(a + 2.4) * s, ey + Math.sin(a + 2.4) * s);

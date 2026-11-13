@@ -175,6 +175,7 @@ const UI = (() => {
       <div class="screen" data-s="battle"><div class="panel-wrap"><div class="panel k-frame">
         <div class="head"><span class="h2">Выбери вылазку</span><button class="k-icon" data-back>${img('close')}</button></div>
         <div class="factions" id="factions"></div>
+        <div class="threat" id="threat"></div>
         <div class="buttons"><button class="k-btn big" id="go">${img('play')} В бой!</button></div>
         <div class="center muted" style="margin-top:8px">WASD — летишь на тросах вверх, на крыши и деревья. С высоты — Пробел: атака по затылку</div>
       </div></div></div>
@@ -325,6 +326,28 @@ const UI = (() => {
       });
       box.appendChild(c);
     });
+    const tb = $('#threat');
+    const f = FACTIONS[factionSel], max = threatMax(factionSel);
+    save.threatSel = save.threatSel || {};
+    const cur = clamp(save.threatSel[f.id] || 1, 1, max);
+    tb.innerHTML = '<span class="tl">Угроза:</span>';
+    THREAT_NAMES.forEach((n, k) => {
+      const b = el('button', 'k-btn th' + (k + 1 === cur ? ' sel' : '') + (k + 1 > max ? ' off' : ''), n);
+      b.title = k + 1 > max ? 'Открой: выживи 10 минут на угрозе ' + THREAT_NAMES[k - 1] : 'Больше титанов, они быстрее и злее. Жетоны x' + (1 + 0.3 * k).toFixed(1);
+      b.addEventListener('click', () => setThreat(k + 1));
+      tb.appendChild(b);
+    });
+    tb.insertAdjacentHTML('beforeend', `<span class="muted">${cur > 1 ? 'титаны злее, жетоны x' + (1 + 0.3 * (cur - 1)).toFixed(1) : 'выживи 10 минут, чтобы открыть следующую'}</span>`);
+  }
+
+  function setThreat(k) {
+    const f = FACTIONS[factionSel];
+    if (k < 1 || k > threatMax(factionSel)) return;
+    save.threatSel = save.threatSel || {};
+    save.threatSel[f.id] = k;
+    persist();
+    requestReset();
+    refreshBattle();
   }
 
   let squadSel = 0;
@@ -598,6 +621,8 @@ const UI = (() => {
     const s = statsOf();
     const rows = [['Продержался', fmtTime(game.time)], ['Титанов убито', game.kills], ['Уровень', game.level]];
     if (faction.civs) rows.push(['Горожан погибло', game.lost]);
+    if (faction.threat > 1) rows.push(['Угроза', THREAT_NAMES[faction.threat - 1]]);
+    if (game.unlocked) rows.push(['Открыта угроза', THREAT_NAMES[game.unlocked - 1] + '!']);
     rows.push(['Рекорд', fmtTime(bestOf(faction))]);
     layers.result.innerHTML = `<div class="shade"></div><div class="panel-wrap"><div class="panel k-frame result">
       <div class="rt" style="color:${won ? '#2c7030' : '#b8302a'}">${won ? (faction.map === 'field' ? 'Вылазка удалась!' : 'Город отбит!') : 'Ты пал'}</div>
@@ -688,12 +713,13 @@ const UI = (() => {
     }
     hud.gauge.classList.toggle('low', player.lowT > 0 && Math.floor(player.lowT * 10) % 2 === 1);
     const B = game.boss;
-    const bk = B ? B.boss.name + B.boss.hp + '/' + B.boss.max + (B.boss.harden > 0 ? 'h' : '') : '';
+    const bst = B ? (B.boss.kneel > 0 ? ' · на коленях — бей в затылок!' : ` · ${B.boss.def.wp}: ${B.boss.wp.filter(w => w.cut).length}/2`) : '';
+    const bk = B ? B.boss.name + B.boss.hp + '/' + B.boss.max + (B.boss.harden > 0 ? 'h' : '') + bst : '';
     if (cache.boss !== bk) {
       cache.boss = bk;
       hud.boss.style.display = B ? '' : 'none';
       if (B) {
-        hud.bossName.textContent = B.boss.name + (B.boss.harden > 0 ? ' · затылок затвердел' : '');
+        hud.bossName.textContent = B.boss.name + bst;
         hud.bossSegs.innerHTML = Array.from({ length: B.boss.max }, (_, i) => '<i class="' + (i < B.boss.hp ? 'on' : '') + (B.boss.harden > 0 ? ' hard' : '') + '"></i>').join('');
       }
     }
@@ -748,6 +774,7 @@ const UI = (() => {
       if (c === 'ArrowLeft' || c === 'KeyA') { factionSel = (factionSel + 2) % 3; requestReset(); refreshBattle(); }
       if (c === 'ArrowRight' || c === 'KeyD') { factionSel = (factionSel + 1) % 3; requestReset(); refreshBattle(); }
       if (['Digit1', 'Digit2', 'Digit3'].includes(c)) { factionSel = +c.slice(5) - 1; requestReset(); refreshBattle(); }
+      if (c === 'ArrowUp' || c === 'KeyW' || c === 'ArrowDown' || c === 'KeyS') { const cur = (save.threatSel && save.threatSel[FACTIONS[factionSel].id]) || 1; setThreat(cur + (c === 'ArrowUp' || c === 'KeyW' ? 1 : -1)); }
       if (c === 'Enter' || c === 'Space') start();
     } else if (screen === 'squad') {
       const n = CHARS.length;
@@ -793,6 +820,15 @@ const UI = (() => {
       ['normal', 'lanky', 'fat', 'aberrant'].forEach((ty, i) => { spawnTitan({ x: player.x - 420 + i * 280, y: player.y - 200 }); const t = titans[titans.length - 1]; t.art = ty; t.set = titanSet(t); t.face = i % 2 ? Math.PI : Math.PI / 2; t.phase = Math.PI / 2 + 0.1; t.spCd = 99; });
       for (const c of civs.slice(0, 6)) { c.x = player.x + rand(-300, 300); c.y = player.y + rand(60, 220); c.moving = true; c.dir = rand(-1, 1) + (Math.random() < 0.5 ? 0 : Math.PI); c.phase = 0.4; }
       cam.x = player.x - viewW() / 2; cam.y = player.y - viewH() / 2;
+      window.FREEZE = true; sync(0); return;
+    }
+    if (q === 'types') {
+      start();
+      for (let i = 0; i < 30; i++) update(1 / 60);
+      titans.length = 0; game.spawnT = 99;
+      const ks = ['normal', 'lanky', 'fat', 'aberrant', 'small', 'crawler', 'thrower', 'giant'].filter(k => KINDS[k].art || kindReady(k));
+      ks.forEach((k, i) => { spawnTitan({ x: player.x - 760 + i * 220, y: player.y - 120 + (i % 2) * 140 }, k); const t = titans[titans.length - 1]; t.face = Math.PI / 2; t.spCd = 99; t.speed = 0; });
+      cam.x = player.x - viewW() / 2; cam.y = player.y - viewH() / 2 - 80;
       window.FREEZE = true; sync(0); return;
     }
     if (q === 'grab') {
@@ -858,6 +894,7 @@ const UI = (() => {
       B.boss.cd = 0.4;
       player.z = 200;
       for (let i = 0; i < 70; i++) update(1 / 60);
+      if (new URLSearchParams(location.search).get('n')) window.FREEZE = true;
       return;
     }
     start();

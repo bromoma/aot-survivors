@@ -35,7 +35,7 @@ function prof() {
 }
 const HURT = {}; const BOSSLOG = [];
 function runTest() {
-  const oh = hurtPlayer; hurtPlayer = function (t) { if (player.inv <= 0) { const k = t && t.boss ? t.boss.kind : t && t.H ? 'titan' : 'rock'; HURT[k] = (HURT[k] || 0) + 1; } return oh(t); };
+  const oh = hurtPlayer; hurtPlayer = function (t) { if (player.inv <= 0) { const k = t && t.boss ? t.boss.kind : t && t.H ? (t.kind || 'titan') + (t.state === 'leap' ? '-leap' : t.state === 'stomp' ? '-stomp' : '') : 'rock'; HURT[k] = (HURT[k] || 0) + 1; } return oh(t); };
   const ob = bossHit; bossHit = function (t) { BOSSLOG.push(t.boss.kind + ' hit@' + game.time.toFixed(0) + ' hp' + (t.boss.hp - 1)); return ob(t); };
   const os = spawnBoss; spawnBoss = function (d, c) { BOSSLOG.push(d.kind + ' spawn@' + game.time.toFixed(0)); return os(d, c); };
   if (HS.includes("prof")) prof();

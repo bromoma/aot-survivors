@@ -28,12 +28,14 @@ function drawSprite(img, footX, footY, o = {}) {
 function titanPoseFx(t) {
   const now = performance.now() / 1000;
   const o = { sx: 1, sy: 1, shear: 0, ox: 0, oy: 0 };
+  if (t.boss && t.boss.kneel > 0) { o.sy = 0.8; o.sx = 1.06; o.shear = Math.sin(now * 3) * 0.02; return o; }
+  if (t.boss && t.boss.act === 'kick') { const k = 1 - t.boss.actT / 0.65; o.shear = Math.sin(k * 9) * 0.1 * k; o.sy = 1 + 0.06 * k; return o; }
   if (t.stun > 0) { o.shear = Math.sin(now * 18 + t.x) * 0.05; return o; }
   const st = t.state;
   if (st === 'walk') {
     const s = Math.sin(t.phase);
     const framed = true;
-    o.shear = s * (framed ? 0.015 : 0.045) * (t.aberrant ? 1.8 : 1);
+    o.shear = s * (framed ? 0.015 : 0.045) * (t.aberrant || t.kind === 'crawler' ? 1.8 : 1);
     o.sy = 1 - Math.abs(s) * 0.025;
     o.sx = 1 + Math.abs(s) * 0.015;
     o.oy = -Math.round(Math.abs(s) * 2);
@@ -55,6 +57,10 @@ function titanPoseFx(t) {
     const k = Math.min(1, t.spT / 0.25);
     o.sy = 1 + 0.06 * k;
     o.shear = Math.sin(now * 40) * 0.02 * k;
+  } else if (st === 'throw') {
+    const c = Math.cos(t.face);
+    if (t.spPhase === 'wind') { const k = Math.min(1, t.spT / 0.6); o.shear = -c * 0.14 * k; o.sy = 1 + 0.05 * k; }
+    else { const r = Math.min(1, t.spT / 0.45); o.shear = c * 0.2 * (1 - r); o.sy = 0.95 + 0.05 * r; }
   } else if (st === 'eat') {
     o.sy = 1 + Math.sin(t.grabT * 9) * 0.02;
   }
@@ -72,16 +78,21 @@ function startTitanSpecial(t, kind) {
   } else if (kind === 'leap') {
     t.spPhase = 'crouch';
     const p = player;
-    const lead = 0.55;
+    const lead = 0.55, low = t.kind === 'crawler', cap = low ? 520 : 650;
+    t.leapLow = low;
     t.leapFrom = { x: t.x, y: t.y };
     t.leapTo = { x: p.x + p.vx * lead, y: p.y + p.vy * lead };
     const d = Math.hypot(t.leapTo.x - t.x, t.leapTo.y - t.y);
-    if (d > 650) { const k = 650 / d; t.leapTo.x = t.x + (t.leapTo.x - t.x) * k; t.leapTo.y = t.y + (t.leapTo.y - t.y) * k; }
+    if (d > cap) { const k = cap / d; t.leapTo.x = t.x + (t.leapTo.x - t.x) * k; t.leapTo.y = t.y + (t.leapTo.y - t.y) * k; }
     t.face = Math.atan2(t.leapTo.y - t.y, t.leapTo.x - t.x);
     t.jz = 0;
-    marks.push({ x: t.leapTo.x, y: t.leapTo.y, r: 150, life: 1.05, max: 1.05, kind: 'rock' });
+    marks.push({ x: t.leapTo.x, y: t.leapTo.y, r: low ? 110 : 150, life: low ? 0.67 : 1.05, max: low ? 0.67 : 1.05, kind: 'rock' });
+    if (low) sfx('hiss', { x: t.x, y: t.y, vol: 0.5, rate: 1.6, tag: 'crawl' });
   } else if (kind === 'roar') {
     sfx('roar', { x: t.x, y: t.y, vol: 0.9 });
+  } else if (kind === 'throw') {
+    t.spPhase = 'wind';
+    sfx('swing', { x: t.x, y: t.y, vol: 0.5, rate: 0.6, tag: 'throwwind' });
   }
 }
 
@@ -93,6 +104,9 @@ function updateTitanSpecial(t, dt) {
   if (t.state === 'walk') {
     t.spCd = (t.spCd ?? rand(3, 6)) - dt;
     if (t.spCd > 0 || t.prey) return false;
+    if (t.kind === 'crawler' && pd > 170 && pd < 560 && p.z < 240) { t.spCd = rand(3.5, 5); startTitanSpecial(t, 'leap'); return true; }
+    if (t.kind === 'thrower' && pd > 280 && pd < 950) { t.spCd = rand(3.5, 5.5); startTitanSpecial(t, 'throw'); return true; }
+    if (t.kind === 'giant' && pd < stompR(t) + 80) { t.spCd = rand(3, 5); startTitanSpecial(t, 'stomp'); return true; }
     if (t.aberrant && pd > 260 && pd < 820) { t.spCd = rand(4, 6.5); startTitanSpecial(t, 'leap'); return true; }
     if (!t.aberrant && t.H >= 300 && pd < stompR(t) + 40 && Math.random() < 0.6) { t.spCd = rand(4, 7); startTitanSpecial(t, 'stomp'); return true; }
     if (pd < 750 && Math.random() < 0.2) { t.spCd = rand(10, 16); startTitanSpecial(t, 'roar'); return true; }
@@ -117,25 +131,44 @@ function updateTitanSpecial(t, dt) {
   }
   if (t.state === 'leap') {
     t.spT += dt;
-    if (t.spPhase === 'crouch' && t.spT >= 0.35) { t.spPhase = 'air'; t.spT = 0; sfx('swing', { x: t.x, y: t.y, vol: 0.8, rate: 0.7, tag: 'leap' }); }
+    const low = t.leapLow, airT = low ? 0.42 : 0.7;
+    if (t.spPhase === 'crouch' && t.spT >= (low ? 0.25 : 0.35)) { t.spPhase = 'air'; t.spT = 0; sfx('swing', { x: t.x, y: t.y, vol: 0.8, rate: 0.7, tag: 'leap' }); }
     else if (t.spPhase === 'air') {
-      const k = Math.min(1, t.spT / 0.7);
+      const k = Math.min(1, t.spT / airT);
       t.x = lerp(t.leapFrom.x, t.leapTo.x, k);
       t.y = lerp(t.leapFrom.y, t.leapTo.y, k);
-      t.jz = Math.sin(k * Math.PI) * (160 + t.H * 0.3);
+      t.jz = Math.sin(k * Math.PI) * (low ? 55 : 160 + t.H * 0.3);
       t.phase += dt * 4;
       if (k >= 1) {
         t.spPhase = 'land';
         t.spT = 0;
         t.jz = 0;
-        rings.push({ x: t.x, y: t.y, r: 150, life: 0.35, color: '#d8c8a0' });
+        rings.push({ x: t.x, y: t.y, r: low ? 110 : 150, life: 0.35, color: '#d8c8a0' });
         for (let i = 0; i < 18; i++) { const a = rand(0, TAU), s = rand(100, 300); particles.push({ x: t.x, y: t.y, vx: Math.cos(a) * s, vy: Math.sin(a) * s * 0.6, life: 0.6, max: 0.6, size: 2, g: 0, kind: 'dust' }); }
         game.shake = Math.max(game.shake, 9);
         sfx('boom', { x: t.x, y: t.y, vol: 0.9, rate: 0.75, tag: 'land' });
-        if (Math.hypot(p.x - t.x, p.y - t.y) < 150 && p.z < t.H * 0.45) hurtPlayer(t);
+        if (Math.hypot(p.x - t.x, p.y - t.y) < (low ? 110 : 150) && p.z < (low ? 170 : t.H * 0.45)) hurtPlayer(t);
       }
     } else if (t.spPhase === 'land' && t.spT >= 0.4) t.state = 'walk';
     clampTitan(t);
+    return true;
+  }
+  if (t.state === 'throw') {
+    t.spT += dt;
+    if (t.spPhase === 'wind') {
+      t.face = Math.atan2(p.y - t.y, p.x - t.x);
+      if (t.spT >= 0.6) {
+        t.spPhase = 'release';
+        t.spT = 0;
+        const n = game.time > 300 ? 2 : 1;
+        for (let i = 0; i < n; i++) {
+          const tx = p.x + p.vx * 0.9 + rand(-90, 90), ty = p.y + p.vy * 0.9 + rand(-90, 90), dur = 1.0 + i * 0.15;
+          rocks.push({ x0: t.x, y0: t.y, z0: t.H * 0.95, tx, ty, t: 0, dur });
+          marks.push({ x: tx, y: ty, r: 75, life: dur, max: dur, kind: 'rock' });
+        }
+        sfx('swing', { x: t.x, y: t.y, vol: 0.9, rate: 0.7, tag: 'throw' });
+      }
+    } else if (t.spT >= 0.45) t.state = 'walk';
     return true;
   }
   if (t.state === 'roar') {
@@ -249,7 +282,7 @@ function zoomTransform() {
   return { z, fx, fy };
 }
 
-const LEG_FRAC = { normal: 0.43, lanky: 0.5, fat: 0.36, aberrant: 0.45, hero: 0.3 };
+const LEG_FRAC = { normal: 0.43, lanky: 0.5, fat: 0.36, aberrant: 0.45, hero: 0.3, crawler: 0.34, small: 0.3, thrower: 0.4, giant: 0.42 };
 const walkCache = new WeakMap();
 
 function bodyMask(img) {

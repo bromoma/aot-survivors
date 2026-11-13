@@ -3,9 +3,14 @@
 const DIR_KEYS = ['down', 'left', 'right', 'up'];
 const HERO_IDS = ['cadet', 'connie', 'sasha', 'jean', 'eren', 'armin', 'hange', 'mikasa', 'levi'];
 const TITAN_TYPES = ['normal', 'lanky', 'fat', 'aberrant'];
+const NEW_TYPES = ['crawler', 'small', 'thrower', 'giant'];
 const TITAN_SIZES = [110, 140, 170, 200];
+const ART_SIZES = { crawler: [80, 100, 120], small: [60, 72, 84], thrower: [140, 170, 200], giant: [240, 280] };
+const sizesOf = t => ART_SIZES[t] || TITAN_SIZES;
+const ALL_TYPES = () => TITAN_TYPES.concat(NEW_TYPES);
 const GRAB_TYPES = ['normal', 'lanky', 'fat', 'aberrant'];
-const WALK_TYPES = [];
+const WALK_TYPES = ['crawler', 'giant', 'small', 'thrower'];
+const WALK_BASE = ['giant', 'small', 'thrower'];
 const CIV_RUN = ['man', 'woman'];
 const BOSS_KINDS = ['female', 'armored', 'beast', 'colossal'];
 const TR_PROPS = ['oak', 'apple_tree', 'pine1', 'pine2', 'pine3', 'well', 'hay_bales', 'cart', 'flower_pots', 'rain_barrel', 'lamp_post_wood',
@@ -26,9 +31,9 @@ function assetList() {
       L[`hero_${id}_${d}`] = `assets/sprites/hero_${id}_${d}.png`;
       L[`herofly_${id}_${d}`] = `assets/sprites/herofly_${id}_${d}.png`;
     }
-    for (const t of TITAN_TYPES) for (const h of TITAN_SIZES) L[`titan_${t}_${h}_${d}`] = `assets/sprites/titan_${t}_${h}_${d}.png`;
+    for (const t of ALL_TYPES()) for (const h of sizesOf(t)) L[`titan_${t}_${h}_${d}`] = `assets/sprites/titan_${t}_${h}_${d}.png`;
     for (const t of GRAB_TYPES) for (const h of TITAN_SIZES) L[`titan_${t}_${h}_grab_${d}`] = `assets/sprites/titan_${t}_${h}_grab_${d}.png`;
-    if (d !== 'right') for (const t of WALK_TYPES) for (const h of TITAN_SIZES) for (let i = 0; i < 3; i++) L[`titan_${t}_${h}_walk${i}_${d}`] = `assets/sprites/titan_${t}_${h}_walk${i}_${d}.png`;
+    if (d !== 'right') for (const t of WALK_TYPES) for (const h of sizesOf(t)) for (let i = 0; i < 3; i++) L[`titan_${t}_${h}_walk${i}_${d}`] = `assets/sprites/titan_${t}_${h}_walk${i}_${d}.png`;
   }
   for (const k of ['house_h1', 'house_h2', 'house_h3', 'house_tower', 'ruin_r1', 'ruin_r2', 'ruin_r3', 'ruin_r4', 'wall_a']) L[k] = `assets/sprites/${k}.png`;
   for (const k of TR_GROUND.concat(TR_PROPS)) L[k] = `assets/tradisea/${k}.png`;
@@ -53,7 +58,13 @@ function loadAssets(onProgress) {
     im.onerror = () => { SPR[key] = null; done++; if (onProgress) onProgress(done / list.length); res(); };
     im.src = (window.ASSET_BASE || '') + src;
   }))).then(() => {
-    for (const t of TITAN_TYPES) for (const h of TITAN_SIZES) {
+    for (const t of WALK_BASE) for (const h of sizesOf(t)) {
+      for (const d of ['down', 'left', 'up']) { const w = SPR[`titan_${t}_${h}_walk0_${d}`]; if (w) SPR[`titan_${t}_${h}_${d}`] = w; }
+      const wl = SPR[`titan_${t}_${h}_walk0_left`];
+      if (wl) SPR[`titan_${t}_${h}_right`] = variant(wl, 'flip');
+    }
+    for (const t of NEW_TYPES) for (const h of sizesOf(t)) for (const d of DIR_KEYS) { dekey(SPR[`titan_${t}_${h}_${d}`]); for (let i = 0; i < 3; i++) dekey(SPR[`titan_${t}_${h}_walk${i}_${d}`]); }
+    for (const t of ALL_TYPES()) for (const h of sizesOf(t)) {
       const up = SPR[`titan_${t}_${h}_up`];
       if (up) { NAPE[`${t}_${h}`] = findNape(up); scrubRed(up); }
       for (let i = 0; i < 3; i++) {
@@ -71,7 +82,7 @@ function loadAssets(onProgress) {
     for (const d of DIR_KEYS) { const s = SPR[`boss_colossal_${d}`]; if (s) unpink(s); }
     for (const k of BOSS_KINDS) for (const d of DIR_KEYS) { const s = SPR[`boss_${k}_${d}`]; if (s) { variant(s, 'white'); variant(s, 'tint'); } }
     for (const w of CIV_RUN) for (let i = 0; i < 3; i++) { const l = SPR[`civ_${w}_run${i}_left`]; if (l) SPR[`civ_${w}_run${i}_right`] = variant(l, 'flip'); }
-    if (typeof proceduralWalk === 'function') for (const t of TITAN_TYPES) for (const h of TITAN_SIZES) for (const d of DIR_KEYS) { const s = SPR[`titan_${t}_${h}_${d}`]; if (s) proceduralWalk(s, t, d); }
+    if (typeof proceduralWalk === 'function') for (const t of ALL_TYPES()) for (const h of sizesOf(t)) for (const d of DIR_KEYS) { const s = SPR[`titan_${t}_${h}_${d}`]; if (s) proceduralWalk(s, t, d); }
     for (const d of DIR_KEYS) for (const k of ['hero', 'herofly']) {
       if (SPR[`${k}_${d}`]) variant(SPR[`${k}_${d}`], 'white');
       for (const id of HERO_IDS) if (SPR[`${k}_${id}_${d}`]) variant(SPR[`${k}_${id}_${d}`], 'white');
@@ -148,6 +159,18 @@ function heroPortrait(id) {
   g.drawImage(s, Math.round((size - s.width) / 2), -Math.round(s.height * 0.02));
   portraitCache2[id] = c;
   return c;
+}
+
+function dekey(c) {
+  if (!c) return;
+  const g = c.getContext('2d');
+  const img = g.getImageData(0, 0, c.width, c.height), d = img.data;
+  for (let i = 0; i < d.length; i += 4) {
+    if (!d[i + 3]) continue;
+    const r = d[i], gg = d[i + 1], b = d[i + 2];
+    if (r > 120 && b > 110 && gg < Math.min(r, b) * 0.62) d[i + 3] = 0;
+  }
+  g.putImageData(img, 0, 0);
 }
 
 function unpink(c) {
