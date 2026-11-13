@@ -32,10 +32,11 @@ function titanPoseFx(t) {
   const st = t.state;
   if (st === 'walk') {
     const s = Math.sin(t.phase);
-    o.shear = s * 0.045 * (t.aberrant ? 1.8 : 1);
+    const framed = true;
+    o.shear = s * (framed ? 0.015 : 0.045) * (t.aberrant ? 1.8 : 1);
     o.sy = 1 - Math.abs(s) * 0.025;
     o.sx = 1 + Math.abs(s) * 0.015;
-    o.oy = -Math.round(Math.abs(s) * 3);
+    o.oy = -Math.round(Math.abs(s) * 2);
     if (t.rageT > 0) o.shear *= 1.6;
   } else if (st === 'grab' || st === 'recover') {
     const k = st === 'grab' ? Math.min(1, t.grabT / grabWind(t)) : 1 - Math.min(1, t.grabT / 0.5);
@@ -246,4 +247,68 @@ function zoomTransform() {
   const z = 1 + 0.16 * Math.sin(k * Math.PI * 0.5) * (k > 0.8 ? (1 - k) / 0.2 : 1);
   const fx = (sx(game.zoomAt.x) - camFrac.x) * PX, fy = (sy(game.zoomAt.y, game.zoomAt.z) - camFrac.y) * PX;
   return { z, fx, fy };
+}
+
+const LEG_FRAC = { normal: 0.43, lanky: 0.5, fat: 0.36, aberrant: 0.45, hero: 0.3 };
+const walkCache = new WeakMap();
+
+function bodyMask(img) {
+  const g = img.getContext('2d');
+  const d = g.getImageData(0, 0, img.width, img.height).data;
+  const rows = new Int32Array(img.height);
+  for (let y = 0; y < img.height; y++) for (let x = 0; x < img.width; x++) if (d[(y * img.width + x) * 4 + 3] > 100) rows[y]++;
+  return rows;
+}
+
+function proceduralWalk(img, set, dir) {
+  let m = walkCache.get(img);
+  if (m) return m;
+  const w = img.width, h = img.height;
+  const legH = Math.round(h * (LEG_FRAC[set] || 0.43));
+  const hipY = h - legH;
+  const marg = Math.ceil(legH * 0.24) + 2;
+  const make = (fn) => {
+    const [c, g] = makeCanvas(w + marg * 2, h);
+    g.imageSmoothingEnabled = false;
+    fn(g);
+    return c;
+  };
+  const upper = (g, dy, dx = 0) => g.drawImage(img, 0, 0, w, hipY + 2, marg + dx, dy, w, hipY + 2);
+  const frames = [make(g => g.drawImage(img, marg, 0))];
+  if (dir === 'left' || dir === 'right') {
+    const s = Math.max(2, Math.round(legH * 0.22));
+    const sign = dir === 'left' ? -1 : 1;
+    for (const ph of [1, -1]) {
+      frames.push(make(g => {
+        const k = s / legH;
+        g.save();
+        g.translate(marg, hipY);
+        g.transform(1, 0, -k * ph * sign, 1, 0, 0);
+        g.filter = 'brightness(0.78)';
+        g.drawImage(img, 0, hipY, w, legH, 0, 0, w, legH);
+        g.restore();
+        g.save();
+        g.translate(marg, hipY);
+        g.transform(1, 0, k * ph * sign, 1, 0, 0);
+        g.drawImage(img, 0, hipY, w, legH, 0, 0, w, legH);
+        g.restore();
+        upper(g, 1);
+      }));
+    }
+  } else {
+    const lift = Math.max(2, Math.round(legH * 0.13));
+    const cx = Math.round(w / 2);
+    for (const side of [0, 1]) {
+      frames.push(make(g => {
+        const x0 = side ? cx : 0, x1 = side ? w : cx;
+        const ox0 = side ? 0 : cx, ox1 = side ? cx : w;
+        g.drawImage(img, ox0, hipY, ox1 - ox0, legH, marg + ox0, hipY, ox1 - ox0, legH);
+        g.drawImage(img, x0, hipY, x1 - x0, legH, marg + x0, hipY - 1, x1 - x0, legH - lift);
+        upper(g, 1, side ? -1 : 1);
+      }));
+    }
+  }
+  m = frames;
+  walkCache.set(img, m);
+  return m;
 }

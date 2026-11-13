@@ -5,6 +5,8 @@ const HERO_IDS = ['cadet', 'connie', 'sasha', 'jean', 'eren', 'armin', 'hange', 
 const TITAN_TYPES = ['normal', 'lanky', 'fat', 'aberrant'];
 const TITAN_SIZES = [110, 140, 170, 200];
 const GRAB_TYPES = ['normal', 'lanky', 'fat', 'aberrant'];
+const WALK_TYPES = [];
+const CIV_RUN = ['man', 'woman'];
 const BOSS_KINDS = ['female', 'armored', 'beast', 'colossal'];
 const TR_PROPS = ['oak', 'apple_tree', 'pine1', 'pine2', 'pine3', 'well', 'hay_bales', 'cart', 'flower_pots', 'rain_barrel', 'lamp_post_wood',
   'bush1', 'bush_berry', 'bush0', 'bush2', 'log_mossy', 'rock_mossy', 'statue', 'bench', 'woodpile', 'flowers_wild', 'flowers_blue', 'grass_tall'];
@@ -17,6 +19,7 @@ function assetList() {
     L[`herofly_${d}`] = `assets/sprites/herofly_${d}.png`;
     L[`civ_man_${d}`] = `assets/sprites/civ_man_${d}.png`;
     L[`civ_woman_${d}`] = `assets/sprites/civ_woman_${d}.png`;
+    if (d !== 'right') for (const w of CIV_RUN) for (let i = 0; i < 3; i++) L[`civ_${w}_run${i}_${d}`] = `assets/sprites/civ_${w}_run${i}_${d}.png`;
     L[`rider_${d}`] = `assets/sprites/rider_${d}.png`;
     for (const k of BOSS_KINDS) L[`boss_${k}_${d}`] = `assets/sprites/boss_${k}_${d}.png`;
     for (const id of HERO_IDS) {
@@ -25,6 +28,7 @@ function assetList() {
     }
     for (const t of TITAN_TYPES) for (const h of TITAN_SIZES) L[`titan_${t}_${h}_${d}`] = `assets/sprites/titan_${t}_${h}_${d}.png`;
     for (const t of GRAB_TYPES) for (const h of TITAN_SIZES) L[`titan_${t}_${h}_grab_${d}`] = `assets/sprites/titan_${t}_${h}_grab_${d}.png`;
+    if (d !== 'right') for (const t of WALK_TYPES) for (const h of TITAN_SIZES) for (let i = 0; i < 3; i++) L[`titan_${t}_${h}_walk${i}_${d}`] = `assets/sprites/titan_${t}_${h}_walk${i}_${d}.png`;
   }
   for (const k of ['house_h1', 'house_h2', 'house_h3', 'house_tower', 'ruin_r1', 'ruin_r2', 'ruin_r3', 'ruin_r4', 'wall_a']) L[k] = `assets/sprites/${k}.png`;
   for (const k of TR_GROUND.concat(TR_PROPS)) L[k] = `assets/tradisea/${k}.png`;
@@ -52,6 +56,12 @@ function loadAssets(onProgress) {
     for (const t of TITAN_TYPES) for (const h of TITAN_SIZES) {
       const up = SPR[`titan_${t}_${h}_up`];
       if (up) { NAPE[`${t}_${h}`] = findNape(up); scrubRed(up); }
+      for (let i = 0; i < 3; i++) {
+        const wl = SPR[`titan_${t}_${h}_walk${i}_left`];
+        if (wl) SPR[`titan_${t}_${h}_walk${i}_right`] = variant(wl, 'flip');
+        const wu = SPR[`titan_${t}_${h}_walk${i}_up`];
+        if (wu) scrubRed(wu);
+      }
       const gl = SPR[`titan_${t}_${h}_grab_left`];
       if (gl) SPR[`titan_${t}_${h}_grab_right`] = variant(gl, 'flip');
       const gup = SPR[`titan_${t}_${h}_grab_up`];
@@ -60,6 +70,8 @@ function loadAssets(onProgress) {
     }
     for (const d of DIR_KEYS) { const s = SPR[`boss_colossal_${d}`]; if (s) unpink(s); }
     for (const k of BOSS_KINDS) for (const d of DIR_KEYS) { const s = SPR[`boss_${k}_${d}`]; if (s) { variant(s, 'white'); variant(s, 'tint'); } }
+    for (const w of CIV_RUN) for (let i = 0; i < 3; i++) { const l = SPR[`civ_${w}_run${i}_left`]; if (l) SPR[`civ_${w}_run${i}_right`] = variant(l, 'flip'); }
+    if (typeof proceduralWalk === 'function') for (const t of TITAN_TYPES) for (const h of TITAN_SIZES) for (const d of DIR_KEYS) { const s = SPR[`titan_${t}_${h}_${d}`]; if (s) proceduralWalk(s, t, d); }
     for (const d of DIR_KEYS) for (const k of ['hero', 'herofly']) {
       if (SPR[`${k}_${d}`]) variant(SPR[`${k}_${d}`], 'white');
       for (const id of HERO_IDS) if (SPR[`${k}_${id}_${d}`]) variant(SPR[`${k}_${id}_${d}`], 'white');

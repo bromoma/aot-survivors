@@ -1,0 +1,22 @@
+<!doctype html><html><head><meta charset="utf-8"></head><body style="margin:0">
+<script>window.onerror=(m,s,l)=>document.body.setAttribute('data-err',m+' @'+l);window.ASSET_BASE='../';</script>
+<canvas id="c" width="1500" height="900"></canvas>
+<script src="../src/core.js"></script><script src="../src/assets.js"></script><script src="../src/juice.js"></script>
+<script>
+loadAssets().then(() => {
+  const g = document.getElementById('c').getContext('2d'); g.imageSmoothingEnabled = false;
+  g.fillStyle = '#56a03a'; g.fillRect(0, 0, 1500, 900);
+  let y = 10;
+  for (const t of TITAN_TYPES) {
+    let x = 10;
+    for (const d of ['down', 'left', 'up']) {
+      const img = SPR[`titan_${t}_110_${d}`];
+      const fr = proceduralWalk(img, t, d);
+      for (const f of [0, 1, 0, 2]) { g.drawImage(fr[f], x, y, fr[f].width * 1.6, fr[f].height * 1.6); x += fr[f].width * 1.6 + 2; }
+      x += 20;
+    }
+    y += 110 * 1.6 + 30;
+  }
+  const o = document.createElement('pre'); o.id = 'snap'; o.textContent = document.getElementById('c').toDataURL(); document.body.appendChild(o);
+});
+</script></body></html>

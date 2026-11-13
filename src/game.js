@@ -1537,6 +1537,22 @@ const CLOUD_SPR = [0, 1, 2].map(i => {
   return c;
 });
 
+const WALK_SEQ = [0, 1, 0, 2];
+function walkFrame(t, dir) {
+  const base = `titan_${t.set}_${t.size}_walk`;
+  if (!SPR[base + '0_' + dir]) {
+    const img = SPR[`titan_${t.set}_${t.size}_${dir}`];
+    if (!img || t.state !== 'walk' || t.stun > 0) return null;
+    const fr = proceduralWalk(img, t.set, dir);
+    return fr[WALK_SEQ[Math.floor(((t.phase % TAU) + TAU) % TAU / (Math.PI / 2)) & 3]];
+  }
+  if (t.state === 'walk' && t.stun <= 0) {
+    const i = WALK_SEQ[Math.floor(((t.phase % TAU) + TAU) % TAU / (Math.PI / 2)) & 3];
+    return SPR[base + i + '_' + dir];
+  }
+  return SPR[base + '0_' + dir];
+}
+
 function titanImg(t, dir) {
   if (!t.boss && !t.dying && t.set) {
     let grabPose = false;
@@ -1545,6 +1561,8 @@ function titanImg(t, dir) {
     else if (t.state === 'eat') grabPose = t.grabT < 0.6;
     else if (t.state === 'stomp' || t.state === 'roar') grabPose = true;
     if (grabPose) { const g = SPR[`titan_${t.set}_${t.size}_grab_${dir}`]; if (g) return g; }
+    const wf = walkFrame(t, dir);
+    if (wf) return wf;
   }
   if (t.boss) return SPR['boss_' + t.boss.kind + '_' + dir] || SPR['titan_normal_200_' + dir];
   const set = t.set || (t.set = titanSet(t));
@@ -1649,11 +1667,19 @@ function civImg(v, dir) {
   return SPR[`${CIV_KINDS[v % 2]}_${dir}`] || SPR[`${CIV_KINDS[(v + 1) % 2]}_${dir}`] || SPR[`hero_${dir}`];
 }
 
+function civRunImg(v, dir, moving, phase) {
+  const kind = CIV_KINDS[v % 2];
+  if (!SPR[`${kind}_run0_${dir}`]) return null;
+  const i = moving ? [1, 0, 2, 0][Math.floor(phase * 1.6) & 3] : 0;
+  return SPR[`${kind}_run${i}_${dir}`];
+}
+
 function drawCiv(c) {
   const dir = dir4(c.dir ?? Math.PI / 2);
-  const img = civImg(c.v, dir);
+  const run = civRunImg(c.v, dir, c.moving, c.phase);
+  const img = run || civImg(c.v, dir);
   if (!img) return;
-  const oy = c.moving ? -Math.round(Math.abs(Math.sin(c.phase * 1.6)) * 2) : 0;
+  const oy = c.moving ? -Math.round(Math.abs(Math.sin(c.phase * 1.6 * Math.PI / 2)) * (run ? 1 : 2)) : 0;
   const x = sx(c.x), y = sy(c.y, 0);
   bctx.drawImage(img, x - (img.width >> 1), y - img.height + oy);
   if (c.panic > 0.5 && Math.floor(performance.now() / 220 + c.phase) % 3 === 0) {
@@ -1677,8 +1703,10 @@ function drawPlayer() {
   const flying = hgt > 8 || p.mode === 'attack';
   let dir = dir4(p.dir);
   if (p.mode === 'attack' && p.phase === 'cut') dir = DIR_KEYS[[0, 2, 3, 1][Math.floor(now * 22) % 4]];
-  const img = heroImg(p.char, dir, flying);
+  let img = heroImg(p.char, dir, flying);
   if (!img) return;
+  const running = !flying && Math.hypot(p.vx, p.vy) > 40;
+  if (running) img = proceduralWalk(img, 'hero', dir)[WALK_SEQ[Math.floor(p.runPhase * 2) & 3]];
   let oy = 0;
   const o = { shear: 0, sx: 1, sy: 1 };
   if (!flying && Math.hypot(p.vx, p.vy) > 40) { oy = -Math.round(Math.abs(Math.sin(p.runPhase * Math.PI)) * 2); o.sy = 1 - Math.abs(Math.sin(p.runPhase * Math.PI)) * 0.05; }

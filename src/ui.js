@@ -786,6 +786,15 @@ const UI = (() => {
   function debugScreen(q) {
     if (['battle', 'squad', 'gacha', 'records', 'settings', 'training', 'missions'].includes(q)) { go(q); return; }
     if (q === 'pull') { save.tokens += 900; doPull(10); revealIdx = 3; showReveal(); return; }
+    if (q === 'walk') {
+      start();
+      for (let i = 0; i < 30; i++) update(1 / 60);
+      titans.length = 0; game.spawnT = 99;
+      ['normal', 'lanky', 'fat', 'aberrant'].forEach((ty, i) => { spawnTitan({ x: player.x - 420 + i * 280, y: player.y - 200 }); const t = titans[titans.length - 1]; t.art = ty; t.set = titanSet(t); t.face = i % 2 ? Math.PI : Math.PI / 2; t.phase = Math.PI / 2 + 0.1; t.spCd = 99; });
+      for (const c of civs.slice(0, 6)) { c.x = player.x + rand(-300, 300); c.y = player.y + rand(60, 220); c.moving = true; c.dir = rand(-1, 1) + (Math.random() < 0.5 ? 0 : Math.PI); c.phase = 0.4; }
+      cam.x = player.x - viewW() / 2; cam.y = player.y - viewH() / 2;
+      window.FREEZE = true; sync(0); return;
+    }
     if (q === 'grab') {
       start();
       for (let i = 0; i < 30; i++) update(1 / 60);

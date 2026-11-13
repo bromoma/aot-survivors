@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Атака титанов: Survivors</title>
+<link rel="stylesheet" href="../src/ui.css">
+<style>
+  html, body { margin: 0; height: 100%; background: #0b0d14; overflow: hidden; }
+  canvas { display: block; image-rendering: pixelated;  }
+  body::after { content: ''; position: fixed; inset: 0; pointer-events: none; background: radial-gradient(ellipse at center, rgba(6, 4, 10, 0) 52%, rgba(6, 4, 10, 0.42) 100%); }
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<script>window.ASSET_BASE = "../";</script>
+<script src="../src/core.js"></script>
+<script src="../src/terrain.js"></script>
+<script src="../src/fx.js"></script>
+<script src="../src/assets.js"></script>
+<script src="../src/audio.js"></script>
+<script src="../src/combat.js"></script>
+<script src="../src/meta.js"></script>
+<script src="../src/town.js"></script>
+<script src="../src/juice.js"></script>
+<script src="../src/game.js"></script>
+<script src="../src/ui.js"></script>
+<script src="anim_cap.js"></script>
+</body>
+</html>
