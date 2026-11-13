@@ -186,17 +186,11 @@ const UI = (() => {
           <div class="squad-detail k-card" id="squad-detail"></div>
         </div>
       </div></div></div>
-      <div class="screen" data-s="gacha"><div class="panel-wrap"><div class="panel k-frame gacha-banner">
-        <div class="head"><span class="h2">${tr('Призыв разведчиков')}</span><button class="k-icon" data-back>${img('close')}</button></div>
-        <div class="faces" id="gacha-faces"></div>
-        <div>${tr('Сигнальная ракета покажет, кто откликнулся на зов')}</div>
-        <div class="muted" style="margin:6px 0"><span class="r5">${tr('Легендарный')} 4%</span> · <span class="r4">${tr('Эпический')} 21%</span> · <span class="r3">${tr('Редкий')} 75%</span></div>
-        <div id="gacha-pity" style="color:#7a3aa8"></div>
-        <div class="muted">${tr('Повтор даёт звезду (+3% к скорости), сверх пяти звёзд — жетоны')}</div>
-        <div class="buttons">
-          <button class="k-btn big" id="pull1">${img('coin')} 1 — 100</button>
-          <button class="k-btn big" id="pull10">${img('coin')} 10 — 900</button>
-        </div>
+      <div class="screen" data-s="gacha"><div class="panel-wrap"><div class="panel k-frame gacha-v2">
+        <div class="head"><span class="h2">${tr('Призыв разведчиков')}</span><div class="g-tabs" id="g-tabs"></div><button class="k-icon" data-back>${img('close')}</button></div>
+        <div class="g-stage" id="g-stage"></div>
+        <div class="g-row"><div class="g-info" id="g-info"></div><div class="g-btns" id="g-btns"></div></div>
+        <div class="g-history k-card hid" id="g-history"></div>
       </div></div></div>
       <div class="screen" data-s="training"><div class="panel-wrap"><div class="panel k-frame" style="width:min(1000px,94vw)">
         <div class="head"><span class="h2">${tr('Тренировки кадетского корпуса')}</span><button class="k-icon" data-back>${img('close')}</button></div>
@@ -232,12 +226,6 @@ const UI = (() => {
     });
     M.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', () => go('hub')));
     $('#go', M).addEventListener('click', () => start());
-    $('#pull1', M).addEventListener('click', () => doPull(1));
-    $('#pull10', M).addEventListener('click', () => doPull(10));
-    const gf = $('#gacha-faces', M);
-    gf.appendChild(face('mikasa'));
-    gf.appendChild(face('levi'));
-    gf.appendChild(face('hange'));
   }
 
   function buildHud() {
@@ -293,7 +281,7 @@ const UI = (() => {
     const n = claimableCount();
     const bd = $('#mis-badge');
     if (bd) { bd.textContent = n || ''; bd.style.display = n ? '' : 'none'; }
-    const hints = { hub: tr('↑↓ — выбрать, Enter — открыть'), battle: tr('← → — фракция, ↑↓ — угроза, Enter — в бой, Esc — назад'), squad: tr('Стрелки — выбрать, Enter — взять в бой, Esc — назад'), gacha: tr('1 — один призыв, 0 — десять, Esc — назад'), records: tr('Esc — назад'), settings: tr('Esc — назад'), training: tr('Клик — купить уровень, Esc — назад'), missions: tr('Клик — забрать награду, Esc — назад') };
+    const hints = { hub: tr('↑↓ — выбрать, Enter — открыть'), battle: tr('← → — фракция, ↑↓ — угроза, Enter — в бой, Esc — назад'), squad: tr('Стрелки — выбрать, Enter — взять в бой, Esc — назад'), gacha: tr('1 — один призыв, 0 — десять, F — бесплатный, Tab — баннер, Esc — назад'), records: tr('Esc — назад'), settings: tr('Esc — назад'), training: tr('Клик — купить уровень, Esc — назад'), missions: tr('Клик — забрать награду, Esc — назад') };
     $('#menu-hint').textContent = hints[screen] || '';
   }
 
@@ -358,21 +346,39 @@ const UI = (() => {
       const owned = save.chars[c.id];
       const d = el('div', 'hero-card k-card' + (i === squadSel ? ' sel' : '') + (owned ? '' : ' locked') + (save.selected === c.id ? ' chosen' : ''));
       d.appendChild(face(c.id));
-      d.insertAdjacentHTML('beforeend', `<div class="hn">${owned ? c.name : '???'}</div><div class="${rarityClass(c.rarity)}">${owned ? starsHTML(owned) : RARITY[c.rarity].name}</div>`);
-      d.addEventListener('click', () => { squadSel = i; pickHero(); refreshSquad(); });
+      d.insertAdjacentHTML('beforeend', `<div class="hn">${owned ? c.name : '???'}</div><div class="${rarityClass(c.rarity)}">${owned ? starsHTML(owned) : RARITY[c.rarity].name}</div>${owned ? '<div class="hlv">' + tr('Ур. {0}', heroLevel(c.id)) + '</div>' : ''}`);
+      d.addEventListener('click', () => { squadSel = i; refreshSquad(); });
+      d.addEventListener('dblclick', () => { squadSel = i; pickHero(); });
       box.appendChild(d);
     });
     const c = CHARS[squadSel], owned = save.chars[c.id];
     const det = $('#squad-detail');
     det.innerHTML = '';
     det.appendChild(face(c.id));
+    const L = heroLevelOf(heroXp(c.id));
     det.insertAdjacentHTML('beforeend', `<div class="center h2 ${rarityClass(c.rarity)}" style="line-height:1">${owned ? c.name : tr('Не открыт')}</div>
-      <div class="center ${rarityClass(c.rarity)}">${RARITY[c.rarity].name}</div>
-      <div class="center muted" style="margin:6px 0;min-height:60px">${owned ? c.ability : tr('Можно получить в «Призыве»')}</div>`);
+      <div class="center ${rarityClass(c.rarity)}">${RARITY[c.rarity].name} ${owned ? starsHTML(owned) : ''}</div>
+      <div class="center muted ab">${owned ? c.ability : tr('Можно получить в «Призыве»')}</div>`);
+    if (owned) {
+      det.insertAdjacentHTML('beforeend', `<div class="hx"><b>${tr('Ур. {0}', L.level)}</b> / ${HERO_MAX}<div class="xpb"><i style="width:${L.need ? Math.round(L.into / L.need * 100) : 100}%"></i></div><span class="muted">${L.need ? L.into + ' / ' + L.need : tr('Максимум')}</span></div>
+        <div class="muted small">${L.level > 1 ? heroBonusText(L.level) : tr('Каждый уровень: +1% к скорости и облёту')}</div>
+        <div class="perks">${HERO_PERKS.map(p => `<div class="perk${L.level >= p.at ? ' on' : ''}"><span class="pl">${tr('Ур. {0}', p.at)}</span>${p.text(c.id)}</div>`).join('')}</div>`);
+    }
     const btn = el('button', 'k-btn' + (owned && save.selected !== c.id ? '' : ' off'), save.selected === c.id ? tr('Уже в бою') : owned ? tr('Взять в бой') : tr('Закрыт'));
     btn.style.width = '100%';
     btn.addEventListener('click', pickHero);
     det.appendChild(btn);
+    if (owned && L.level < HERO_MAX) {
+      const row = el('div', 'row hbtns');
+      const tb = el('button', 'k-btn' + (save.tokens >= TRAIN_COST ? '' : ' off'), `${tr('Тренировать +{0}', TRAIN_XP)} · <img src="assets/ui/coin.png" alt="">${TRAIN_COST}`);
+      tb.addEventListener('click', () => { const r = trainHero(c.id); if (!r) { toast(tr('Не хватает жетонов — сыграй забег')); snd('error', { vol: 0.6 }); return; } snd(r > 1 ? 'levelup' : 'confirm', { vol: 0.6 }); if (r > 1) toast(tr('{0}: уровень {1}!', c.name, heroLevel(c.id))); refreshSquad(); refreshFooter(); });
+      const mb = el('button', 'k-btn' + ((save.manuals || 0) > 0 ? '' : ' off'), `<img src="assets/ui/scroll.png" alt=""> +${MANUAL_XP} (${save.manuals || 0})`);
+      mb.title = tr('Наставление: +{0} опыта герою', MANUAL_XP);
+      mb.addEventListener('click', () => { const r = useManual(c.id); if (!r) { toast(tr('Наставления выпадают в «Призыве»')); snd('error', { vol: 0.6 }); return; } snd(r > 1 ? 'levelup' : 'confirm', { vol: 0.6 }); if (r > 1) toast(tr('{0}: уровень {1}!', c.name, heroLevel(c.id))); refreshSquad(); });
+      row.appendChild(tb);
+      row.appendChild(mb);
+      det.appendChild(row);
+    }
   }
 
   function pickHero() {
@@ -384,11 +390,80 @@ const UI = (() => {
     refreshSquad();
   }
 
+  let gBanner = 'event';
+  function fmtDur(ms) {
+    const h = Math.max(0, Math.floor(ms / 3600000));
+    return h >= 24 ? tr('{0} д {1} ч', Math.floor(h / 24), h % 24) : tr('{0} ч', h);
+  }
+
   function refreshGacha() {
-    $('#gacha-pity').textContent = tr('Эпический гарантирован через {0}, легендарный — через {1}', Math.max(1, 10 - save.pity4), Math.max(1, 40 - save.pity5));
-    $('#pull1').classList.toggle('off', save.tokens < 100);
-    $('#pull10').classList.toggle('off', save.tokens < 900);
+    const B = bannerInfo(), ev = gBanner === 'event', g = gachaState();
+    const tabs = $('#g-tabs');
+    tabs.innerHTML = '';
+    for (const [k, label] of [['event', tr('Особый призыв')], ['standard', tr('Стандартный')]]) {
+      const b = el('button', 'k-btn gt' + (k === gBanner ? ' sel' : ''), label);
+      b.addEventListener('click', () => { gBanner = k; snd('click', { vol: 0.6 }); refreshGacha(); });
+      tabs.appendChild(b);
+    }
+    const st = $('#g-stage');
+    st.className = 'g-stage ' + (ev ? 'ev' : 'std');
+    let sp = '';
+    for (let i = 0; i < 18; i++) sp += `<i style="left:${(i * 53) % 100}%;animation-delay:${(i * 0.37) % 3}s;animation-duration:${2.4 + (i % 5) * 0.5}s"></i>`;
+    st.innerHTML = `<div class="rays"></div><div class="sparks">${sp}</div>`;
+    if (ev) {
+      const c = charById(B.five);
+      const hero = el('div', 'g-hero');
+      hero.appendChild(body(c.id));
+      st.appendChild(hero);
+      st.insertAdjacentHTML('beforeend', `<div class="g-title">
+        <div class="g-kicker">${tr('Особый призыв')}</div>
+        <div class="g-name">${tr(B.title)}</div>
+        <div class="g-sub r5">${c.name} · ${RARITY[5].name}</div>
+        <div class="g-up">${tr('Шанс ×2: каждый второй легендарный — {0}', c.name)}</div>
+        <div class="g-fours" id="g-fours"></div>
+        <div class="g-timer">${tr('Смена баннера через {0}', fmtDur(B.endsIn))}</div></div>`);
+      const fb = $('#g-fours', st);
+      for (const id of B.fours) {
+        const ch = charById(id), w = el('div', 'g-four');
+        w.appendChild(face(id));
+        w.insertAdjacentHTML('beforeend', `<span class="r4">${ch.name}</span>`);
+        fb.appendChild(w);
+      }
+    } else {
+      const row = el('div', 'g-std');
+      for (const c of CHARS.filter(x => x.rarity === 5)) { const w = el('div', 'g-four'); w.appendChild(body(c.id)); w.insertAdjacentHTML('beforeend', `<span class="r5">${c.name}</span>`); row.appendChild(w); }
+      st.appendChild(row);
+      st.insertAdjacentHTML('beforeend', `<div class="g-title std"><div class="g-name">${tr('Стандартный')}</div><div class="g-sub">${tr('Все бойцы без повышенных шансов')}</div></div>`);
+    }
+    const p5 = save.pity5 || 0, p4 = save.pity4 || 0;
+    $('#g-info').innerHTML = `<div class="pity"><span class="r5">5★</span><div class="pbar"><i style="width:${Math.round(p5 / PITY5 * 100)}%"></i></div><span>${tr('гарантия через {0}', PITY5 - p5)}</span></div>
+      <div class="pity"><span class="r4">4★</span><div class="pbar p4"><i style="width:${Math.round(p4 / PITY4 * 100)}%"></i></div><span>${tr('гарантия через {0}', PITY4 - p4)}</span></div>
+      ${ev && g.guar ? '<div class="guar">' + tr('Следующий легендарный — точно {0}!', charById(B.five).name) + '</div>' : ''}
+      <div class="muted small">${tr('Шансы: 5★ 3% · 4★ 18% · 3★ 79% (бойцы и наставления)')} · <a class="lnk" id="g-hist-btn">${tr('История')}</a></div>`;
+    $('#g-hist-btn').addEventListener('click', () => { $('#g-history').classList.toggle('hid'); refreshHistory(); });
+    const bb = $('#g-btns');
+    bb.innerHTML = '';
+    if (freeAvailable()) {
+      const fb = el('button', 'k-btn big free', `${img('pearl')} ${tr('Бесплатно')}`);
+      fb.title = tr('Один бесплатный призыв каждый день');
+      fb.addEventListener('click', () => doPull(1, true));
+      bb.appendChild(fb);
+    }
+    const b1 = el('button', 'k-btn big' + (save.tokens < PULL_COST ? ' off' : ''), `${img('coin')} ×1 — ${PULL_COST}`);
+    b1.addEventListener('click', () => doPull(1));
+    const b10 = el('button', 'k-btn big' + (save.tokens < PULL10_COST ? ' off' : ''), `${img('coin')} ×10 — ${PULL10_COST}`);
+    b10.title = tr('Десять за цену девяти, минимум один эпический');
+    b10.addEventListener('click', () => doPull(10));
+    bb.appendChild(b1);
+    bb.appendChild(b10);
     refreshFooter();
+  }
+
+  function refreshHistory() {
+    const h = $('#g-history');
+    if (h.classList.contains('hid')) return;
+    const list = gachaState().history;
+    h.innerHTML = '<div class="sec">' + tr('История призывов') + '</div>' + (list.length ? list.map(e => `<span class="hi r${e.r}">${e.id === 'manual' ? tr('Наставление') : charById(e.id).name}${e.f ? ' ✦' : ''}</span>`).join('') : '<span class="muted">' + tr('Пока пусто') + '</span>');
   }
 
   function refreshTraining() {
@@ -547,50 +622,105 @@ const UI = (() => {
     msgT = 2.2;
   }
 
-  function doPull(n) {
-    if (save.tokens < (n === 10 ? 900 : 100)) { toast(tr('Не хватает жетонов — сыграй забег')); snd('error', { vol: 0.6 }); return; }
-    pull(n);
-    revealIdx = 0;
-    revealSummary = false;
-    showReveal();
+  let rv = null;
+  function doPull(n, free) {
+    const res = gachaPull(n, gBanner, free);
+    if (!res) { toast(tr('Не хватает жетонов — сыграй забег')); snd('error', { vol: 0.6 }); return; }
+    pullRes = res;
+    state = 'pull';
+    refreshFooter();
+    rvStart();
   }
 
-  function showReveal() {
-    const L = layers.reveal;
-    if (revealSummary || revealIdx >= pullRes.length) {
-      revealSummary = true;
-      L.innerHTML = `<div class="summary k-frame"><div class="big-title wood-text" style="color:var(--gold)">${tr('Итоги призыва')}</div><div class="grid" id="rv-grid"></div></div><div class="next wood-text">${tr('Enter или клик — дальше')}</div>`;
-      const gr = $('#rv-grid', L);
-      for (const r of pullRes) {
-        const d = el('div', 'hero-card k-card' + (r.c.rarity >= 4 ? ' sel' : ''));
-        d.appendChild(face(r.c.id));
-        d.insertAdjacentHTML('beforeend', `<div class="hn">${r.c.name}</div><div class="${r.isNew ? '' : rarityClass(r.c.rarity)}" style="${r.isNew ? 'color:var(--good)' : ''}">${r.isNew ? tr('Новый!') : r.refund ? '+' + r.refund : starsHTML(r.stars)}</div>`);
-        gr.appendChild(d);
-      }
+  function rvLater(ms, fn) { rv.timers.push(setTimeout(fn, ms)); }
+  function rvClear() { if (rv) { for (const t of rv.timers) clearTimeout(t); rv.timers = []; } }
+  function rvBg() {
+    let st = '';
+    for (let i = 0; i < 46; i++) st += `<i style="left:${(i * 37 + 11) % 100}%;top:${(i * 23 + 7) % 62}%;animation-delay:${(i % 7) * 0.3}s"></i>`;
+    return `<div class="rv-sky"></div><div class="rv-stars">${st}</div><div class="rv-wall"></div>`;
+  }
+
+  function rvStart() {
+    const L = layers.reveal, max = Math.max(...pullRes.map(r => r.rarity));
+    rvClear();
+    rv = { phase: 'launch', timers: [], max };
+    L.innerHTML = `${rvBg()}<div class="rv-rocket m${max}"><i class="trail"></i><b></b></div><div class="rv-burst m${max}"></div><div class="rv-flash m${max}"></div><div class="next wood-text">${tr('Клик — пропустить')}</div>`;
+    snd('flare', { vol: 0.9 });
+    rvLater(950, () => { const r = $('.rv-rocket', L); if (r) r.classList.add('lit'); if (max === 5) snd('bong', { vol: 0.9 }); else if (max === 4) snd('chime5', { vol: 0.7, tag: 'chime' }); });
+    rvLater(1450, () => { const b = $('.rv-burst', L), f = $('.rv-flash', L); if (b) b.classList.add('on'); if (f) f.classList.add('on'); snd('boom', { vol: 0.8, rate: max === 5 ? 0.7 : 1 }); });
+    rvLater(1800, () => (pullRes.length === 1 ? rvCard(0) : rvGrid()));
+  }
+
+  function rvCard(i, fromGrid) {
+    rvClear();
+    rv.phase = 'card';
+    rv.fromGrid = !!fromGrid;
+    const r = pullRes[i], L = layers.reveal;
+    L.innerHTML = `${rvBg()}<div class="rv-rays m${r.rarity}"></div><div class="rv-card r${r.rarity}" id="rv-card"></div><div class="next wood-text">${fromGrid ? tr('Клик — назад') : tr('Enter или клик — дальше')}</div>`;
+    const card = $('#rv-card', L);
+    if (r.item) {
+      card.insertAdjacentHTML('beforeend', `<img class="rv-item" src="assets/ui/scroll.png" alt=""><div class="rname r3">${tr('Наставление')}</div><div class="rv-txt">${tr('+{0} опыта любому герою — используй в «Отряде»', MANUAL_XP)}</div>`);
+      snd('chime3', { vol: 0.6, tag: 'chime' });
       return;
     }
-    const r = pullRes[revealIdx], rar = RARITY[r.c.rarity];
-    snd('reveal', { vol: 0.7 });
-    setTimeout(() => {
-      if (r.c.rarity >= 5) snd('victory', { vol: 0.8 });
-      else if (r.c.rarity === 4) { snd('bong', { vol: 0.8 }); snd('chime6', { vol: 0.6, tag: 'chime' }); }
-      else snd('chime3', { vol: 0.6, tag: 'chime' });
-    }, 780);
-    L.innerHTML = `<div class="flare" style="background:linear-gradient(${rar.flare}, transparent)"></div><div class="flash" style="background:${rar.flare}"></div>
-      <div class="card-pop k-frame hid" id="rv-card"></div><div class="next wood-text">${revealIdx + 1} / ${pullRes.length} · ${tr('Enter или клик — дальше')}</div>`;
-    const card = $('#rv-card', L);
-    setTimeout(() => card.classList.remove('hid'), 800);
     card.appendChild(body(r.c.id));
-    card.insertAdjacentHTML('beforeend', `<div class="rname ${rarityClass(r.c.rarity)}" style="text-shadow:2px 2px 0 #3a1e0c">${r.c.name}</div>
-      <div class="${rarityClass(r.c.rarity)}" style="text-shadow:1px 1px 0 #3a1e0c">${rar.name} ${starsHTML(r.stars)}</div>
-      <div style="margin-top:6px">${r.isNew ? '<span style="color:var(--good)">' + tr('Новый боец!') + '</span> ' + r.c.ability : r.refund ? tr('Уже 5★ — возвращено {0} жетонов', r.refund) : tr('Повтор: +1 звезда')}</div>`);
+    let stars = '';
+    for (let k = 0; k < 5; k++) stars += `<span class="st${k < r.stars ? ' on' : ''}" style="animation-delay:${0.25 + k * 0.12}s">★</span>`;
+    card.insertAdjacentHTML('beforeend', `${r.isNew ? '<div class="stamp">' + tr('Новый!') + '</div>' : ''}${r.featured ? '<div class="feat">' + tr('Шанс ×2') + '</div>' : ''}
+      <div class="rname r${r.rarity}">${r.c.name}</div><div class="rrar r${r.rarity}">${RARITY[r.rarity].name}</div><div class="rstars">${stars}</div>
+      <div class="rv-txt">${r.isNew ? r.c.ability : r.refund ? tr('Уже 5★ — возвращено {0} жетонов', r.refund) : tr('Повтор: +1 звезда')}</div>`);
+    if (r.rarity >= 5) snd('victory', { vol: 0.8 });
+    else if (r.rarity === 4) { snd('bong', { vol: 0.7 }); snd('chime6', { vol: 0.6, tag: 'chime' }); }
+    else snd('chime3', { vol: 0.6, tag: 'chime' });
+  }
+
+  function rvGrid(instant) {
+    rvClear();
+    rv.phase = 'grid';
+    const L = layers.reveal;
+    L.innerHTML = `${rvBg()}<div class="rv-grid" id="rv-grid"></div><div class="next wood-text" id="rv-next">${tr('Клик — открыть все')}</div>`;
+    const gr = $('#rv-grid', L);
+    rv.cards = pullRes.map((r, i) => {
+      const d = el('div', 'rv-c r' + r.rarity + (instant ? ' open' : ''));
+      d.innerHTML = '<div class="back"></div><div class="front"></div>';
+      const fr = $('.front', d);
+      if (r.item) fr.insertAdjacentHTML('beforeend', `<img src="assets/ui/scroll.png" alt=""><div class="hn">${tr('Наставление')}</div>`);
+      else { fr.appendChild(face(r.c.id)); fr.insertAdjacentHTML('beforeend', `<div class="hn">${r.c.name}</div><div class="r${r.rarity} small">${r.isNew ? tr('Новый!') : r.refund ? '+' + r.refund : starsHTML(r.stars)}</div>`); }
+      d.addEventListener('click', e => { if (!d.classList.contains('open')) return; e.stopPropagation(); rvCard(i, true); });
+      gr.appendChild(d);
+      return d;
+    });
+    if (instant) { rv.phase = 'done'; $('#rv-next', L).textContent = tr('Клик по карточке — подробнее, Enter — готово'); return; }
+    let t = 250;
+    pullRes.forEach((r, i) => {
+      t += r.rarity >= 4 ? 520 : 170;
+      rvLater(t, () => {
+        rv.cards[i].classList.add('open');
+        if (r.rarity === 5) { snd('victory', { vol: 0.7 }); L.classList.add('shake'); setTimeout(() => L.classList.remove('shake'), 400); }
+        else if (r.rarity === 4) snd('bong', { vol: 0.6 });
+        else snd('tick', { vol: 0.5 });
+      });
+    });
+    rvLater(t + 200, () => { rv.phase = 'done'; const n = $('#rv-next', L); if (n) n.textContent = tr('Клик по карточке — подробнее, Enter — готово'); });
+  }
+
+  function rvFlipAll() {
+    rvClear();
+    for (const c of rv.cards || []) c.classList.add('open');
+    rv.phase = 'done';
+    const n = $('#rv-next', layers.reveal);
+    if (n) n.textContent = tr('Клик по карточке — подробнее, Enter — готово');
   }
 
   function nextReveal() {
-    if (revealSummary) { state = 'menu'; go('gacha'); return; }
-    revealIdx++;
-    if (revealIdx >= pullRes.length && pullRes.length === 1) { state = 'menu'; go('gacha'); return; }
-    showReveal();
+    if (!rv) { state = 'menu'; go('gacha'); return; }
+    if (rv.phase === 'launch') { rvClear(); if (pullRes.length === 1) rvCard(0); else rvGrid(true); return; }
+    if (rv.phase === 'grid') { rvFlipAll(); return; }
+    if (rv.phase === 'card' && rv.fromGrid) { rvGrid(true); return; }
+    rvClear();
+    rv = null;
+    state = 'menu';
+    go('gacha');
   }
 
   function buildLevelUp() {
@@ -634,6 +764,7 @@ const UI = (() => {
     const rows = [[tr('Продержался'), fmtTime(game.time)], [tr('Титанов убито'), game.kills], [tr('Уровень'), game.level]];
     if (faction.civs) rows.push([tr('Горожан погибло'), game.lost]);
     if (faction.threat > 1) rows.push([tr('Угроза'), THREAT_NAMES[faction.threat - 1]]);
+    if (game.heroXpGain) rows.push([tr('Опыт героя'), '+' + game.heroXpGain + (game.heroUps ? ' · ' + tr('новый уровень!') : '')]);
     if (game.unlocked) rows.push([tr('Открыта угроза'), THREAT_NAMES[game.unlocked - 1] + '!']);
     rows.push([tr('Рекорд'), fmtTime(bestOf(faction))]);
     layers.result.innerHTML = `<div class="shade"></div><div class="panel-wrap"><div class="panel k-frame result">
@@ -773,7 +904,7 @@ const UI = (() => {
     if (c === 'KeyM') { toggleMute(); return state === 'menu' || state === 'pull'; }
     if (state === 'pull') {
       if (c === 'Enter' || c === 'Space') nextReveal();
-      if (c === 'Escape') { revealSummary = true; nextReveal(); }
+      if (c === 'Escape') { rvClear(); rv = null; state = 'menu'; go('gacha'); }
       return true;
     }
     if (state !== 'menu') return false;
@@ -799,6 +930,8 @@ const UI = (() => {
     } else if (screen === 'gacha') {
       if (c === 'Digit1' || c === 'Enter') doPull(1);
       if (c === 'Digit0') doPull(10);
+      if (c === 'KeyF' && freeAvailable()) doPull(1, true);
+      if (c === 'Tab' || c === 'KeyQ' || c === 'KeyE') { gBanner = gBanner === 'event' ? 'standard' : 'event'; refreshGacha(); }
     }
     return true;
   }
@@ -824,7 +957,8 @@ const UI = (() => {
 
   function debugScreen(q) {
     if (['battle', 'squad', 'gacha', 'records', 'settings', 'training', 'missions'].includes(q)) { go(q); return; }
-    if (q === 'pull') { save.tokens += 900; doPull(10); revealIdx = 3; showReveal(); return; }
+    if (q === 'pull') { save.tokens += 900; go('gacha'); doPull(10); return; }
+    if (q === 'pull1') { save.tokens += 100; go('gacha'); doPull(1); return; }
     if (q === 'walk') {
       start();
       for (let i = 0; i < 30; i++) update(1 / 60);
@@ -903,6 +1037,7 @@ const UI = (() => {
       const B = game.boss;
       B.x = player.x + 260;
       B.y = player.y - 40;
+      if (B.boss.def.fixed) placePylons(B);
       B.boss.cd = 0.4;
       player.z = 200;
       for (let i = 0; i < 70; i++) update(1 / 60);

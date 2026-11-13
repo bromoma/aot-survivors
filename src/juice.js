@@ -29,6 +29,8 @@ function titanPoseFx(t) {
   const now = performance.now() / 1000;
   const o = { sx: 1, sy: 1, shear: 0, ox: 0, oy: 0 };
   if (t.boss && t.boss.kneel > 0) { o.sy = 0.8; o.sx = 1.06; o.shear = Math.sin(now * 3) * 0.02; return o; }
+  if (t.boss && t.jz) { o.oy = -Math.round(t.jz / ART); o.sy = 1.06; o.shear = Math.cos(t.face) * 0.1; return o; }
+  if (t.boss && t.boss.act === 'pounce') { const k = Math.min(1, t.boss.actT / 0.55); o.sy = 1 - 0.14 * k; o.sx = 1 + 0.06 * k; return o; }
   if (t.boss && t.boss.act === 'kick') { const k = 1 - t.boss.actT / 0.65; o.shear = Math.sin(k * 9) * 0.1 * k; o.sy = 1 + 0.06 * k; return o; }
   if (t.stun > 0) { o.shear = Math.sin(now * 18 + t.x) * 0.05; return o; }
   const st = t.state;
@@ -187,6 +189,7 @@ function updateTitanSpecial(t, dt) {
 }
 
 function titanShadowLift(t) {
+  if (t.boss && t.jz) return Math.max(0.4, 1 - t.jz / 400);
   return t.state === 'leap' && t.spPhase === 'air' ? Math.max(0.4, 1 - t.jz / 400) : 1;
 }
 

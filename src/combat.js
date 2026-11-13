@@ -38,16 +38,20 @@ const PASSIVES = {
 };
 
 const BOSSES = [
-  { kind: 'female', at: 150, name: 'Женская особь', size: 170, hp: 3, speed: 150, wp: 'лодыжки', wz: 0.06, ws: 0.11, kneel: 3 },
-  { kind: 'armored', at: 300, name: 'Бронированный титан', size: 190, hp: 4, speed: 70, wp: 'колени', wz: 0.2, ws: 0.13, kneel: 3.4 },
-  { kind: 'beast', at: 450, name: 'Звероподобный титан', size: 210, hp: 3, speed: 60, wp: 'руки', wz: 0.42, ws: 0.24, kneel: 3.6 },
-  { kind: 'colossal', at: 570, name: 'Колоссальный титан', size: 300, hp: 4, speed: 22, wp: 'лодыжки', wz: 0.05, ws: 0.12, kneel: 4 },
+  { kind: 'female', tier: 0, name: 'Женская особь', size: 170, hp: 3, speed: 150, wp: 'лодыжки', wz: 0.06, ws: 0.11, kneel: 3 },
+  { kind: 'jaw', tier: 0, name: 'Титан-челюсти', size: 130, hp: 3, speed: 205, wp: 'лодыжки', wz: 0.06, ws: 0.13, kneel: 2.6, napeK: 0.72 },
+  { kind: 'cart', tier: 0, name: 'Титан-перевозчик', size: 160, hp: 3, speed: 175, wp: 'передние лапы', wz: 0.1, ws: 0.16, kneel: 3, napeK: 0.74 },
+  { kind: 'armored', tier: 1, name: 'Бронированный титан', size: 190, hp: 4, speed: 70, wp: 'колени', wz: 0.2, ws: 0.13, kneel: 3.4 },
+  { kind: 'beast', tier: 1, name: 'Звероподобный титан', size: 210, hp: 3, speed: 60, wp: 'руки', wz: 0.42, ws: 0.24, kneel: 3.6 },
+  { kind: 'hammer', tier: 1, name: 'Молот войны', size: 210, hp: 3, speed: 38, wp: 'кристаллы', wz: 0, ws: 0, kneel: 3.4, fixed: true },
+  { kind: 'colossal', tier: 2, name: 'Колоссальный титан', size: 300, hp: 4, speed: 22, wp: 'лодыжки', wz: 0.05, ws: 0.12, kneel: 4 },
+  { kind: 'reiss', tier: 2, name: 'Титан Рода Рейсса', size: 300, hp: 4, speed: 30, wp: 'руки', wz: 0.12, ws: 0.3, kneel: 4.2, napeK: 0.6 },
 ];
 
 trFields(Object.values(SKILLS), ['name']);
 trFields(Object.values(PASSIVES), ['name']);
 trFields(BOSSES, ['name', 'wp']);
-let allies = [], traps = [], shots = [], rocks = [], marks = [];
+let allies = [], traps = [], shots = [], rocks = [], marks = [], spikes = [];
 
 function combatReset() {
   allies = [];
@@ -55,11 +59,14 @@ function combatReset() {
   shots = [];
   rocks = [];
   marks = [];
+  spikes = [];
   stats.skills = { spin: 0, flash: 0, cannon: 0, ally: 0, trap: 0 };
   stats.pass = { speed: 0, range: 0, orbit: 0, hp: 0, heal: 0, glide: 0 };
   game.sk = { spin: 3, flash: 2, cannon: 1.5, trap: 3 };
   game.boss = null;
   game.bossIdx = 0;
+  game.bossQueue = null;
+  game.bossCycle = -1;
   game.bossKills = 0;
   game.banner = null;
 }
@@ -145,7 +152,7 @@ function updateSkills(dt) {
     sk.spin -= dt;
     if (sk.spin <= 0) {
       const S = SKILLS.spin, rad = S.rad[L.spin - 1];
-      sk.spin = S.cd[L.spin - 1];
+      sk.spin = S.cd[L.spin - 1] * stats.cdMul;
       rings.push({ x: p.x, y: p.y, r: rad, life: 0.35, color: '#dfe8f0' });
       for (let i = 0; i < 4; i++) slashes.push({ x: p.x, y: p.y - KZ * p.z, ang: i * Math.PI / 2, life: 0.22, big: true });
       sfx('spin', { vol: 0.7 });
@@ -167,7 +174,7 @@ function updateSkills(dt) {
         if (c > bc) { bc = c; best = t; }
       }
       if (best) {
-        sk.flash = S.cd[L.flash - 1];
+        sk.flash = S.cd[L.flash - 1] * stats.cdMul;
         const cx = best.x, cy = best.y;
         rings.push({ x: cx, y: cy, r: rad, life: 0.35, color: '#fff6c8' });
         rings.push({ x: cx, y: cy, r: rad * 0.6, life: 0.3, color: '#ffffff' });
@@ -187,7 +194,7 @@ function updateSkills(dt) {
       const S = SKILLS.cannon;
       const near = titans.filter(t => !t.dying && dist2(t, p) < 650);
       if (near.length) {
-        sk.cannon = S.cd[L.cannon - 1];
+        sk.cannon = S.cd[L.cannon - 1] * stats.cdMul;
         const n = Math.min(near.length, S.shots[L.cannon - 1]);
         for (let i = 0; i < n; i++) {
           const t = near.splice(Math.floor(Math.random() * near.length), 1)[0];
@@ -205,7 +212,7 @@ function updateSkills(dt) {
       let tgt = null, bd = 520;
       for (const t of titans) if (!t.dying && !t.stun && dist2(t, p) < bd) { bd = dist2(t, p); tgt = t; }
       if (tgt) {
-        sk.trap = S.cd[L.trap - 1];
+        sk.trap = S.cd[L.trap - 1] * stats.cdMul;
         const ahead = 60;
         traps.push({ x: tgt.x + Math.cos(tgt.face) * ahead, y: tgt.y + Math.sin(tgt.face) * ahead, r: 95, life: 10, caps: S.caps[L.trap - 1], dur: S.dur[L.trap - 1], caught: [], seed: Math.random() * 10 });
         sfx('snap', { vol: 0.5, tag: 'trapset' });
@@ -243,24 +250,24 @@ function updateShots(dt) {
 }
 
 function updateTraps(dt) {
-  for (const tr of traps) {
-    tr.life -= dt;
-    if (tr.caught.length < tr.caps && tr.life > 0) {
+  for (const trp of traps) {
+    trp.life -= dt;
+    if (trp.caught.length < trp.caps && trp.life > 0) {
       for (const t of titans) {
-        if (t.dying || t.bound || tr.caught.includes(t)) continue;
-        if (Math.hypot(t.x - tr.x, t.y - tr.y) > tr.r + t.H * 0.05) continue;
+        if (t.dying || t.bound || trp.caught.includes(t)) continue;
+        if (Math.hypot(t.x - trp.x, t.y - trp.y) > trp.r + t.H * 0.05) continue;
         if (t.boss && (t.boss.kind === 'armored' || t.boss.kind === 'colossal')) continue;
-        stunTitan(t, tr.dur, 'trap');
-        t.bound = tr;
-        tr.caught.push(t);
+        stunTitan(t, trp.dur, 'trap');
+        t.bound = trp;
+        trp.caught.push(t);
         addText(tr('Пойман!'), t.x, t.y - KZ * t.H * 0.6, '#7ad8d0');
         sfx('snap', { x: t.x, y: t.y, vol: 0.8 });
-        if (tr.caught.length >= tr.caps) break;
+        if (trp.caught.length >= trp.caps) break;
       }
     }
-    for (const t of tr.caught) if (t.bound === tr && (t.stun <= 0 || t.dying)) t.bound = null;
+    for (const t of trp.caught) if (t.bound === trp && (t.stun <= 0 || t.dying)) t.bound = null;
   }
-  traps = traps.filter(tr => tr.life > 0 || tr.caught.some(t => t.bound === tr));
+  traps = traps.filter(trp => trp.life > 0 || trp.caught.some(t => t.bound === trp));
 }
 
 function allyHeroes() {
@@ -280,7 +287,7 @@ function syncAllies() {
 
 function updateAllies(dt) {
   if (!allies.length) return;
-  const L = stats.skills.ally, cd = SKILLS.ally.cd[L - 1];
+  const L = stats.skills.ally, cd = SKILLS.ally.cd[L - 1] * stats.cdMul * (stats.allyMul || 1);
   const taken = new Set(allies.map(a => a.target).filter(Boolean));
   for (const a of allies) {
     const ox = a.x, oy = a.y;
@@ -347,19 +354,57 @@ function updateRocks(dt) {
     }
   }
   rocks = rocks.filter(r => !r.done);
+  for (const s of spikes) {
+    const was = s.t;
+    s.t += dt;
+    if (was < 0 && s.t >= 0) {
+      const p = player;
+      if (Math.hypot(p.x - s.x, p.y - s.y) < 72 && p.z < 230) hurtPlayer({ x: s.x, y: s.y });
+      for (const t of titans) if (!t.dying && !t.boss && Math.hypot(t.x - s.x, t.y - s.y) < 70) stunTitan(t, 1, 'rock');
+      for (let i = 0; i < 8; i++) particles.push({ x: s.x + rand(-15, 15), y: s.y + rand(-8, 8), vx: rand(-90, 90), vy: rand(-220, -60), life: 0.5, max: 0.5, size: 2, g: 500, kind: 'px', color: pick(['#bff4ff', '#7ad8f0', '#ffffff']) });
+      game.shake = Math.max(game.shake, 3);
+      sfx('crystal', { x: s.x, y: s.y, vol: 0.35, rate: 1.3, tag: 'spike' });
+    }
+  }
+  spikes = spikes.filter(s => s.t < s.life);
   for (const m of marks) m.life -= dt;
   marks = marks.filter(m => m.life > 0);
 }
 
+function bossPlan() {
+  const slots = [120, 240, 345, 450, 555], tiers = [0, 0, 1, 1, 2], used = new Set();
+  return slots.map((at, i) => {
+    let pool = BOSSES.filter(b => b.tier === tiers[i] && !used.has(b.kind) && SPR['boss_' + b.kind + '_down']);
+    if (!pool.length) pool = BOSSES.filter(b => b.tier === tiers[i] && !used.has(b.kind));
+    const def = pick(pool);
+    used.add(def.kind);
+    return { def, at };
+  });
+}
+
 function bossSchedule() {
   if (game.boss) return;
-  const cycle = Math.floor(game.bossIdx / BOSSES.length);
-  const def = BOSSES[game.bossIdx % BOSSES.length];
-  const at = def.at + cycle * 600;
-  if (game.time >= at) {
-    spawnBoss(def, cycle);
+  if (!game.bossQueue || !game.bossQueue.length) {
+    const cyc = game.bossCycle = (game.bossCycle ?? -1) + 1;
+    game.bossQueue = bossPlan().map(s => ({ def: s.def, at: s.at + cyc * 600, cycle: cyc }));
+  }
+  const nx = game.bossQueue[0];
+  if (game.time >= nx.at) {
+    game.bossQueue.shift();
+    spawnBoss(nx.def, nx.cycle);
     game.bossIdx++;
   }
+}
+
+function placePylons(t) {
+  const a = rand(0, TAU);
+  t.boss.wp.forEach((w, i) => { const r = 330 + rand(0, 80), ang = a + i * Math.PI + rand(-0.4, 0.4); w.x = t.x + Math.cos(ang) * r; w.y = t.y + Math.sin(ang) * r * 0.8; });
+}
+
+function segDist(px, py, x0, y0, x1, y1) {
+  const vx = x1 - x0, vy = y1 - y0, l2 = vx * vx + vy * vy || 1;
+  const k = clamp(((px - x0) * vx + (py - y0) * vy) / l2, 0, 1);
+  return Math.hypot(px - x0 - vx * k, py - y0 - vy * k);
 }
 
 function spawnBoss(def, cycle = 0) {
@@ -371,13 +416,14 @@ function spawnBoss(def, cycle = 0) {
   const H = def.size * ART;
   const hp = Math.max(2, def.hp + (factionSel === 0 ? -1 : 0) + cycle + Math.floor((threat - 1) / 2));
   const t = {
-    x, y, H, Hp: def.size, size: def.size, art: 'boss', set: 'boss', napeZ: H * 0.82, face: Math.atan2(p.y - y, p.x - x),
+    x, y, H, Hp: def.size, size: def.size, art: 'boss', set: 'boss', napeZ: H * (def.napeK || 0.82), face: Math.atan2(p.y - y, p.x - x),
     type: 'normal', g: bodyOf('normal'), speed: def.speed * faction.speed, aberrant: false,
     state: 'walk', grabT: 0, grabCd: 2, grabAng: 0, hand: null, prey: null, preyT: 99, held: -1,
     stun: 0, lunge: 0, lungeCd: 99, flash: 0, phase: 0, dying: 0, fallDir: 1, fallSide: 1, deathKey: 'down',
     boss: { kind: def.kind, name: def.name, hp, max: hp, harden: 0, act: 'walk', actT: 0, cd: 3, dir: 0, warned: 0, def, kneel: 0, wp: [{ side: -1, cut: false }, { side: 1, cut: false }], kickCd: 3, callT: 14, rainT: 6 },
   };
   titans.push(t);
+  if (def.fixed) placePylons(t);
   game.boss = t;
   game.banner = { text: def.name, sub: tr('Подрежь {0}, чтобы открыть затылок', def.wp), t: 3.4 };
   game.shake = 18;
@@ -386,7 +432,9 @@ function spawnBoss(def, cycle = 0) {
 }
 
 function wpPos(t, w) {
-  const def = t.boss.def, s = w.side * t.H * def.ws;
+  const def = t.boss.def;
+  if (def.fixed) return { x: w.x, y: w.y, z: 36 };
+  const s = w.side * t.H * def.ws;
   return { x: t.x - Math.sin(t.face) * s + Math.cos(t.face) * t.H * 0.03, y: t.y + Math.cos(t.face) * s * 0.7 + Math.sin(t.face) * t.H * 0.03, z: t.H * def.wz };
 }
 
@@ -444,6 +492,136 @@ function bossRise(t) {
     if (w.cut) { const q = wpPos(t, w); steam(q.x, q.y - KZ * q.z, 6, 10); }
     w.cut = false;
   }
+  if (b.def.fixed) { placePylons(t); for (const w of b.wp) { rings.push({ x: w.x, y: w.y, r: 90, life: 0.35, color: '#9fe8ff' }); } sfx('crystal', { x: t.x, y: t.y, vol: 0.7 }); }
+}
+
+function bossNew(t, dt) {
+  const b = t.boss, p = player;
+  const dx = p.x - t.x, dy = p.y - t.y, d = Math.hypot(dx, dy) || 1;
+  if (b.kind === 'jaw') {
+    if (b.act === 'pounce') {
+      b.actT += dt;
+      if (b.actT < 0.55) { t.face = Math.atan2(b.ty - t.y, b.tx - t.x); return true; }
+      const k = Math.min(1, (b.actT - 0.55) / 0.45);
+      t.x = lerp(b.fx, b.tx, k);
+      t.y = lerp(b.fy, b.ty, k);
+      t.jz = Math.sin(k * Math.PI) * 300;
+      t.phase += dt * 6;
+      if (k >= 1) {
+        b.act = 'walk';
+        t.jz = 0;
+        b.cd = rand(2.4, 3.4);
+        rings.push({ x: t.x, y: t.y, r: 125, life: 0.35, color: '#d8c8a0' });
+        game.shake = Math.max(game.shake, 8);
+        sfx('boom', { x: t.x, y: t.y, vol: 0.8, rate: 1.1, tag: 'jaw' });
+        sfx('chomp', { x: t.x, y: t.y, vol: 0.8 });
+        if (Math.hypot(p.x - t.x, p.y - t.y) < 125 && p.z < 360) hurtPlayer(t);
+      }
+      return true;
+    }
+    if (b.cd <= 0 && d > 180 && d < 760 && t.state === 'walk') {
+      b.act = 'pounce';
+      b.actT = 0;
+      b.fx = t.x; b.fy = t.y;
+      b.tx = p.x + p.vx * 0.55; b.ty = p.y + p.vy * 0.55;
+      const l = Math.hypot(b.tx - t.x, b.ty - t.y);
+      if (l > 680) { b.tx = t.x + (b.tx - t.x) * 680 / l; b.ty = t.y + (b.ty - t.y) * 680 / l; }
+      marks.push({ x: b.tx, y: b.ty, r: 125, life: 1, max: 1, kind: 'rock' });
+      sfx('hiss', { x: t.x, y: t.y, vol: 0.6, rate: 1.4, tag: 'jawhiss' });
+      return true;
+    }
+    return false;
+  }
+  if (b.kind === 'cart') {
+    if (b.act === 'volley') {
+      b.actT -= dt;
+      t.face = Math.atan2(dy, dx);
+      if (b.actT <= 0) {
+        for (const s of b.shots) {
+          if (segDist(p.x, p.y, s.x0, s.y0, s.x1, s.y1) < 46 && p.z < 300) hurtPlayer(t);
+          for (let i = 0; i < 10; i++) { const k = Math.random(); particles.push({ x: lerp(s.x0, s.x1, k), y: lerp(s.y0, s.y1, k) - 30, vx: rand(-20, 20), vy: rand(-30, 0), life: 0.35, max: 0.35, size: 2, g: 0, kind: 'px', color: '#fff2c0' }); }
+          for (const o of titans) if (o !== t && !o.dying && !o.boss && segDist(o.x, o.y, s.x0, s.y0, s.x1, s.y1) < 40) stunTitan(o, 1, 'rock');
+        }
+        sfx('boom', { x: t.x, y: t.y, vol: 0.9, rate: 1.5, tag: 'volley' });
+        game.shake = Math.max(game.shake, 5);
+        b.act = 'walk';
+        b.cd = rand(2.8, 3.8);
+        b.shots = null;
+      }
+      return true;
+    }
+    const want = d > 720 ? 1 : d < 430 ? -1 : 0;
+    b.side = b.side || (Math.random() < 0.5 ? 1 : -1);
+    if (Math.random() < dt * 0.15) b.side = -b.side;
+    const ux = dx / d, uy = dy / d;
+    let vx = ux * want - uy * b.side * 0.9, vy = uy * want + ux * b.side * 0.9;
+    const vl = Math.hypot(vx, vy) || 1;
+    t.x += vx / vl * t.speed * dt;
+    t.y += vy / vl * t.speed * dt;
+    t.face = Math.atan2(vy, vx);
+    t.phase += dt * 8;
+    if (d < 100 && p.z < 150) hurtPlayer(t);
+    if (b.cd <= 0 && d < 980) {
+      b.act = 'volley';
+      b.actT = 0.85;
+      b.shots = [];
+      for (let i = 0; i < 3; i++) {
+        const ax = p.x + p.vx * 0.6 + rand(-120, 120), ay = p.y + p.vy * 0.6 + rand(-120, 120);
+        const a = Math.atan2(ay - t.y, ax - t.x), L = 1150;
+        const s = { x0: t.x, y0: t.y, x1: t.x + Math.cos(a) * L, y1: t.y + Math.sin(a) * L };
+        b.shots.push(s);
+        marks.push({ ...s, x: t.x, y: t.y, r: 0, life: 0.85, max: 0.85, kind: 'line' });
+      }
+      sfx('cast', { x: t.x, y: t.y, vol: 0.7, rate: 0.7, tag: 'aimv' });
+    }
+    return true;
+  }
+  if (b.kind === 'hammer') {
+    b.spikeT = (b.spikeT ?? 2) - dt;
+    if (b.spikeT <= 0 && d < 1050) {
+      b.spikeT = rand(2.4, 3.2);
+      const a = Math.atan2(dy, dx) + rand(-0.15, 0.15), n = Math.min(9, Math.ceil((d + 260) / 140));
+      for (let i = 0; i < n; i++) {
+        const x = t.x + Math.cos(a) * (120 + i * 140), y = t.y + Math.sin(a) * (120 + i * 140), delay = 0.55 + i * 0.12;
+        spikes.push({ x, y, t: -delay, life: 1.3 });
+        marks.push({ x, y, r: 70, life: delay, max: delay, kind: 'rock' });
+      }
+      sfx('crystal', { x: t.x, y: t.y, vol: 0.6, rate: 0.8, tag: 'spk' });
+    }
+    return false;
+  }
+  if (b.kind === 'reiss') {
+    if (b.heat > 0) {
+      b.heat -= dt;
+      if (Math.random() < dt * 25) steam(t.x + rand(-120, 120), t.y - rand(0, 60), 1, 40);
+      if (b.heat <= 0) {
+        rings.push({ x: t.x, y: t.y, r: 380, life: 0.35, color: '#ffb347' });
+        rings.push({ x: t.x, y: t.y, r: 250, life: 0.3, color: '#ff6b3a' });
+        game.shake = Math.max(game.shake, 10);
+        sfx('steamburst', { vol: 0.9 });
+        if (d < 380 && p.z < 430) { hurtPlayer(t); p.vx = dx / d * 700; p.vy = dy / d * 700; }
+        for (const c of civs) if (Math.hypot(c.x - t.x, c.y - t.y) < 380) c.panic = 1;
+      }
+    }
+    b.heatT = (b.heatT ?? 4) - dt;
+    if (b.heatT <= 0 && d < 900) {
+      b.heatT = rand(3.2, 4.2);
+      b.heat = 0.8;
+      marks.push({ x: t.x, y: t.y, r: 380, life: 0.8, max: 0.8, kind: 'steam' });
+      sfx('hiss', { x: t.x, y: t.y, vol: 0.9, rate: 0.7, tag: 'reisshiss' });
+    }
+    b.rainT = (b.rainT ?? 5) - dt;
+    if (b.rainT <= 0 && d < 1500) {
+      b.rainT = rand(7, 9);
+      for (let i = 0; i < 4; i++) {
+        const tx = p.x + p.vx * 0.9 + rand(-240, 240), ty = p.y + p.vy * 0.9 + rand(-180, 180), dur = 1.3 + i * 0.12;
+        rocks.push({ x0: t.x, y0: t.y - 40, z0: t.H * 0.6, tx, ty, t: 0, dur, fire: true });
+        marks.push({ x: tx, y: ty, r: 75, life: dur, max: dur, kind: 'rock' });
+      }
+    }
+    return false;
+  }
+  return false;
 }
 
 function updateBoss(t, dt) {
@@ -499,6 +677,7 @@ function updateBoss(t, dt) {
       sfx('rumble', { vol: 0.8, tag: 'rain' });
     }
   }
+  if (['jaw', 'cart', 'hammer', 'reiss'].includes(b.kind)) return bossNew(t, dt);
   if (b.kind === 'female') {
     if (b.act === 'flee') {
       b.actT -= dt;
@@ -669,20 +848,27 @@ function drawStunStars(x, y, n = 3) {
 
 function drawCombatGround() {
   const now = performance.now() / 1000;
-  for (const tr of traps) {
-    const x = sx(tr.x), y = sy(tr.y, 0), R = tr.r / ART;
-    if (tr.life > 0) {
+  for (const trp of traps) {
+    const x = sx(trp.x), y = sy(trp.y, 0), R = trp.r / ART;
+    if (trp.life > 0) {
       bctx.fillStyle = 'rgba(122, 216, 208, 0.55)';
       for (let a = 0; a < TAU; a += 3 / R) bctx.fillRect(Math.round(x + Math.cos(a) * R), Math.round(y + Math.sin(a) * R * 0.6), 1, 1);
     }
     for (let i = 0; i < 6; i++) {
-      const a = i * TAU / 6 + tr.seed, px = Math.round(x + Math.cos(a) * R), py = Math.round(y + Math.sin(a) * R * 0.6);
+      const a = i * TAU / 6 + trp.seed, px = Math.round(x + Math.cos(a) * R), py = Math.round(y + Math.sin(a) * R * 0.6);
       rect(bctx, px - 1, py - 6, 3, 7, '#2a1c12');
       rect(bctx, px, py - 5, 1, 5, '#8a6a44');
     }
   }
   for (const m of marks) {
     const x = sx(m.x), y = sy(m.y, 0), k = 1 - m.life / m.max, R = m.r / ART;
+    if (m.kind === 'line') {
+      const k2 = 1 - m.life / m.max, on = Math.floor(now * 12) % 2;
+      bctx.fillStyle = on ? '#ff6b4a' : '#ffd36e';
+      const L = Math.hypot(m.x1 - m.x0, m.y1 - m.y0) / ART, steps = Math.floor(L / 7);
+      for (let i = 2; i < steps * (0.4 + 0.6 * k2); i++) bctx.fillRect(Math.round(sx(lerp(m.x0, m.x1, i / steps))), Math.round(sy(lerp(m.y0, m.y1, i / steps), 0) - 15), 2, 1);
+      continue;
+    }
     if (m.kind === 'rock') {
       bctx.globalAlpha = 0.35 + 0.3 * k;
       disc(bctx, x, y, R * k, R * k * 0.6, '#c0392b');
@@ -696,6 +882,16 @@ function drawCombatGround() {
     }
   }
   const B = game.boss;
+  if (B && B.boss.def.fixed && !(B.boss.kneel > 0)) {
+    for (const w of B.boss.wp) {
+      if (w.cut) continue;
+      const x = sx(w.x), y = sy(w.y, 0), bx = sx(B.x), by = sy(B.y, 0);
+      bctx.globalAlpha = 0.55;
+      for (let i = 0; i <= 24; i++) { const k = i / 24; rect(bctx, Math.round(lerp(x, bx, k) + Math.sin(k * 9 + now * 3) * 3), Math.round(lerp(y, by, k)), 2, 1, '#7a1e1e'); }
+      bctx.globalAlpha = 1;
+      crystal(bctx, x, y, 14, 30, now + w.side);
+    }
+  }
   if (B && B.boss.kind === 'armored' && B.boss.act === 'aim') {
     const x = sx(B.x), y = sy(B.y, 0), dir = B.boss.dir;
     bctx.fillStyle = Math.floor(now * 10) % 2 ? '#e5484d' : '#ff9a8a';
@@ -722,7 +918,23 @@ function drawAlly(a) {
   bctx.drawImage(img, x - (img.width >> 1), y - img.height + Math.round(Math.sin(game.time * 6 + a.idx)));
 }
 
+function crystal(g, x, y, w, h, seed) {
+  const pulse = Math.sin(seed * 2) * 0.5 + 0.5;
+  g.fillStyle = '#1e3e4e';
+  g.beginPath(); g.moveTo(x, y - h - 1); g.lineTo(x + w / 2 + 1, y - h * 0.35); g.lineTo(x + w / 3, y + 1); g.lineTo(x - w / 3, y + 1); g.lineTo(x - w / 2 - 1, y - h * 0.35); g.closePath(); g.fill();
+  g.fillStyle = pulse > 0.5 ? '#9fe8ff' : '#7ad8f0';
+  g.beginPath(); g.moveTo(x, y - h); g.lineTo(x + w / 2, y - h * 0.35); g.lineTo(x + w / 3 - 1, y); g.lineTo(x - w / 3 + 1, y); g.lineTo(x - w / 2, y - h * 0.35); g.closePath(); g.fill();
+  g.fillStyle = '#e8fbff';
+  g.fillRect(Math.round(x - 2), Math.round(y - h + 4), 2, Math.round(h * 0.5));
+}
+
 function drawCombatAir() {
+  const nowS = performance.now() / 1000;
+  for (const s of spikes) {
+    if (s.t < 0) continue;
+    const k = s.t / s.life, h = Math.round(28 * Math.min(1, s.t * 8) * (k > 0.7 ? (1 - k) / 0.3 : 1));
+    if (h > 2) crystal(bctx, sx(s.x), sy(s.y, 0), 12, h, nowS + s.x);
+  }
   for (const s of shots) {
     if (s.done) continue;
     const k = Math.min(1, s.t / s.dur);
@@ -750,12 +962,12 @@ function drawCombatAir() {
 }
 
 function drawBoundCables(t, dx, dy, img) {
-  const tr = t.bound;
-  if (!tr || t.stun <= 0) return;
-  const x = sx(tr.x), y = sy(tr.y, 0), R = tr.r / ART;
+  const trp = t.bound;
+  if (!trp || t.stun <= 0) return;
+  const x = sx(trp.x), y = sy(trp.y, 0), R = trp.r / ART;
   const hx = dx + img.width / 2, hy = dy + img.height * 0.55;
   for (let i = 0; i < 6; i++) {
-    const a = i * TAU / 6 + tr.seed;
+    const a = i * TAU / 6 + trp.seed;
     wire(bctx, Math.round(x + Math.cos(a) * R), Math.round(y + Math.sin(a) * R * 0.6) - 5, Math.round(hx + Math.cos(a) * 6), Math.round(hy), 1, 0.85);
   }
 }

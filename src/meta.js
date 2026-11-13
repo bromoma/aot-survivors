@@ -20,7 +20,7 @@ const RANKS = [
 trFields(TRAINING, ['name']);
 trFields(RANKS, ['name']);
 const FACTION_WIN_NAMES = { mp: 'Военная полиция', garrison: 'Гарнизон', scouts: 'Разведкорпус' };
-const BOSS_NAMES = { female: 'Женская особь', armored: 'Бронированный', beast: 'Звероподобный', colossal: 'Колоссальный' };
+const BOSS_NAMES = { female: 'Женская особь', armored: 'Бронированный', beast: 'Звероподобный', colossal: 'Колоссальный', jaw: 'Титан-челюсти', cart: 'Титан-перевозчик', hammer: 'Молот войны', reiss: 'Титан Рода Рейсса' };
 
 function stat(k) { return (save.stats && save.stats[k]) || 0; }
 function trainingTotal() { return Object.values(save.meta || {}).reduce((a, b) => a + b, 0); }
@@ -28,8 +28,8 @@ function trainingTotal() { return Object.values(save.meta || {}).reduce((a, b) =
 const ACHIEVEMENTS = [
   ...[[50, 50], [250, 100], [1000, 200], [3000, 400], [10000, 800]].map(([n, r], i) => ({ id: 'kills' + i, get name() { return tr('Охотник на титанов {0}', ['I', 'II', 'III', 'IV', 'V'][i]); }, get text() { return tr('Убей {0} титанов за всё время', n); }, goal: n, reward: r, get: () => stat('kills') })),
   ...[[1, 30], [10, 100], [50, 300]].map(([n, r], i) => ({ id: 'runs' + i, get name() { return tr(['Первая вылазка', 'Ветеран', 'Живая легенда'][i]); }, get text() { return tr(n === 1 ? 'Сыграй {0} забег' : 'Сыграй {0} забегов', n); }, goal: n, reward: r, get: () => stat('runs') })),
-  ...Object.entries(BOSS_NAMES).map(([k, nm], i) => ({ id: 'boss_' + k, get name() { return tr(nm + ' повержен' + (k === 'female' ? 'а' : '')); }, get text() { return tr('Победи шифтера «{0}»', tr(nm)); }, goal: 1, reward: [150, 200, 250, 400][i], get: () => (save.stats && save.stats.bosses && save.stats.bosses[k]) || 0 })),
-  { id: 'boss_all', get name() { return tr('Охота на шифтеров'); }, get text() { return tr('Победи всех четырёх шифтеров за один забег'); }, goal: 4, reward: 600, get: () => stat('maxBossRun') },
+  ...Object.entries(BOSS_NAMES).map(([k, nm], i) => ({ id: 'boss_' + k, get name() { return tr(nm + ' повержен' + (k === 'female' ? 'а' : '')); }, get text() { return tr('Победи шифтера «{0}»', tr(nm)); }, goal: 1, reward: [150, 200, 250, 400, 150, 150, 250, 400][i], get: () => (save.stats && save.stats.bosses && save.stats.bosses[k]) || 0 })),
+  { id: 'boss_all', get name() { return tr('Охота на шифтеров'); }, get text() { return tr('Победи пятерых шифтеров за один забег'); }, goal: 5, reward: 600, get: () => stat('maxBossRun') },
   ...Object.entries(FACTION_WIN_NAMES).map(([k, nm], i) => ({ id: 'win_' + k, get name() { return tr(['Порядок в столице', 'Шиганшина отбита', 'Вылазка за стену'][i]); }, get text() { return tr('Продержись 10 минут: {0}', tr(nm)); }, goal: 1, reward: [200, 300, 500][i], get: () => (save.stats && save.stats.winsBy && save.stats.winsBy[k]) || 0 })),
   ...[[10, 60], [20, 150], [30, 300]].map(([n, r], i) => ({ id: 'lvl' + i, get name() { return tr(['Быстро учусь', 'Опытный боец', 'Элита'][i]); }, get text() { return tr('Достигни {0} уровня за один забег', n); }, goal: n, reward: r, get: () => stat('bestLevel') })),
   ...[[10, 60], [30, 150], [60, 300]].map(([n, r], i) => ({ id: 'combo' + i, get name() { return tr(['Комбо', 'Вихрь', 'Ураган'][i]); }, get text() { return tr('Сделай комбо x{0}', n); }, goal: n, reward: r, get: () => stat('maxCombo') })),

@@ -42,13 +42,13 @@ if (!only || only === 'sprites') {
   }
   for (const t of ['normal', 'lanky', 'fat', 'aberrant']) if (fs.existsSync(raw(`aot_titan_${t}_grab.png`))) for (const h of [110, 140, 170, 200]) run('cut.js', [raw(`aot_titan_${t}_grab.png`), `titan_${t}_${h}_grab`, String(h), DIRS, 'assets/sprites']);
   for (const [t, hs] of [['crawler', '80,100,120'], ['small', '60,72,84'], ['thrower', '140,170,200'], ['giant', '240,280']]) if (fs.existsSync(raw(`aot_titan_${t}_walk.png`))) console.log(execFileSync('node', [path.join(root, 'dev/cut_grid.js'), raw(`aot_titan_${t}_walk.png`), t, hs], { cwd: root }).toString().trim().split('\n').pop());
-  for (const [k, h] of [['female', 170], ['armored', 190], ['beast', 210], ['colossal', 300]]) if (fs.existsSync(raw(`aot_boss_${k}.png`))) run('cut.js', [raw(`aot_boss_${k}.png`), `boss_${k}`, String(h), DIRS, 'assets/sprites']);
+  for (const [k, h] of [['female', 170], ['armored', 190], ['beast', 210], ['colossal', 300], ['jaw', 130], ['cart', 160], ['hammer', 210], ['reiss', 300]]) if (fs.existsSync(raw(`aot_boss_${k}.png`))) run('cut.js', [raw(`aot_boss_${k}.png`), `boss_${k}`, String(h), DIRS, 'assets/sprites']);
   if (fs.existsSync(raw('aot_ruins.png'))) run('cut.js', [raw('aot_ruins.png'), 'ruin', '110', 'r1,r2,r3,r4', 'assets/sprites']);
   if (fs.existsSync(raw('aot_wall.png'))) run('cut.js', [raw('aot_wall.png'), 'wall', '96', 'a', 'assets/sprites']);
 }
 
 if (!only || only === 'sprites' || only === 'heroes') {
-  for (const id of ['cadet', 'connie', 'sasha', 'jean', 'armin', 'hange', 'mikasa', 'levi']) {
+  for (const id of ['cadet', 'connie', 'sasha', 'jean', 'armin', 'hange', 'mikasa', 'levi', 'erwin', 'historia', 'mike']) {
     if (fs.existsSync(raw(`aot_hero_${id}.png`))) console.log(execFileSync('bash', [path.join(root, 'dev/cut_hero.sh'), id]).toString().trim());
   }
   const ef = path.join(root, 'dev/out_test/h');

@@ -1,7 +1,7 @@
 'use strict';
 
 const DIR_KEYS = ['down', 'left', 'right', 'up'];
-const HERO_IDS = ['cadet', 'connie', 'sasha', 'jean', 'eren', 'armin', 'hange', 'mikasa', 'levi'];
+const HERO_IDS = ['cadet', 'connie', 'sasha', 'jean', 'eren', 'armin', 'hange', 'mikasa', 'levi', 'erwin', 'historia', 'mike'];
 const TITAN_TYPES = ['normal', 'lanky', 'fat', 'aberrant'];
 const NEW_TYPES = ['crawler', 'small', 'thrower', 'giant'];
 const TITAN_SIZES = [110, 140, 170, 200];
@@ -12,7 +12,7 @@ const GRAB_TYPES = ['normal', 'lanky', 'fat', 'aberrant'];
 const WALK_TYPES = ['crawler', 'giant', 'small', 'thrower'];
 const WALK_BASE = ['giant', 'small', 'thrower'];
 const CIV_RUN = ['man', 'woman'];
-const BOSS_KINDS = ['female', 'armored', 'beast', 'colossal'];
+const BOSS_KINDS = ['female', 'armored', 'beast', 'colossal', 'jaw', 'cart', 'hammer', 'reiss'];
 const TR_PROPS = ['oak', 'apple_tree', 'pine1', 'pine2', 'pine3', 'well', 'hay_bales', 'cart', 'flower_pots', 'rain_barrel', 'lamp_post_wood',
   'bush1', 'bush_berry', 'bush0', 'bush2', 'log_mossy', 'rock_mossy', 'statue', 'bench', 'woodpile', 'flowers_wild', 'flowers_blue', 'grass_tall'];
 const TR_GROUND = ['grass', 'grass3', 'path', 'paving_a', 'paving_b', 'paving_c'];
@@ -79,7 +79,8 @@ function loadAssets(onProgress) {
       if (gup) scrubRed(gup);
       for (const d of DIR_KEYS) { const s = SPR[`titan_${t}_${h}_${d}`]; if (s) { variant(s, 'white'); variant(s, 'tint'); } }
     }
-    for (const d of DIR_KEYS) { const s = SPR[`boss_colossal_${d}`]; if (s) unpink(s); }
+    for (const k of ['colossal', 'reiss']) for (const d of DIR_KEYS) { const s = SPR[`boss_${k}_${d}`]; if (s) unpink(s); }
+    for (const k of BOSS_KINDS) scrubMark(SPR[`boss_${k}_up`]);
     for (const k of BOSS_KINDS) for (const d of DIR_KEYS) { const s = SPR[`boss_${k}_${d}`]; if (s) { variant(s, 'white'); variant(s, 'tint'); } }
     for (const w of CIV_RUN) for (let i = 0; i < 3; i++) { const l = SPR[`civ_${w}_run${i}_left`]; if (l) SPR[`civ_${w}_run${i}_right`] = variant(l, 'flip'); }
     if (typeof proceduralWalk === 'function') for (const t of ALL_TYPES()) for (const h of sizesOf(t)) for (const d of DIR_KEYS) { const s = SPR[`titan_${t}_${h}_${d}`]; if (s) proceduralWalk(s, t, d); }
@@ -137,6 +138,51 @@ function scrubRed(c) {
         r += d[j * 4]; gg += d[j * 4 + 1]; bb += d[j * 4 + 2]; n++;
       }
       if (n) fill.push([k, r / n, gg / n, bb / n]); else left++;
+    }
+    for (const [k, r, gg, bb] of fill) { d[k * 4] = r; d[k * 4 + 1] = gg; d[k * 4 + 2] = bb; bad[k] = 0; }
+    if (!left) break;
+  }
+  g.putImageData(img, 0, 0);
+}
+
+function scrubMark(c) {
+  if (!c) return;
+  const g = c.getContext('2d');
+  const img = g.getImageData(0, 0, c.width, c.height), d = img.data, w = c.width, h = c.height;
+  const lim = Math.floor(h * 0.6);
+  const seed = i => d[i + 3] > 128 && d[i] >= 185 && d[i + 1] <= 45 && d[i + 2] <= 70;
+  const pts = [];
+  for (let y = 0; y < lim; y++) for (let x = 0; x < w; x++) if (seed((y * w + x) * 4)) pts.push([x, y]);
+  if (pts.length < 3) return;
+  let cx = 0, cy = 0;
+  for (const [x, y] of pts) { cx += x; cy += y; }
+  cx /= pts.length; cy /= pts.length;
+  const near = pts.filter(([x, y]) => Math.hypot(x - cx, y - cy) < w * 0.15);
+  if (near.length < 3) return;
+  cx = 0; cy = 0;
+  for (const [x, y] of near) { cx += x; cy += y; }
+  cx /= near.length; cy /= near.length;
+  let R = 5;
+  for (const [x, y] of near) R = Math.max(R, Math.hypot(x - cx, y - cy) + 4);
+  const bad = new Uint8Array(w * h);
+  for (let y = Math.max(0, Math.floor(cy - R)); y < Math.min(h, cy + R); y++) for (let x = Math.max(0, Math.floor(cx - R)); x < Math.min(w, cx + R); x++) {
+    if ((x - cx) ** 2 + (y - cy) ** 2 > R * R) continue;
+    const i = (y * w + x) * 4;
+    if (d[i + 3] < 128) continue;
+    const r = d[i], gg = d[i + 1], bb = d[i + 2];
+    if ((r > 70 && r > gg * 1.9 && r > bb * 1.5) || (r > 200 && gg > 110 && r > bb * 1.15) || (r > 225 && gg > 200 && bb > 200)) bad[y * w + x] = 1;
+  }
+  for (let it = 0; it < 80; it++) {
+    let left = 0;
+    const fill = [];
+    for (let k = 0; k < w * h; k++) {
+      if (!bad[k]) continue;
+      let r = 0, gg = 0, bb = 0, m = 0;
+      for (const j of [k - 1, k + 1, k - w, k + w]) {
+        if (j < 0 || j >= w * h || bad[j] || d[j * 4 + 3] < 128) continue;
+        r += d[j * 4]; gg += d[j * 4 + 1]; bb += d[j * 4 + 2]; m++;
+      }
+      if (m) fill.push([k, r / m, gg / m, bb / m]); else left++;
     }
     for (const [k, r, gg, bb] of fill) { d[k * 4] = r; d[k * 4 + 1] = gg; d[k * 4 + 2] = bb; bad[k] = 0; }
     if (!left) break;

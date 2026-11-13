@@ -42,6 +42,9 @@ const CHARS = [
   { id: 'hange', name: 'Ханджи', rarity: 4, hair: '#6a4028', look: 'goggles', ability: 'Учёный: убийство оглушает титанов рядом, с собой ловушка из тросов' },
   { id: 'mikasa', name: 'Микаса', rarity: 5, hair: '#151214', look: 'scarf', ability: 'Облёт +35%, после убийства сразу летит к следующему' },
   { id: 'levi', name: 'Леви', rarity: 5, hair: '#121014', look: 'undercut', ability: 'Сильнейший: вихрь клинков с начала, быстрее во всём' },
+  { id: 'erwin', name: 'Эрвин', rarity: 5, hair: '#d8b860', look: 'short', ability: 'Командор: с начала световая ракета и боевой товарищ' },
+  { id: 'historia', name: 'Хистория', rarity: 4, hair: '#f0d070', look: 'ponytail', ability: 'Королева: +2 сердца и лечение чаще' },
+  { id: 'mike', name: 'Майк', rarity: 4, hair: '#c8a870', look: 'short', ability: 'Чутьё: атака дальше на 15%, +10% опыта, ракеты предупреждают о титанах' },
 ];
 trFields(FACTIONS, ['name', 'diff', 'desc']);
 trFields(Object.values(RARITY), ['name']);
@@ -389,7 +392,7 @@ function reset() {
     worldFor = factionSel;
     worldUsed = false;
   }
-  stats = { speed: 480, range: 340, orbit: 620, engage: 380, maxHp: 5, spin: 0, healEvery: faction.heal, glide: GLIDE, xp: 1, cd: 0.45, stun: false, rage: false, chain: false, warn: false };
+  stats = { speed: 480, range: 340, orbit: 620, engage: 380, maxHp: 5, spin: 0, healEvery: faction.heal, glide: GLIDE, xp: 1, cd: 0.45, stun: false, rage: false, chain: false, warn: false, cdMul: 1, allyMul: 1, chainCd: 2, startSkills: [] };
   const hero = save.chars[save.selected] ? charById(save.selected) : CHARS[0];
   const stars = save.chars[hero.id] || 1;
   if (hero.id === 'connie') { stats.speed *= 1.1; stats.glide *= 0.9; }
@@ -400,8 +403,12 @@ function reset() {
   if (hero.id === 'hange') stats.stun = true;
   if (hero.id === 'mikasa') { stats.orbit *= 1.35; stats.chain = true; }
   if (hero.id === 'levi') { stats.speed *= 1.15; stats.orbit *= 1.2; stats.cd = 0.15; }
+  if (hero.id === 'erwin') stats.startSkills.push(['flash', 1], ['ally', 1]);
+  if (hero.id === 'historia') { stats.maxHp += 2; stats.healEvery -= 2; }
+  if (hero.id === 'mike') { stats.engage *= 1.15; stats.xp *= 1.1; stats.warn = true; }
   stats.speed *= 1 + (stars - 1) * 0.03;
   stats.orbit *= 1 + (stars - 1) * 0.03;
+  applyHeroLevel(stats, hero.id);
   metaApply(stats);
   const start = startSpot();
   player = {
@@ -436,6 +443,7 @@ function reset() {
   if (hero.id === 'levi') stats.skills.spin = 1;
   if (hero.id === 'hange') stats.skills.trap = 1;
   metaRunStart();
+  heroRunStart();
   for (let i = 0; i < faction.base; i++) spawnTitan();
 }
 
@@ -489,6 +497,7 @@ function reqZ(t) {
   let z = nape(t).z * faction.req;
   if (t.stun > 0) z *= 0.6;
   if (t.boss) z = Math.min(z, 210);
+  if (t.boss && t.boss.def && t.boss.def.fixed) z = Math.min(z, 170);
   if (t.kind === 'giant') z = Math.min(z, 260);
   return z;
 }
@@ -662,6 +671,12 @@ function finishRun(won) {
     game.unlocked = threat + 1;
   }
   const greed = 1 + ((save.meta && save.meta.greed) || 0) * 0.1;
+  const hx = runHeroXp(won, game.kills - game.paidKills, game.time - game.paidTime, game.bossKills - (game.paidBoss || 0));
+  if (save.chars[player.char]) {
+    const ups = addHeroXp(player.char, hx);
+    game.heroXpGain = (game.heroXpGain || 0) + hx;
+    game.heroUps = (game.heroUps || 0) + ups;
+  }
   const earned = Math.round(((game.kills - game.paidKills) * 2 + Math.floor((game.time - game.paidTime) / 10) + (won ? 300 : 0) + (game.bossKills - (game.paidBoss || 0)) * 60) * mul * greed);
   game.paidBoss = game.bossKills;
   game.paidKills = game.kills;
@@ -814,10 +829,11 @@ function engage() {
   let found = null, foundWp = null, bs = Infinity, tooLow = false, hard = false;
   for (const t of titans) {
     if (t.dying) continue;
-    const dx = t.x - p.x, dy = t.y - p.y, d = Math.hypot(dx, dy) || 1;
-    if (d > stats.engage + t.H * 0.2) continue;
-    if (t.boss && t.boss.harden > 0) { hard = true; continue; }
     const wp = t.boss && !(t.boss.kneel > 0) ? bossWeak(t) : null;
+    const tp = wp ? wpPos(t, wp) : t;
+    const dx = tp.x - p.x, dy = tp.y - p.y, d = Math.hypot(dx, dy) || 1;
+    if (d > stats.engage + (wp ? 80 : t.H * 0.2)) continue;
+    if (t.boss && t.boss.harden > 0) { hard = true; continue; }
     if (!wp && p.z < reqZ(t)) { tooLow = true; continue; }
     const s = d - ((dx * inp.x + dy * inp.y) / d) * 150 - (wp ? 120 : 0);
     if (s < bs) { bs = s; found = t; foundWp = wp; }
@@ -983,7 +999,7 @@ function updateAttack(dt) {
       epicKill(t);
       if (t.boss) { bossHit(t); return; }
       if (!cutTitan(t)) return;
-      if (stats.chain && game.time - p.lastChain > 2 && state === 'play') {
+      if (stats.chain && game.time - p.lastChain > (stats.chainCd || 2) && state === 'play') {
         let next = null, bd = stats.engage;
         for (const o of titans) {
           if (o.dying) continue;
