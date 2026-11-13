@@ -37,6 +37,7 @@ function assetList() {
   }
   for (const k of ['house_h1', 'house_h2', 'house_h3', 'house_tower', 'ruin_r1', 'ruin_r2', 'ruin_r3', 'ruin_r4', 'wall_a']) L[k] = `assets/sprites/${k}.png`;
   for (const k of TR_GROUND.concat(TR_PROPS)) L[k] = `assets/tradisea/${k}.png`;
+  for (const s of ['blade', 'odm', 'gas', 'cloak', 'boots', 'relic']) for (let i = 1; i <= 4; i++) L[`gear_${s}${i}`] = `assets/sprites/gear_${s}${i}.png`;
   return L;
 }
 
@@ -243,6 +244,16 @@ function variant(img, kind) {
   if (kind === 'flip') {
     g.translate(img.width, 0);
     g.scale(-1, 1);
+    g.drawImage(img, 0, 0);
+  } else if (kind === 'gold') {
+    g.drawImage(img, 0, 0);
+    g.globalCompositeOperation = 'source-atop';
+    g.fillStyle = 'rgba(255, 196, 60, 0.42)';
+    g.fillRect(0, 0, img.width, img.height);
+    g.globalCompositeOperation = 'lighter';
+    g.fillStyle = 'rgba(60, 40, 0, 0.18)';
+    g.fillRect(0, 0, img.width, img.height);
+    g.globalCompositeOperation = 'destination-in';
     g.drawImage(img, 0, 0);
   } else {
     g.drawImage(img, 0, 0);

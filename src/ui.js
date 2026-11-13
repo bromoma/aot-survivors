@@ -26,6 +26,7 @@ const UI = (() => {
   const HUB_ITEMS = [
     { id: 'battle', get label() { return tr('В бой'); }, icon: 'play' },
     { id: 'squad', get label() { return tr('Отряд'); }, icon: 'square' },
+    { id: 'gear', get label() { return tr('Снаряжение'); }, icon: 'seal_red' },
     { id: 'training', get label() { return tr('Тренировки'); }, icon: 'pearl' },
     { id: 'gacha', get label() { return tr('Призыв'); }, icon: 'coin' },
     { id: 'missions', get label() { return tr('Задания'); }, icon: 'ribbon' },
@@ -187,10 +188,17 @@ const UI = (() => {
         </div>
       </div></div></div>
       <div class="screen" data-s="gacha"><div class="panel-wrap"><div class="panel k-frame gacha-v2">
-        <div class="head"><span class="h2">${tr('Призыв разведчиков')}</span><div class="g-tabs" id="g-tabs"></div><button class="k-icon" data-back>${img('close')}</button></div>
+        <div class="head"><span class="h2">${tr('Призыв')}</span><div class="g-tabs" id="g-tabs"></div><button class="k-icon" data-back>${img('close')}</button></div>
         <div class="g-stage" id="g-stage"></div>
         <div class="g-row"><div class="g-info" id="g-info"></div><div class="g-btns" id="g-btns"></div></div>
         <div class="g-history k-card hid" id="g-history"></div>
+      </div></div></div>
+      <div class="screen" data-s="gear"><div class="panel-wrap"><div class="panel k-frame gear-v">
+        <div class="head"><span class="h2">${tr('Снаряжение')}</span><span class="gear-coll" id="gear-coll"></span><button class="k-icon" data-back>${img('close')}</button></div>
+        <div class="row" style="align-items:flex-start">
+          <div class="gear-left"><div class="gear-slots" id="gear-slots"></div><div class="gear-tot k-card" id="gear-tot"></div></div>
+          <div class="gear-right"><div class="gear-inv" id="gear-inv"></div><div class="gear-info k-card" id="gear-info"></div></div>
+        </div>
       </div></div></div>
       <div class="screen" data-s="training"><div class="panel-wrap"><div class="panel k-frame" style="width:min(1000px,94vw)">
         <div class="head"><span class="h2">${tr('Тренировки кадетского корпуса')}</span><button class="k-icon" data-back>${img('close')}</button></div>
@@ -267,6 +275,7 @@ const UI = (() => {
     if (id === 'battle') refreshBattle();
     if (id === 'squad') refreshSquad();
     if (id === 'gacha') refreshGacha();
+    if (id === 'gear') refreshGear();
     if (id === 'records') refreshRecords();
     if (id === 'training') refreshTraining();
     if (id === 'missions') refreshMissions();
@@ -281,7 +290,7 @@ const UI = (() => {
     const n = claimableCount();
     const bd = $('#mis-badge');
     if (bd) { bd.textContent = n || ''; bd.style.display = n ? '' : 'none'; }
-    const hints = { hub: tr('↑↓ — выбрать, Enter — открыть'), battle: tr('← → — фракция, ↑↓ — угроза, Enter — в бой, Esc — назад'), squad: tr('Стрелки — выбрать, Enter — взять в бой, Esc — назад'), gacha: tr('1 — один призыв, 0 — десять, F — бесплатный, T — билет, Tab — баннер, Esc — назад'), records: tr('Esc — назад'), settings: tr('Esc — назад'), training: tr('Клик — купить уровень, Esc — назад'), missions: tr('Клик — забрать награду, Esc — назад') };
+    const hints = { gear: tr('Клик по ячейке — фильтр, по предмету — подробнее, Esc — назад'), hub: tr('↑↓ — выбрать, Enter — открыть'), battle: tr('← → — фракция, ↑↓ — угроза, Enter — в бой, Esc — назад'), squad: tr('Стрелки — выбрать, Enter — взять в бой, Esc — назад'), gacha: tr('1 — один призыв, 0 — десять, F — бесплатный, T — билет, Tab — баннер, Esc — назад'), records: tr('Esc — назад'), settings: tr('Esc — назад'), training: tr('Клик — купить уровень, Esc — назад'), missions: tr('Клик — забрать награду, Esc — назад') };
     $('#menu-hint').textContent = hints[screen] || '';
   }
 
@@ -368,6 +377,14 @@ const UI = (() => {
     btn.style.width = '100%';
     btn.addEventListener('click', pickHero);
     det.appendChild(btn);
+    if (save.golden && save.golden[c.id]) {
+      save.goldOff = save.goldOff || {};
+      const on = !save.goldOff[c.id];
+      const gb = el('button', 'k-btn gold-btn' + (on ? ' sel' : ''), '✦ ' + (on ? tr('Золотой мундир: вкл') : tr('Золотой мундир: выкл')));
+      gb.style.width = '100%';
+      gb.addEventListener('click', () => { save.goldOff[c.id] = on; persist(); snd('click', { vol: 0.6 }); refreshSquad(); });
+      det.appendChild(gb);
+    }
     if (owned && L.level < HERO_MAX) {
       const row = el('div', 'row hbtns');
       const tb = el('button', 'k-btn' + (save.tokens >= TRAIN_COST ? '' : ' off'), `${tr('Тренировать +{0}', TRAIN_XP)} · <img src="assets/ui/coin.png" alt="">${TRAIN_COST}`);
@@ -396,22 +413,40 @@ const UI = (() => {
     return h >= 24 ? tr('{0} д {1} ч', Math.floor(h / 24), h % 24) : tr('{0} ч', h);
   }
 
+  const TIERC = { 1: '#d8d4cc', 2: '#7cdc7c', 3: '#6fb6ff', 4: '#c58cff', 5: '#ffd36e' };
+  function rarName(r) { return r.kind === 'hero' ? RARITY[r.rarity].name : GEAR_RAR[r.rarity].name; }
+  function resName(r) { return r.kind === 'hero' ? r.c.name : r.kind === 'gear' ? tr(r.gear.name) : tr('Наставление'); }
+  function resIcon(r, big) {
+    if (r.kind === 'hero') { const c = big ? cv(heroImg(r.c.id, 'down', false)) : face(r.c.id); if (r.golden) { const v = cv(variant(big ? heroImg(r.c.id, 'down', false) : (heroPortrait(r.c.id) || portrait(r.c.id)), 'gold')); return v; } return c; }
+    if (r.kind === 'gear') return cv(gearIcon(r.gear.id));
+    const im = document.createElement('img'); im.src = 'assets/ui/scroll.png'; return im;
+  }
+  function resNote(r) {
+    if (r.kind === 'hero') return r.golden ? tr('ЗОЛОТОЙ!') : r.isNew ? tr('Новый!') : r.refund ? '+' + r.refund : '★' + r.stars;
+    if (r.kind === 'gear') return r.isNew ? tr('Новое!') : r.maxed ? tr('Макс.') : tr('Ур. {0}', r.lvl);
+    return '+' + MANUAL_XP;
+  }
+  function collStats() {
+    return { heroes: Object.keys(save.chars).length, gold: Object.keys(save.golden || {}).length, gear: gearOwned() };
+  }
+
   function refreshGacha() {
-    const B = bannerInfo(), ev = gBanner === 'event', g = gachaState();
+    const B = bannerInfo(), g = gachaState();
     const tabs = $('#g-tabs');
     tabs.innerHTML = '';
-    for (const [k, label] of [['event', tr('Особый призыв')], ['standard', tr('Стандартный')], ['shop', tr('Обмен')]]) {
+    for (const [k, label] of [['event', tr('Особый')], ['arsenal', tr('Арсенал')], ['standard', tr('Стандартный')], ['shop', tr('Обмен')]]) {
       const b = el('button', 'k-btn gt' + (k === gBanner ? ' sel' : ''), label);
       b.addEventListener('click', () => { gBanner = k; snd('click', { vol: 0.6 }); refreshGacha(); });
       tabs.appendChild(b);
     }
     const st = $('#g-stage');
     if (gBanner === 'shop') { refreshShop(); return; }
-    st.className = 'g-stage ' + (ev ? 'ev' : 'std');
+    st.className = 'g-stage ' + (gBanner === 'event' ? 'ev' : gBanner === 'arsenal' ? 'ars' : 'std');
     let sp = '';
     for (let i = 0; i < 18; i++) sp += `<i style="left:${(i * 53) % 100}%;animation-delay:${(i * 0.37) % 3}s;animation-duration:${2.4 + (i % 5) * 0.5}s"></i>`;
     st.innerHTML = `<div class="rays"></div><div class="sparks">${sp}</div>`;
-    if (ev) {
+    const cs = collStats();
+    if (gBanner === 'event') {
       const c = charById(B.five);
       const hero = el('div', 'g-hero');
       hero.appendChild(body(c.id));
@@ -421,50 +456,95 @@ const UI = (() => {
         <div class="g-name">${tr(B.title)}</div>
         <div class="g-sub r5">${c.name} · ${RARITY[5].name}</div>
         <div class="g-quote">«${tr(QUOTES[c.id] || '')}»</div>
-        <div class="g-up">${tr('Шанс ×2: каждый второй легендарный — {0}', c.name)}</div>
+        <div class="g-up">${tr('Шанс ×2: каждый второй легендарный боец — {0}', c.name)}</div>
         <div class="g-fours" id="g-fours"></div>
         <div class="g-timer">${tr('Смена баннера через {0}', fmtDur(B.endsIn))}</div></div>`);
       const fb = $('#g-fours', st);
-      for (const id of B.fours) {
-        const ch = charById(id), w = el('div', 'g-four');
-        w.appendChild(face(id));
-        w.insertAdjacentHTML('beforeend', `<span class="r4">${ch.name}</span>`);
-        fb.appendChild(w);
-      }
+      for (const id of B.fours) { const ch = charById(id), w = el('div', 'g-four'); w.appendChild(face(id)); w.insertAdjacentHTML('beforeend', `<span class="r4">${ch.name}</span>`); fb.appendChild(w); }
+    } else if (gBanner === 'arsenal') {
+      const m = gearById(B.gear);
+      const big = el('div', 'g-gear');
+      big.appendChild(cv(gearIcon(m.id)));
+      st.appendChild(big);
+      st.insertAdjacentHTML('beforeend', `<div class="g-title">
+        <div class="g-kicker">${tr('Арсенал Гарнизона')}</div>
+        <div class="g-name">${tr(m.name)}</div>
+        <div class="g-sub t5">${tr(SLOT_NAMES[m.slot])} · ${GEAR_RAR[5].name}</div>
+        <div class="g-up">${tr('Только снаряжение. Каждое второе легендарное — {0}', tr(m.name))}</div>
+        <div class="g-fours" id="g-slots"></div>
+        <div class="g-timer">${tr('Смена баннера через {0}', fmtDur(B.endsIn))}</div></div>`);
+      const sb = $('#g-slots', st);
+      for (const slot of GEAR_SLOTS) { const it = GEAR.find(x => x.slot === slot && x.id !== m.id) || GEAR.find(x => x.slot === slot); const w = el('div', 'g-four'); w.appendChild(cv(gearIcon(it.id))); sb.appendChild(w); }
     } else {
       const row = el('div', 'g-std');
       for (const c of CHARS.filter(x => x.rarity === 5)) { const w = el('div', 'g-four'); w.appendChild(body(c.id)); w.insertAdjacentHTML('beforeend', `<span class="r5">${c.name}</span>`); row.appendChild(w); }
       st.appendChild(row);
-      st.insertAdjacentHTML('beforeend', `<div class="g-title std"><div class="g-name">${tr('Стандартный')}</div><div class="g-sub">${tr('Все бойцы без повышенных шансов')}</div></div>`);
+      st.insertAdjacentHTML('beforeend', `<div class="g-title std"><div class="g-name">${tr('Стандартный')}</div><div class="g-sub">${tr('Все бойцы и всё снаряжение без повышенных шансов')}</div></div>`);
     }
-    const p5 = save.pity5 || 0, p4 = save.pity4 || 0;
-    $('#g-info').innerHTML = `<div class="pity"><span class="r5">5★</span><div class="pbar"><i style="width:${Math.round(p5 / PITY5 * 100)}%"></i></div><span>${tr('гарантия через {0}', PITY5 - p5)}</span></div>
-      <div class="pity"><span class="r4">4★</span><div class="pbar p4"><i style="width:${Math.round(p4 / PITY4 * 100)}%"></i></div><span>${tr('гарантия через {0}', PITY4 - p4)}</span></div>
-      ${ev && g.guar ? '<div class="guar">' + tr('Следующий легендарный — точно {0}!', charById(B.five).name) + '</div>' : ''}
-      <div class="muted small">${tr('Шансы: 5★ 3% · 4★ 18% · 3★ 79% (бойцы и наставления)')} · <a class="lnk" id="g-hist-btn">${tr('История')}</a></div>
-      <div class="g-wallet"><span><img src="assets/ui/ribbon.png" alt="">${tr('Перья: {0}', feathers())}</span><span><img src="assets/ui/pearl.png" alt="">${tr('Билеты: {0}', tickets())}</span></div>`;
+    st.insertAdjacentHTML('beforeend', `<div class="g-coll"><span>${tr('Бойцы {0}/{1}', cs.heroes, CHARS.length)}</span><span class="gold">${tr('Золотые {0}/{1}', cs.gold, CHARS.length)}</span><span>${tr('Снаряжение {0}/{1}', cs.gear, GEAR_TOTAL)}</span></div>`);
+    const p5 = save.pity5 || 0, p4 = save.pity4 || 0, ck = gBanner, chest = g.chest[ck] || 0;
+    $('#g-info').innerHTML = `<div class="pity"><span class="t5">${tr('Леген.')}</span><div class="pbar"><i style="width:${Math.round(p5 / PITY5 * 100)}%"></i></div><span>${tr('гарантия через {0}', PITY5 - p5)}</span></div>
+      <div class="pity"><span class="t4">${tr('Эпич.')}</span><div class="pbar p4"><i style="width:${Math.round(p4 / PITY4 * 100)}%"></i></div><span>${tr('гарантия через {0}', PITY4 - p4)}</span></div>
+      <div class="pity"><span class="chest-ic">▣</span><div class="pbar pc"><i style="width:${Math.round(chest * 10)}%"></i></div><span>${tr('Сундук трофеев: {0}/10 призывов ×10', Math.floor(chest))}</span></div>
+      ${gBanner === 'event' && g.guar ? '<div class="guar">' + tr('Следующий легендарный боец — точно {0}!', charById(B.five).name) + '</div>' : ''}
+      ${gBanner === 'arsenal' && g.guarG ? '<div class="guar">' + tr('Следующее легендарное — точно {0}!', tr(gearById(B.gear).name)) + '</div>' : ''}
+      <div class="muted small">${tr('Шансы: легендарное 1,5% (в среднем 1 из ~37 с гарантией) · эпическое 7% (минимум раз в 10) · редкое 17,5% · необычное 30% · обычное 44%; бойцы — 12%, золотой мундир — 3% от бойцов')} · <a class="lnk" id="g-hist-btn">${tr('История')}</a></div>
+      <div class="g-wallet"><span><img src="assets/ui/ribbon.png" alt="">${tr('Перья: {0}', feathers())}</span><span><img src="assets/ui/pearl.png" alt="">${tr('Билеты: {0}', tickets())}</span><span><img src="assets/ui/pearl.png" alt="">${tr('Билеты ×10: {0}', g.tickets10 || 0)}</span></div>`;
     $('#g-hist-btn').addEventListener('click', () => { $('#g-history').classList.toggle('hid'); refreshHistory(); });
     const bb = $('#g-btns');
     bb.innerHTML = '';
-    if (freeAvailable()) {
-      const fb = el('button', 'k-btn big free', `${img('pearl')} ${tr('Бесплатно')}`);
-      fb.title = tr('Один бесплатный призыв каждый день');
-      fb.addEventListener('click', () => doPull(1, 'free'));
-      bb.appendChild(fb);
-    }
-    if (tickets() > 0) {
-      const tb = el('button', 'k-btn big free', `${img('pearl')} ${tr('Билет')} (${tickets()})`);
-      tb.addEventListener('click', () => doPull(1, 'ticket'));
-      bb.appendChild(tb);
-    }
-    const b1 = el('button', 'k-btn big' + (save.tokens < PULL_COST ? ' off' : ''), `${img('coin')} ×1 — ${PULL_COST}`);
-    b1.addEventListener('click', () => doPull(1));
-    const b10 = el('button', 'k-btn big' + (save.tokens < PULL10_COST ? ' off' : ''), `${img('coin')} ×10 — ${PULL10_COST}`);
-    b10.title = tr('Десять за цену девяти, минимум один эпический');
-    b10.addEventListener('click', () => doPull(10));
-    bb.appendChild(b1);
-    bb.appendChild(b10);
+    const btn = (cls, html, fn, title) => { const b = el('button', 'k-btn big ' + cls, html); if (title) b.title = title; b.addEventListener('click', fn); bb.appendChild(b); };
+    if (freeAvailable()) btn('free', `${img('pearl')} ${tr('Бесплатно')}`, () => doPull(1, 'free'), tr('Один бесплатный призыв каждый день'));
+    if (tickets() > 0) btn('free', `${img('pearl')} ×1 (${tickets()})`, () => doPull(1, 'ticket'), tr('Билет призыва'));
+    if ((g.tickets10 || 0) > 0) btn('free', `${img('pearl')} ×10 (${g.tickets10})`, () => doPull(10, 'ticket'), tr('Билет ×10'));
+    btn(save.tokens < PULL_COST ? 'off' : '', `${img('coin')} ×1 — ${PULL_COST}`, () => doPull(1));
+    btn(save.tokens < PULL10_COST ? 'off' : '', `${img('coin')} ×10 — ${PULL10_COST}`, () => doPull(10), tr('Десять за цену девяти, минимум один эпический'));
+    btn('x100' + (save.tokens < PULL100_COST ? ' off' : ''), `${img('coin')} ×100 — ${PULL100_COST}`, () => doPull(100), tr('Сто призывов разом: в каждой десятке минимум один эпический, сундук трофеев сразу'));
     refreshFooter();
+  }
+
+  let gearSlot = null, gearSel = null;
+  function refreshGear() {
+    const gs = gearSave();
+    $('#gear-coll').textContent = tr('Собрано {0}/{1}', gearOwned(), GEAR_TOTAL);
+    const sl = $('#gear-slots');
+    sl.innerHTML = '';
+    for (const slot of GEAR_SLOTS) {
+      const k = gs.eq[slot], d = el('div', 'gslot k-card' + (gearSlot === slot ? ' sel' : ''));
+      if (k && gs.items[k]) {
+        const { m, r } = parseGear(k);
+        d.classList.add('t' + r);
+        d.appendChild(cv(gearIcon(m.id)));
+        d.insertAdjacentHTML('beforeend', `<div class="gl t${r}">${tr('Ур. {0}', gs.items[k].lvl)}</div>`);
+      } else d.insertAdjacentHTML('beforeend', '<div class="gempty">+</div>');
+      d.insertAdjacentHTML('beforeend', `<div class="gn">${tr(SLOT_NAMES[slot])}</div>`);
+      d.addEventListener('click', () => { gearSlot = gearSlot === slot ? null : slot; gearSel = null; refreshGear(); });
+      sl.appendChild(d);
+    }
+    const t = gearEffects(), lines = Object.entries(t).filter(([e, v]) => v && FX_TEXT[e]).map(([e, v]) => tr(FX_TEXT[e], e === 'hp' || e === 'heal' ? v : Math.round(v * 10) / 10));
+    $('#gear-tot').innerHTML = `<div class="sec">${tr('Бонусы снаряжения')}</div>` + (lines.length ? lines.map(x => '<div>' + x + '</div>').join('') : '<div class="muted">' + tr('Пока ничего не надето') + '</div>');
+    const inv = $('#gear-inv');
+    inv.innerHTML = '';
+    const keys = Object.keys(gs.items).filter(k => !gearSlot || parseGear(k).m.slot === gearSlot).sort((a, b) => parseGear(b).r - parseGear(a).r || a.localeCompare(b));
+    if (!keys.length) inv.innerHTML = '<div class="muted">' + tr('Снаряжение выпадает в «Призыве» — особенно во вкладке «Арсенал»') + '</div>';
+    for (const k of keys) {
+      const { m, r } = parseGear(k), it = gs.items[k], eq = gs.eq[m.slot] === k;
+      const d = el('div', 'gitem t' + r + (gearSel === k ? ' sel' : '') + (eq ? ' eq' : ''));
+      d.appendChild(cv(gearIcon(m.id)));
+      d.insertAdjacentHTML('beforeend', `<b class="lv">${it.lvl}</b>${eq ? '<b class="e">✓</b>' : ''}`);
+      d.addEventListener('click', () => { gearSel = k; refreshGear(); });
+      inv.appendChild(d);
+    }
+    const info = $('#gear-info');
+    if (gearSel && gs.items[gearSel]) {
+      const { m, r } = parseGear(gearSel), it = gs.items[gearSel], eq = gs.eq[m.slot] === gearSel;
+      info.innerHTML = `<div class="row" style="gap:10px"><div class="gbig t${r}" id="gbig"></div><div><div class="h2 t${r}" style="line-height:1">${tr(m.name)}</div><div class="t${r}">${tr(SLOT_NAMES[m.slot])} · ${GEAR_RAR[r].name} · ${tr('Ур. {0}', it.lvl)}/5</div>
+        <div class="small">${gearFxLines(m, r, it.lvl).join('<br>')}</div><div class="muted small">${it.lvl < 5 ? tr('Повторы из призыва повышают уровень') : tr('Максимальный уровень')}</div></div></div>`;
+      $('#gbig', info).appendChild(cv(gearIcon(m.id)));
+      const b = el('button', 'k-btn' + (eq ? ' off' : ''), eq ? tr('Надето') : tr('Надеть'));
+      b.addEventListener('click', () => { if (equipGear(gearSel)) { snd('confirm', { vol: 0.7 }); refreshGear(); } });
+      info.appendChild(b);
+    } else info.innerHTML = '<div class="muted">' + tr('Выбери предмет, чтобы увидеть бонусы и надеть его') + '</div>';
   }
 
   let shopPick = null;
@@ -516,7 +596,8 @@ const UI = (() => {
     const h = $('#g-history');
     if (h.classList.contains('hid')) return;
     const list = gachaState().history;
-    h.innerHTML = '<div class="sec">' + tr('История призывов') + '</div>' + (list.length ? list.map(e => `<span class="hi r${e.r}">${e.id === 'manual' ? tr('Наставление') : charById(e.id).name}${e.f ? ' ✦' : ''}</span>`).join('') : '<span class="muted">' + tr('Пока пусто') + '</span>');
+    const nm = e => e.k === 'gear' ? tr(parseGear(e.id).m.name) : e.id === 'manual' ? tr('Наставление') : (charById(e.id) || { name: e.id }).name;
+    h.innerHTML = '<div class="sec">' + tr('История призывов') + '</div>' + (list.length ? list.map(e => `<span class="hi t${e.r}">${nm(e)}${e.gold ? ' ✦✦' : e.f ? ' ✦' : ''}</span>`).join('') : '<span class="muted">' + tr('Пока пусто') + '</span>');
   }
 
   function refreshTraining() {
@@ -677,10 +758,11 @@ const UI = (() => {
 
   let rv = null;
   const FX = { parts: [], raf: 0, cv: null, g: null, w: 0, h: 0, last: 0 };
-  const RCOL = { 3: ['#8fd0ff', '#4a8cff', '#ffffff'], 4: ['#e0b0ff', '#a24aff', '#ffffff', '#ff9ad8'], 5: ['#fff2b0', '#ffcf3a', '#ffffff', '#ff9a3a'] };
+  const RCOL = { 1: ['#f0ece4', '#b4b0a8', '#ffffff'], 2: ['#b8f0b0', '#5ac05a', '#ffffff'], 3: ['#8fd0ff', '#4a8cff', '#ffffff'], 4: ['#e0b0ff', '#a24aff', '#ffffff', '#ff9ad8'], 5: ['#fff2b0', '#ffcf3a', '#ffffff', '#ff9a3a'], g: ['#ff6b6b', '#ffd36e', '#7cfc9a', '#6fb6ff', '#c58cff', '#ffffff'] };
+  const isBig = r => r.rarity === 5 || r.golden;
 
   function doPull(n, mode) {
-    const res = gachaPull(n, gBanner === 'standard' ? 'standard' : 'event', mode);
+    const res = gachaPull(n, gBanner === 'shop' ? 'event' : gBanner, mode);
     if (!res) { toast(mode === 'ticket' ? tr('Нет билетов') : tr('Не хватает жетонов — сыграй забег')); snd('error', { vol: 0.6 }); return; }
     pullRes = res;
     state = 'pull';
@@ -754,7 +836,7 @@ const UI = (() => {
     g.globalAlpha = 1;
     g.globalCompositeOperation = 'source-over';
     FX.parts = FX.parts.filter(p => p.life > 0 && p.y < FX.h + 40);
-    if (FX.parts.length > 1800) FX.parts.splice(0, FX.parts.length - 1800);
+    if (FX.parts.length > 2200) FX.parts.splice(0, FX.parts.length - 2200);
   }
 
   function fxBurst(x, y, n, cols, sp = 420, life = 1.4, gr = 260, size = 3) {
@@ -766,48 +848,54 @@ const UI = (() => {
   function fxRain(cols, n) {
     for (let i = 0; i < n; i++) FX.parts.push({ x: Math.random() * FX.w, y: -20 - Math.random() * FX.h * 0.9, vx: (Math.random() - 0.5) * 30, vy: 70 + Math.random() * 130, gr: 30, drag: 1, life: 5, max: 5, fade: false, c: cols[i % cols.length], s: 2 + Math.random() * 3 });
   }
+  function fxAt(elm, n, cols, sp) { const b = elm.getBoundingClientRect(); fxBurst(b.left + b.width / 2, b.top + b.height / 2, n, cols, sp, 0.9, 140, 3); }
 
   function flareStep(dt) {
-    const f = rv.flare;
+    const f = rv.flare, m = rv.max;
     f.t += dt * f.speed;
     const k = Math.min(1, f.t / f.dur), e = 1 - Math.pow(1 - k, 2.2);
     f.x = FX.w / 2 + Math.sin(k * 6) * 8;
     f.y = FX.h * 0.8 - e * FX.h * 0.56;
-    if (!f.s1 && k > 0.42) { f.s1 = true; f.col = rv.max >= 4 ? 4 : 3; snd('crack', { vol: 0.6 }); fxBurst(f.x, f.y, 26, RCOL[f.col], 200, 0.6, 100, 2); }
-    if (!f.s2 && k > 0.72 && (rv.max === 5 || rv.tease)) { f.s2 = true; f.speed = 0.3; rvDim(0.7); snd('heartbeat', { vol: 0.9 }); f.flick = true; f.flt = 0; }
+    if (!f.s1 && k > 0.34) { f.s1 = true; f.col = m >= 3 ? 3 : m; snd('crack', { vol: 0.5 }); fxBurst(f.x, f.y, 22, RCOL[f.col], 180, 0.6, 100, 2); }
+    if (!f.s1b && k > 0.56 && m >= 4) { f.s1b = true; f.col = 4; snd('crack', { vol: 0.7 }); fxBurst(f.x, f.y, 30, RCOL[4], 220, 0.6, 100, 2); }
+    if (!f.s2 && k > 0.72 && (m === 5 || rv.tease || rv.golden)) { f.s2 = true; f.speed = 0.3; rvDim(0.7); snd('heartbeat', { vol: 0.9 }); f.flick = true; f.flt = 0; }
     if (f.flick) {
       f.flt += dt;
       if (f.flt > 1.15) {
         f.flick = false; f.speed = 1; rvDim(0);
-        if (rv.max === 5) { f.col = 5; snd('crack', { vol: 0.9 }); fxBurst(f.x, f.y, 70, RCOL[5], 320, 0.8, 120, 3); }
+        if (m === 5 || rv.golden) { f.col = rv.golden ? 'g' : 5; snd('crack', { vol: 0.9 }); fxBurst(f.x, f.y, 80, RCOL[f.col], 320, 0.8, 120, 3); }
         else snd('tick', { vol: 0.5 });
       }
     }
-    const col = f.flick ? (Math.floor(f.flt * 12) % 2 ? 5 : 4) : f.col;
+    const col = f.flick ? (rv.golden && f.flt > 0.6 ? 'g' : Math.floor(f.flt * 12) % 2 ? 5 : 4) : f.col;
     const cs = col ? RCOL[col] : ['#ffffff', '#fff6d6'];
-    for (let i = 0; i < 3; i++) FX.parts.push({ x: f.x + (Math.random() - 0.5) * 5, y: f.y + 6, vx: (Math.random() - 0.5) * 40, vy: 40 + Math.random() * 60, gr: 140, drag: 0.97, life: 0.7, max: 0.7, c: cs[i % 2], s: 2 + Math.random() * 2 });
+    for (let i = 0; i < 3; i++) FX.parts.push({ x: f.x + (Math.random() - 0.5) * 5, y: f.y + 6, vx: (Math.random() - 0.5) * 40, vy: 40 + Math.random() * 60, gr: 140, drag: 0.97, life: 0.7, max: 0.7, c: cs[(i + Math.floor(f.t * 20)) % cs.length], s: 2 + Math.random() * 2 });
     FX.parts.push({ x: f.x, y: f.y + 10, vx: (Math.random() - 0.5) * 16, vy: 10 + Math.random() * 20, gr: -6, drag: 0.98, life: 1.1, max: 1.1, c: 'rgba(120,110,140,0.35)', s: 4, grow: 3 });
     FX.parts.push({ x: f.x, y: f.y, vx: 0, vy: 0, gr: 0, drag: 1, life: 0.04, max: 0.04, c: cs[0], s: 12 });
     FX.parts.push({ x: f.x, y: f.y, vx: 0, vy: 0, gr: 0, drag: 1, life: 0.04, max: 0.04, c: '#ffffff', s: 6 });
     if (k >= 1) { rv.flare = null; rvBurst(f.x, f.y); }
   }
 
+  function rvShell(L) {
+    L.innerHTML = `${rvBg()}<canvas class="rv-fx" id="rv-fx"></canvas><div class="rv-dim" id="rv-dim"></div><div class="rv-flash" id="rv-flash"></div><div class="rv-stage" id="rv-stage"></div><div class="next wood-text" id="rv-next"></div>`;
+    fxInit(L);
+  }
+
   function rvStart() {
     const L = layers.reveal, max = Math.max(...pullRes.map(r => r.rarity));
     rvClear();
-    rv = { phase: 'aim', timers: [], max, tease: max === 4 && Math.random() < 0.3, anomaly: !!pullRes.anomaly, charge: 0, charging: false };
-    L.innerHTML = `${rvBg()}<canvas class="rv-fx" id="rv-fx"></canvas><div class="rv-dim" id="rv-dim"></div><div class="rv-flash" id="rv-flash"></div><div class="rv-stage" id="rv-stage"></div>
-      <div class="rv-aim" id="rv-aim"><div class="ring"><i id="rv-ring"></i><b>✦</b></div><div class="wood-text">${tr('Зажми, чтобы выпустить ракету')}</div></div><div class="next wood-text" id="rv-next">${tr('Esc — пропустить')}</div>`;
-    fxInit(L);
+    rv = { phase: 'aim', timers: [], max, golden: pullRes.some(r => r.golden), tease: max === 4 && Math.random() < 0.3, anomaly: !!pullRes.anomaly, charge: 0, charging: false };
+    rvShell(L);
+    $('#rv-stage', L).insertAdjacentHTML('afterend', `<div class="rv-aim" id="rv-aim"><div class="ring"><i id="rv-ring"></i><b>✦</b></div><div class="wood-text">${tr('Зажми, чтобы выпустить ракету')}</div></div>`);
+    rvNext(tr('Esc — пропустить'));
     rvLater(4500, () => rvAimDone());
   }
 
   function rvDirect() {
     const L = layers.reveal, r = pullRes[0];
     rvClear();
-    rv = { phase: 'card', timers: [], max: r.rarity, charge: 0 };
-    L.innerHTML = `${rvBg()}<canvas class="rv-fx" id="rv-fx"></canvas><div class="rv-dim" id="rv-dim"></div><div class="rv-flash" id="rv-flash"></div><div class="rv-stage" id="rv-stage"></div><div class="next wood-text" id="rv-next"></div>`;
-    fxInit(L);
+    rv = { phase: 'card', timers: [], max: r.rarity, golden: !!r.golden, charge: 0 };
+    rvShell(L);
     rvBurst(FX.w / 2, FX.h * 0.3);
   }
 
@@ -830,13 +918,13 @@ const UI = (() => {
   function rvAnomaly() {
     rv.phase = 'anomaly';
     const L = layers.reveal, st = $('#rv-stage', L);
-    const set = pick(['normal', 'aberrant', 'lanky']);
-    const img = SPR[`titan_${set}_200_up`] || SPR.titan_normal_200_up;
-    const nap = NAPE[`${set}_200`] || { fx: 0.5, fy: 0.2 };
+    const set = pick(['normal', 'aberrant', 'lanky', 'thrower', 'giant']);
+    const size = set === 'giant' ? 280 : 200;
+    const img = SPR[`titan_${set}_${size}_up`] || SPR.titan_normal_200_up;
+    const nap = NAPE[`${set}_${size}`] || { fx: 0.5, fy: 0.2 };
     const box = el('div', 'rv-titan');
     box.style.left = (25 + Math.random() * 50) + '%';
-    const c = cv(img);
-    box.appendChild(c);
+    box.appendChild(cv(img));
     const tgt = el('button', 'rv-nape', '');
     tgt.style.left = (nap.fx * 100) + '%';
     tgt.style.top = (nap.fy * 100) + '%';
@@ -852,8 +940,7 @@ const UI = (() => {
       done = true;
       const al = $('.rv-alert', st);
       if (ok) {
-        const r = tgt.getBoundingClientRect();
-        fxBurst(r.left + r.width / 2, r.top + r.height / 2, 90, ['#ff4a3a', '#ffffff', '#ffd36e'], 380, 1, 300, 3);
+        fxAt(tgt, 90, ['#ff4a3a', '#ffffff', '#ffd36e'], 380);
         snd('slash', { vol: 1 });
         snd('cut', { vol: 0.9 });
         anomalyReward();
@@ -870,17 +957,17 @@ const UI = (() => {
   }
 
   function rvBurst(x, y) {
-    const m = rv.max;
+    const m = rv.max, gc = rv.golden ? 'g' : m;
     rv.phase = 'burst';
-    fxBurst(x, y, m === 5 ? 280 : m === 4 ? 180 : 120, RCOL[m], m === 5 ? 600 : 460, 1.7, 230, 3);
-    for (let i = 0; i < (m - 2) * 2; i++) rvLater(260 + i * 170, () => { fxBurst(x + (Math.random() - 0.5) * 300, y + (Math.random() - 0.5) * 180, 44, RCOL[m], 230, 1, 160, 2); snd('crack', { vol: 0.4 }); });
-    if (m === 5) { fxRain(RCOL[5], 170); snd('choir', { vol: 0.8 }); }
+    fxBurst(x, y, m === 5 ? 280 : m === 4 ? 180 : 120, RCOL[gc], m === 5 ? 600 : 460, 1.7, 230, 3);
+    for (let i = 0; i < Math.max(1, (m - 2) * 2); i++) rvLater(260 + i * 170, () => { fxBurst(x + (Math.random() - 0.5) * 300, y + (Math.random() - 0.5) * 180, 44, RCOL[gc], 230, 1, 160, 2); snd('crack', { vol: 0.4 }); });
+    if (m === 5 || rv.golden) { fxRain(RCOL[gc], 170); snd('choir', { vol: 0.8 }); }
     else if (m === 4) snd('shimmer', { vol: 0.7 });
     snd('boom', { vol: 0.8, rate: m === 5 ? 0.7 : 1 });
     const fl = $('#rv-flash', layers.reveal);
-    if (fl) { fl.className = 'rv-flash m' + m; void fl.offsetWidth; fl.classList.add('on'); }
+    if (fl) { fl.className = 'rv-flash m' + Math.max(3, m); void fl.offsetWidth; fl.classList.add('on'); }
     if (m === 5) { layers.reveal.classList.add('shake'); setTimeout(() => layers.reveal.classList.remove('shake'), 450); }
-    rvLater(m === 5 ? 1000 : 750, () => (pullRes.length === 1 ? rvShow(0) : rvDeal()));
+    rvLater(m === 5 ? 1000 : 750, () => (pullRes.length === 1 ? rvShow(0) : pullRes.length <= 10 ? rvDeal() : rvGrid100()));
   }
 
   function rvStars(r) {
@@ -889,46 +976,66 @@ const UI = (() => {
     return s;
   }
 
-  function rvShow(i, detail) {
-    const r = pullRes[i], st = $('#rv-stage', layers.reveal);
-    rv.phase = detail ? 'detail' : 'card';
-    rvNext(detail ? tr('Клик — назад') : tr('Enter или клик — дальше'));
-    if (r.rarity === 5 && !r.item) { rvCinema(r, st, false); return; }
-    st.innerHTML = `<div class="rv-rays m${r.rarity}"></div><div class="rv-card r${r.rarity}" id="rv-card"></div>`;
-    const card = $('#rv-card', st);
-    if (r.item) {
-      card.insertAdjacentHTML('beforeend', `<img class="rv-item" src="assets/ui/scroll.png" alt=""><div class="rname r3">${tr('Наставление')}</div><div class="rv-txt">${tr('+{0} опыта любому герою — используй в «Отряде»', MANUAL_XP)}</div><div class="rv-fe">+${r.feathers} ${tr('перьев')}</div>`);
-      snd('chime3', { vol: 0.6, tag: 'chime' });
-      return;
+  function rvBody(r) {
+    if (r.kind === 'hero') {
+      const quote = `<div class="rv-quote">«${tr(QUOTES[r.c.id] || QUOTES.cadet)}»</div>`;
+      return `<div class="rname t${r.rarity}">${r.c.name}</div><div class="rrar t${r.rarity}">${rarName(r)}${r.golden ? ' · <b class="gold">' + tr('Золотой мундир') + '</b>' : ''}</div><div class="rstars">${rvStars(r)}</div>
+        <div class="rv-txt">${r.isNew ? r.c.ability : r.refund ? tr('Уже 5★ — возвращено {0} жетонов', r.refund) : tr('Повтор: +1 звезда')}</div>${quote}`;
     }
-    const c = body(r.c.id);
-    c.classList.add('sil');
-    card.appendChild(c);
-    card.insertAdjacentHTML('beforeend', `${r.isNew ? '<div class="stamp">' + tr('Новый!') + '</div>' : ''}${r.featured ? '<div class="feat">' + tr('Шанс ×2') + '</div>' : ''}
-      <div class="rname r${r.rarity}">${r.c.name}</div><div class="rrar r${r.rarity}">${RARITY[r.rarity].name}</div><div class="rstars">${rvStars(r)}</div>
-      <div class="rv-txt">${r.isNew ? r.c.ability : r.refund ? tr('Уже 5★ — возвращено {0} жетонов', r.refund) : tr('Повтор: +1 звезда')}</div>
-      <div class="rv-quote">«${tr(QUOTES[r.c.id] || QUOTES.cadet)}»</div><div class="rv-fe">+${r.feathers} ${tr('перьев')}</div>`);
-    setTimeout(() => { c.classList.remove('sil'); }, 420);
+    if (r.kind === 'gear') {
+      return `<div class="rname t${r.rarity}">${tr(r.gear.name)}</div><div class="rrar t${r.rarity}">${tr(SLOT_NAMES[r.gear.slot])} · ${rarName(r)}</div>
+        <div class="rv-txt">${gearFxLines(r.gear, r.rarity, r.lvl).join(' · ')}</div><div class="rv-quote">${r.isNew ? tr('Новое в коллекции!') : r.maxed ? tr('Уже максимального уровня') : tr('Повтор: уровень {0}', r.lvl)}</div>`;
+    }
+    return `<div class="rname t${r.rarity}">${tr('Наставление')}</div><div class="rv-txt">${tr('+{0} опыта любому герою — используй в «Отряде»', MANUAL_XP)}</div>`;
+  }
+
+  function rvShow(i, host) {
+    const r = pullRes[i] || i, st = host || $('#rv-stage', layers.reveal);
+    if (!host) { rv.phase = 'card'; rvNext(tr('Enter или клик — дальше')); }
+    if (isBig(r) && r.kind !== 'item') { rvCinema(r, st, false); return; }
+    st.innerHTML = `<div class="rv-rays m${Math.max(3, r.rarity)}"></div><div class="rv-card t${r.rarity}" id="rv-card"></div>`;
+    const card = $('#rv-card', st);
+    const ic = resIcon(r, true);
+    ic.classList.add(r.kind === 'gear' ? 'gearbig' : 'herobig');
+    if (r.kind === 'hero') ic.classList.add('sil');
+    card.appendChild(ic);
+    if (r.isNew && r.kind !== 'item') card.insertAdjacentHTML('beforeend', '<div class="stamp">' + (r.kind === 'gear' ? tr('Новое!') : tr('Новый!')) + '</div>');
+    if (r.featured) card.insertAdjacentHTML('beforeend', '<div class="feat">' + tr('Шанс ×2') + '</div>');
+    card.insertAdjacentHTML('beforeend', rvBody(r) + `<div class="rv-fe">+${r.feathers || 0} ${tr('перьев')}</div>`);
+    if (r.kind === 'hero') setTimeout(() => ic.classList.remove('sil'), 420);
     if (r.rarity === 4) { snd('bong', { vol: 0.7 }); snd('chime6', { vol: 0.6, tag: 'chime' }); }
-    else snd('chime3', { vol: 0.6, tag: 'chime' });
+    else snd('chime' + Math.min(5, r.rarity + 1), { vol: 0.6, tag: 'chime' });
   }
 
   function rvCinema(r, host, overlay) {
     const box = overlay ? el('div', 'cine-over') : host;
     if (!overlay) host.innerHTML = '';
-    const q = '«' + tr(QUOTES[r.c.id] || QUOTES.cadet) + '»';
-    box.insertAdjacentHTML('beforeend', `<div class="cine"><div class="cine-black"></div><div class="cine-rays"></div><div class="cine-emblem" id="ce"></div><div class="cine-cables"><i></i><i></i></div><div class="cine-hero" id="chero"></div>
-      <div class="cine-text"><div class="cine-kick">${tr('Легендарный боец')}</div><div class="cine-name">${r.c.name}</div><div class="rstars">${rvStars(r)}</div><div class="cine-quote" id="cq"></div>
-      <div class="cine-sub">${r.isNew ? '<b>' + tr('Новый!') + '</b> ' + r.c.ability : r.refund ? tr('Уже 5★ — возвращено {0} жетонов', r.refund) : tr('Повтор: +1 звезда')}</div><div class="rv-fe">+${r.feathers} ${tr('перьев')}</div></div></div>`);
+    const gear = r.kind === 'gear';
+    const q = gear ? tr('Легендарное снаряжение Разведкорпуса') : '«' + tr(QUOTES[r.c.id] || QUOTES.cadet) + '»';
+    const kick = gear ? tr('Легендарное снаряжение') : r.golden ? tr('Золотой боец!') : tr('Легендарный боец');
+    box.insertAdjacentHTML('beforeend', `<div class="cine${r.golden ? ' golden' : ''}"><div class="cine-black"></div><div class="cine-rays"></div><div class="cine-emblem" id="ce"></div>${gear ? '' : '<div class="cine-cables"><i></i><i></i></div>'}<div class="cine-hero${gear ? ' gear' : ''}" id="chero"></div>
+      <div class="cine-text"><div class="cine-kick">${kick}</div><div class="cine-name">${resName(r)}</div>${gear ? `<div class="rrar t5">${tr(SLOT_NAMES[r.gear.slot])}</div>` : `<div class="rstars">${rvStars(r)}</div>`}<div class="cine-quote" id="cq"></div>
+      <div class="cine-sub">${gear ? gearFxLines(r.gear, r.rarity, r.lvl).join(' · ') + (r.isNew ? ' · <b>' + tr('Новое!') + '</b>' : ' · ' + tr('Ур. {0}', r.lvl)) : (r.isNew ? '<b>' + tr('Новый!') + '</b> ' + r.c.ability : r.refund ? tr('Уже 5★ — возвращено {0} жетонов', r.refund) : tr('Повтор: +1 звезда'))}${r.golden ? ' · <b class="gold">' + tr('Золотой мундир открыт!') + '</b>' : ''}</div><div class="rv-fe">+${r.feathers || 0} ${tr('перьев')}</div></div></div>`);
     if (overlay) host.appendChild(box);
-    const em = $('#ce', box);
-    em.appendChild(emblem('scouts'));
-    $('#chero', box).appendChild(body(r.c.id));
+    $('#ce', box).appendChild(emblem('scouts'));
+    const hc = resIcon(r, true);
+    $('#chero', box).appendChild(hc);
     snd('horn', { vol: 0.45 });
-    rvLater(650, () => { snd('choir', { vol: 0.7 }); snd('rope', { vol: 0.7 }); fxRain(RCOL[5], 120); });
+    rvLater(650, () => { snd('choir', { vol: 0.7 }); if (!gear) snd('rope', { vol: 0.7 }); fxRain(RCOL[r.golden ? 'g' : 5], 120); });
     const qe = $('#cq', box);
     for (let k = 1; k <= q.length; k++) rvLater(1500 + k * 38, () => { qe.textContent = q.slice(0, k); if (k % 3 === 0) snd('tick', { vol: 0.15 }); });
     return box;
+  }
+
+  function cardEl(r, i, small) {
+    const d = el('div', (small ? 'rv-m' : 'rv-c') + ' t' + r.rarity + (r.golden ? ' golden' : ''));
+    d.innerHTML = small ? '' : '<div class="back"></div><div class="front"></div>';
+    const fr = small ? d : $('.front', d);
+    fr.appendChild(resIcon(r, false));
+    if (!small) fr.insertAdjacentHTML('beforeend', `<div class="hn">${resName(r)}</div><div class="t${r.rarity} small">${resNote(r)}</div>`);
+    else if (r.isNew && r.kind !== 'item') d.insertAdjacentHTML('beforeend', '<b class="nw">N</b>');
+    d.addEventListener('click', e => { if (rv.phase !== 'done' || (!small && !d.classList.contains('open'))) return; e.stopPropagation(); rvDetail(i); });
+    return d;
   }
 
   function rvDeal() {
@@ -936,18 +1043,9 @@ const UI = (() => {
     const st = $('#rv-stage', layers.reveal);
     st.innerHTML = '<div class="rv-grid" id="rv-grid"></div>';
     const gr = $('#rv-grid', st);
-    rv.cards = pullRes.map((r, i) => {
-      const d = el('div', 'rv-c r' + r.rarity);
-      d.innerHTML = '<div class="back"></div><div class="front"></div>';
-      const fr = $('.front', d);
-      if (r.item) fr.insertAdjacentHTML('beforeend', `<img src="assets/ui/scroll.png" alt=""><div class="hn">${tr('Наставление')}</div>`);
-      else { fr.appendChild(face(r.c.id)); fr.insertAdjacentHTML('beforeend', `<div class="hn">${r.c.name}</div><div class="r${r.rarity} small">${r.isNew ? tr('Новый!') : r.refund ? '+' + r.refund : starsHTML(r.stars)}</div>`); }
-      d.addEventListener('click', e => { if (!d.classList.contains('open') || rv.phase !== 'done') return; e.stopPropagation(); rvDetail(i); });
-      gr.appendChild(d);
-      return d;
-    });
+    rv.cards = pullRes.map((r, i) => { const d = cardEl(r, i, false); gr.appendChild(d); return d; });
     const cx = FX.w / 2, cy = FX.h * 0.25;
-    rv.cards.forEach((d, i) => {
+    rv.cards.forEach(d => {
       const b = d.getBoundingClientRect();
       d.style.transition = 'none';
       d.style.transform = `translate(${cx - (b.left + b.width / 2)}px, ${cy - (b.top + b.height / 2)}px) scale(0.2) rotate(${(Math.random() - 0.5) * 120}deg)`;
@@ -964,48 +1062,89 @@ const UI = (() => {
     if (i >= rv.cards.length) { rvGridDone(); return; }
     const r = pullRes[i], d = rv.cards[i];
     d.classList.add('open');
-    const b = d.getBoundingClientRect(), x = b.left + b.width / 2, y = b.top + b.height / 2;
-    if (r.rarity === 5) {
-      fxBurst(x, y, 80, RCOL[5], 300, 1, 160, 3);
+    if (isBig(r) && r.kind !== 'item') {
+      fxAt(d, 80, RCOL[r.golden ? 'g' : 5], 300);
       snd('choir', { vol: 0.6 });
       rv.phase = 'cine-grid';
       rv.resume = () => { rv.phase = 'grid'; flipNext(i + 1); };
       rvLater(500, () => { if (rv.phase === 'cine-grid') { rv.over = rvCinema(r, $('#rv-stage', layers.reveal), true); rvNext(tr('Клик — дальше')); } });
       return;
     }
-    if (r.rarity === 4) { fxBurst(x, y, 50, RCOL[4], 240, 0.9, 140, 3); snd('shimmer', { vol: 0.5 }); }
-    else { fxBurst(x, y, 12, RCOL[3], 120, 0.6, 100, 2); snd('tick', { vol: 0.4 }); }
-    rvLater(r.rarity === 4 ? 480 : 180, () => flipNext(i + 1));
+    if (r.rarity === 4) { fxAt(d, 50, RCOL[4], 240); snd('shimmer', { vol: 0.5 }); }
+    else { fxAt(d, 6 + r.rarity * 4, RCOL[r.rarity], 120); snd('tick', { vol: 0.35 + r.rarity * 0.05 }); }
+    rvLater(r.rarity === 4 ? 480 : 150 + r.rarity * 20, () => flipNext(i + 1));
+  }
+
+  function rvGrid100() {
+    rv.phase = 'grid100';
+    const st = $('#rv-stage', layers.reveal);
+    st.innerHTML = '<div class="rv-g100" id="rv-g100"></div><div class="rv-sum" id="rv-sum"></div>';
+    const gr = $('#rv-g100', st);
+    const order = pullRes.map((r, i) => i);
+    rv.cards = pullRes.map((r, i) => { const d = cardEl(r, i, true); d.classList.add('hid'); gr.appendChild(d); return d; });
+    rvNext(tr('Клик — показать всё'));
+    let t = 200, cnt = { 5: 0, 4: 0, n: 0 };
+    order.forEach(i => {
+      const r = pullRes[i];
+      t += r.rarity >= 4 ? 260 : 28;
+      rvLater(t, () => {
+        rv.cards[i].classList.remove('hid');
+        if (r.rarity >= 4 || r.golden) { fxAt(rv.cards[i], r.rarity === 5 ? 60 : 30, RCOL[r.golden ? 'g' : r.rarity], 200); snd(r.rarity === 5 ? 'choir' : 'shimmer', { vol: 0.45 }); }
+        else if (i % 3 === 0) snd('tick', { vol: 0.25 });
+        if (r.rarity >= 4) cnt[r.rarity]++;
+        if (r.isNew && r.kind !== 'item') cnt.n++;
+        rvSum(cnt);
+      });
+    });
+    rvLater(t + 300, () => rvGridDone());
+  }
+
+  function rvSum(cnt) {
+    const s = $('#rv-sum', layers.reveal);
+    if (s) s.innerHTML = `<span class="t5">${tr('Легендарных: {0}', cnt[5])}</span><span class="t4">${tr('Эпических: {0}', cnt[4])}</span><span class="t2">${tr('Новых: {0}', cnt.n)}</span>`;
   }
 
   function rvGridDone() {
     rv.phase = 'done';
+    if (rv.cards) for (const c of rv.cards) c.classList.remove('hid');
+    if (pullRes.length > 10) { const cnt = { 5: 0, 4: 0, n: 0 }; for (const r of pullRes) { if (r.rarity >= 4) cnt[r.rarity]++; if (r.isNew && r.kind !== 'item') cnt.n++; } rvSum(cnt); }
     rvNext(tr('Клик по карточке — подробнее, Enter — готово') + ' · +' + (pullRes.feathers || 0) + ' ' + tr('перьев'));
   }
 
   function rvDetail(i) {
     const st = $('#rv-stage', layers.reveal);
-    rv.grid = st.innerHTML;
-    rv.gridCards = rv.cards;
     rv.phase = 'detail';
     const ov = el('div', 'cine-over detail');
     st.appendChild(ov);
     const r = pullRes[i];
-    if (r.rarity === 5 && !r.item) rvCinema(r, ov, false);
-    else {
-      ov.innerHTML = `<div class="rv-rays m${r.rarity}"></div><div class="rv-card r${r.rarity}"></div>`;
-      const card = $('.rv-card', ov);
-      if (r.item) card.insertAdjacentHTML('beforeend', `<img class="rv-item" src="assets/ui/scroll.png" alt=""><div class="rname r3">${tr('Наставление')}</div>`);
-      else { card.appendChild(body(r.c.id)); card.insertAdjacentHTML('beforeend', `<div class="rname r${r.rarity}">${r.c.name}</div><div class="rrar r${r.rarity}">${RARITY[r.rarity].name}</div><div class="rstars">${rvStars(r)}</div><div class="rv-txt">${r.c.ability}</div><div class="rv-quote">«${tr(QUOTES[r.c.id] || QUOTES.cadet)}»</div>`); }
-    }
+    if (isBig(r) && r.kind !== 'item') rvCinema(r, ov, false);
+    else rvShow(i, ov);
     rv.detailEl = ov;
     rvNext(tr('Клик — назад'));
   }
 
   function rvFlipAll() {
     rvClear();
-    for (const c of rv.cards || []) c.classList.add('open');
+    for (const c of rv.cards || []) { c.classList.add('open'); c.classList.remove('hid'); c.style.transition = 'none'; c.style.transform = ''; c.style.opacity = '1'; }
     rvGridDone();
+  }
+
+  function rvChest() {
+    rvClear();
+    rv.phase = 'chest';
+    rv.chestShown = true;
+    const st = $('#rv-stage', layers.reveal), r = pullRes.chest;
+    st.innerHTML = `<div class="chest-wrap"><div class="chest-title">${tr('Сундук трофеев!')}</div><div class="chest" id="chest"><div class="lid"></div><div class="box"></div><div class="lock"></div></div></div>`;
+    rvNext('');
+    const ch = $('#chest', st);
+    [400, 1000, 1500].forEach((ms, k) => rvLater(ms, () => { ch.classList.remove('wob'); void ch.offsetWidth; ch.classList.add('wob'); snd('thud', { vol: 0.6 + k * 0.15 }); fxAt(ch, 12 + k * 10, RCOL[r.rarity], 160); }));
+    rvLater(2100, () => {
+      ch.classList.add('open');
+      fxAt(ch, 140, RCOL[r.rarity], 420);
+      snd(r.rarity === 5 ? 'choir' : 'shimmer', { vol: 0.8 });
+      snd('boom', { vol: 0.6, rate: 1.3 });
+    });
+    rvLater(2700, () => { const wrap = el('div', 'chest-res'); st.appendChild(wrap); rvShow(r, wrap); rvNext(tr('Enter или клик — готово')); rv.phase = 'chest-done'; });
   }
 
   function rvClose() {
@@ -1017,21 +1156,21 @@ const UI = (() => {
     if (fe) toast(tr('+{0} перьев', fe));
   }
 
+  function rvFinish() {
+    if (pullRes.chest && !rv.chestShown) { rvChest(); return; }
+    rvClose();
+  }
+
   function nextReveal() {
     if (!rv) { state = 'menu'; go('gacha'); return; }
     const ph = rv.phase;
     if (ph === 'aim') { rvAimDone(); return; }
-    if (ph === 'anomaly' || ph === 'burst') return;
-    if (ph === 'launch') { rv.flare = null; rvClear(); rvDim(0); if (pullRes.length === 1) rvShow(0); else { rvDeal(); rvClear(); rvFlipAllNow(); } return; }
-    if (ph === 'deal' || ph === 'grid') { rvClear(); for (const d of rv.cards) { d.style.transition = 'none'; d.style.transform = ''; d.style.opacity = '1'; } rvFlipAll(); return; }
+    if (ph === 'anomaly' || ph === 'burst' || ph === 'chest') return;
+    if (ph === 'launch') { rv.flare = null; rvClear(); rvDim(0); if (pullRes.length === 1) rvShow(0); else if (pullRes.length <= 10) { rvDeal(); rvFlipAll(); } else { rvGrid100(); rvFlipAll(); } return; }
+    if (ph === 'deal' || ph === 'grid' || ph === 'grid100') { rvFlipAll(); return; }
     if (ph === 'cine-grid') { rvClear(); if (rv.over) { rv.over.remove(); rv.over = null; } const res = rv.resume; rv.phase = 'grid'; rvNext(tr('Клик — открыть все')); res(); return; }
     if (ph === 'detail') { rvClear(); if (rv.detailEl) rv.detailEl.remove(); rv.phase = 'done'; rvGridDone(); return; }
-    rvClose();
-  }
-
-  function rvFlipAllNow() {
-    for (const d of rv.cards) { d.style.transition = 'none'; d.style.transform = ''; d.style.opacity = '1'; }
-    rvFlipAll();
+    rvFinish();
   }
 
   function buildLevelUp() {
@@ -1075,6 +1214,7 @@ const UI = (() => {
     const rows = [[tr('Продержался'), fmtTime(game.time)], [tr('Титанов убито'), game.kills], [tr('Уровень'), game.level]];
     if (faction.civs) rows.push([tr('Горожан погибло'), game.lost]);
     if (faction.threat > 1) rows.push([tr('Угроза'), THREAT_NAMES[faction.threat - 1]]);
+    if (game.ticketGain) rows.push([tr('Билеты призыва'), '+' + game.ticketGain]);
     if (game.heroXpGain) rows.push([tr('Опыт героя'), '+' + game.heroXpGain + (game.heroUps ? ' · ' + tr('новый уровень!') : '')]);
     if (game.unlocked) rows.push([tr('Открыта угроза'), THREAT_NAMES[game.unlocked - 1] + '!']);
     rows.push([tr('Рекорд'), fmtTime(bestOf(faction))]);
@@ -1272,6 +1412,8 @@ const UI = (() => {
   function debugScreen(q) {
     if (['battle', 'squad', 'gacha', 'records', 'settings', 'training', 'missions'].includes(q)) { go(q); return; }
     if (q === 'pull') { save.tokens += 900; go('gacha'); doPull(10); return; }
+    if (q === 'pull100') { save.tokens += PULL100_COST; go('gacha'); doPull(100); const U = new URLSearchParams(location.search); if (U.get('skipaim')) rvAimDone(); return; }
+    if (q === 'gear') { for (let i = 0; i < 40; i++) grantGear(pick(GEAR).id, 1 + Math.floor(Math.random() * 5)); go('gear'); return; }
     if (q === 'pull1') { save.tokens += 100; go('gacha'); doPull(1); return; }
     if (q === 'shop') { const g = gachaState(); g.feathers = (g.feathers || 0) + 200; g.tickets = (g.tickets || 0) + 2; gBanner = 'shop'; shopPick = 'pick4'; go('gacha'); return; }
     if (q === 'pull5' || q === 'pull10x' || q === 'anomaly') {

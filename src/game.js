@@ -409,6 +409,7 @@ function reset() {
   stats.speed *= 1 + (stars - 1) * 0.03;
   stats.orbit *= 1 + (stars - 1) * 0.03;
   applyHeroLevel(stats, hero.id);
+  applyGear(stats);
   metaApply(stats);
   const start = startSpot();
   player = {
@@ -677,7 +678,9 @@ function finishRun(won) {
     game.heroXpGain = (game.heroXpGain || 0) + hx;
     game.heroUps = (game.heroUps || 0) + ups;
   }
-  const earned = Math.round(((game.kills - game.paidKills) * 2 + Math.floor((game.time - game.paidTime) / 10) + (won ? 300 : 0) + (game.bossKills - (game.paidBoss || 0)) * 60) * mul * greed);
+  const tk = Math.floor((game.kills - game.paidKills) / 70) + (game.bossKills - (game.paidBoss || 0)) + (won ? 2 : 0);
+  if (tk > 0) { const gs = gachaState(); gs.tickets = (gs.tickets || 0) + tk; game.ticketGain = (game.ticketGain || 0) + tk; }
+  const earned = Math.round(((game.kills - game.paidKills) * 2 + Math.floor((game.time - game.paidTime) / 10) + (won ? 300 : 0) + (game.bossKills - (game.paidBoss || 0)) * 60) * mul * greed * (stats.tokenMul || 1));
   game.paidBoss = game.bossKills;
   game.paidKills = game.kills;
   game.paidTime = game.time;
@@ -702,7 +705,7 @@ function hurtPlayer(t) {
   const p = player;
   if (p.inv > 0) return;
   p.hp -= 1;
-  p.inv = 2;
+  p.inv = 2 * (stats.invMul || 1);
   sfx('hurt', { vol: 0.9 });
   sfx('maul', { vol: 0.8, rate: 0.8 });
   p.mode = 'fly';
@@ -1590,6 +1593,7 @@ function drawPlayer() {
   let dir = dir4(p.dir);
   if (p.mode === 'attack' && p.phase === 'cut') dir = DIR_KEYS[[0, 2, 3, 1][Math.floor(now * 22) % 4]];
   let img = heroImg(p.char, dir, flying);
+  const gold = save.golden && save.golden[p.char] && !(save.goldOff && save.goldOff[p.char]);
   if (!img) return;
   const running = !flying && Math.hypot(p.vx, p.vy) > 40;
   if (running) img = proceduralWalk(img, 'hero', dir)[WALK_SEQ[Math.floor(p.runPhase * 2) & 3]];
@@ -1599,7 +1603,8 @@ function drawPlayer() {
   if (flying) { oy = Math.round(Math.sin(now * 6)); o.shear = clamp(p.vx / 1800, -0.28, 0.28); }
   if (p.mode === 'attack' && p.phase === 'cut') { o.sx = 1.15; o.sy = 1.15; }
   drawTrail();
-  drawSprite(p.inv > 1.6 ? variant(img, 'white') : img, sx(p.x), sy(p.y, p.z) + oy, o);
+  drawSprite(p.inv > 1.6 ? variant(img, 'white') : gold ? variant(img, 'gold') : img, sx(p.x), sy(p.y, p.z) + oy, o);
+  if (gold && Math.random() < 0.3) particles.push({ x: p.x + rand(-14, 14), y: p.y - KZ * p.z - rand(4, 40), vx: rand(-10, 10), vy: rand(-30, -10), life: 0.6, max: 0.6, size: rand(1, 2.5), g: 0, kind: 'flare', color: '#ffd36e' });
 }
 
 function drawRope(a, alpha, grow) {
