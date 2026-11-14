@@ -261,13 +261,16 @@ const UI = (() => {
       </div>
       <div class="lvl wood-text" id="hud-lvl"></div>
       <div class="xp k-field"><div class="bar" id="hud-xp"></div></div>
+      <button class="ult" id="hud-ult"><i class="uf"></i><span class="uk">${IS_TOUCH ? '★' : 'E'}</span><span class="un wood-text"></span></button>
       <div class="tip-line k-tip" id="hud-tip">${IS_TOUCH ? tr('Веди пальцем — полёт на тросах к крышам и деревьям. С высоты — круглая кнопка: атака по затылку') : tr('WASD — летишь на тросах вверх, на крыши и деревья. С высоты — Пробел: атака')}</div>
       ${IS_TOUCH ? '<div class="tzone" id="tzone"></div><div class="tstick" id="tstick"><i></i></div><button class="tatk" id="tatk">⚔</button>' : ''}`;
     Object.assign(hud, {
       face: $('#hud-face', Hd), hearts: $('#hud-hearts', Hd), name: $('#hud-name', Hd), gauge: $('#hud-gauge', Hd),
       fill: $('#hud-gauge .fill', Hd), need: $('#hud-gauge .need', Hd), timer: $('#hud-timer', Hd), kills: $('#hud-kills', Hd),
       combo: $('#hud-combo', Hd), boss: $('#hud-boss', Hd), bossName: $('#hud-boss-name', Hd), bossSegs: $('#hud-boss-segs', Hd), skills: $('#hud-skills', Hd), banner: $('#hud-banner', Hd), bannerT: $('#hud-banner-t', Hd), bannerS: $('#hud-banner-s', Hd), civ: $('#hud-civ', Hd), lvl: $('#hud-lvl', Hd), xp: $('#hud-xp', Hd), tip: $('#hud-tip', Hd),
+      ult: $('#hud-ult', Hd), ultFace: $('#hud-ult .uf', Hd), ultName: $('#hud-ult .un', Hd),
     });
+    hud.ult.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); if (ultUse()) { hud.ult.classList.add('hit'); setTimeout(() => hud.ult.classList.remove('hit'), 150); } });
     $('#hud-pause', Hd).addEventListener('click', () => { if (state === 'play') state = 'paused'; });
     if (IS_TOUCH) {
       const zone = $('#tzone', Hd), stick = $('#tstick', Hd), knob = $('#tstick i', Hd), atk = $('#tatk', Hd);
@@ -416,6 +419,8 @@ const UI = (() => {
     det.insertAdjacentHTML('beforeend', `<div class="center h2 ${rarityClass(c.rarity)}" style="line-height:1">${owned ? c.name : tr('Не открыт')}</div>
       <div class="center ${rarityClass(c.rarity)}">${RARITY[c.rarity].name} ${owned ? starsHTML(owned) : ''}</div>
       <div class="center muted ab">${owned ? c.ability : tr('Можно получить в «Призыве»')}</div>`);
+    const U = heroUlt(c.id), UD = ULTS[U[0]];
+    det.insertAdjacentHTML('beforeend', `<div class="ultd"><b>★ ${UD.name}</b>${U[1] ? ' ×' + U[1] : ''}<div>${UD.text}</div></div>`);
     if (owned) {
       det.insertAdjacentHTML('beforeend', `<div class="hx"><b>${tr('Ур. {0}', L.level)}</b> / ${HERO_MAX}<div class="xpb"><i style="width:${L.need ? Math.round(L.into / L.need * 100) : 100}%"></i></div><span class="muted">${L.need ? L.into + ' / ' + L.need : tr('Максимум')}</span></div>
         <div class="muted small">${L.level > 1 ? heroBonusText(L.level) : tr('Каждый уровень: +1% к скорости и облёту')}</div>
@@ -1387,6 +1392,9 @@ const UI = (() => {
       hud.face.appendChild(face(hero.id));
       hud.name.textContent = hero.name;
       hud.name.className = rarityClass(hero.rarity);
+      hud.ultFace.innerHTML = '';
+      hud.ultFace.appendChild(face(hero.id));
+      hud.ultName.textContent = ULTS[heroUlt(hero.id)[0]].name;
     }
     hud.civ.style.display = faction.civs ? '' : 'none';
     cache.hp = -1;
@@ -1406,6 +1414,8 @@ const UI = (() => {
     setText(hud.combo, 'combo', game.combo > 1 && game.time - game.lastKill < 4 ? tr('КОМБО x{0}', game.combo) : '');
     setText(hud.civ, 'civ', tr('Горожан погибло: {0}', game.lost));
     setText(hud.lvl, 'lvl', tr('Ур. {0}', game.level));
+    const up = Math.floor((game.ult || 0) * 100);
+    if (cache.ult !== up) { cache.ult = up; hud.ult.style.setProperty('--p', up); hud.ult.classList.toggle('ready', up >= 100); }
     const xp = Math.round(clamp(game.xp / game.need, 0, 1) * 1000) / 10;
     if (cache.xp !== xp) { cache.xp = xp; hud.xp.style.width = xp + '%'; }
     const z = Math.round(clamp(player.z / MAXZ, 0, 1) * 100);
@@ -1518,6 +1528,7 @@ const UI = (() => {
     const P = new URLSearchParams(location.search);
     const devHost = location.protocol === 'file:' || ['localhost', '127.0.0.1', ''].includes(location.hostname);
     if (!devHost) return;
+    if ([...P.keys()].some(k => k !== 'lang' && k !== 'sound')) SND.setMuted(true);
     if (P.get('tokens')) save.tokens = +P.get('tokens');
     if (P.get('meta')) { ensureMeta(); for (const t of TRAINING) save.meta[t.id] = Math.min(t.max, +P.get('meta')); reset(); }
     if (P.get('stats')) { ensureMeta(); Object.assign(save.stats, { kills: 1234, runs: 12, bestLevel: 22, maxCombo: 11 }); save.stats.bosses.female = 1; save.daily.tasks[0].progress = 999; save.claimed = { kills0: true, runs0: true, kills1: true, lvl0: true }; refreshFooter(); }
@@ -1556,6 +1567,19 @@ const UI = (() => {
     }
     if (q === 'dex') { ensureMeta(); save.stats.killsBy = { normal: 120, lanky: 12, fat: 3, small: 40, aberrant: 9, crawler: 1, boss_female: 2, boss_jaw: 1 }; go('records'); return; }
     if (q === 'chal') { challengeOn = true; factionSel = weekChallenge().map; reset(); start(); SND.setMuted(true); for (let i = 0; i < 60 * 20; i++) { player.hp = Math.max(player.hp, 1); update(1 / 60); if (state === 'levelup') choose(0); if (state === 'loot') closeLoot(); } return; }
+    if (q === 'ult') {
+      const hid = new URLSearchParams(location.search).get('hero');
+      if (hid && CHARS.find(c => c.id === hid)) { save.chars[hid] = save.chars[hid] || 1; save.selected = hid; }
+      start();
+      SND.setMuted(true);
+      for (let i = 0; i < 30; i++) update(1 / 60);
+      titans.length = 0; game.spawnT = 4;
+      const ks = ['normal', 'lanky', 'fat', 'small', 'normal', 'aberrant', 'small', 'normal', 'lanky', 'fat'];
+      ks.forEach((k, i) => { const a = i / ks.length * TAU, d = 320 + (i % 3) * 120; spawnTitan({ x: player.x + Math.cos(a) * d, y: player.y + Math.sin(a) * d * 0.8 }, KINDS[k] && (KINDS[k].art || kindReady(k)) ? k : 'normal'); });
+      game.ult = 1;
+      cam.x = player.x - viewW() / 2; cam.y = player.y - viewH() / 2;
+      return;
+    }
     if (q === 'loot') {
       start();
       for (let i = 0; i < 30; i++) update(1 / 60);

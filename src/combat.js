@@ -280,7 +280,7 @@ function updateShots(dt) {
         rings.push({ x: s.x, y: s.y, r: 150, life: 0.35, color: '#ffb347' });
         for (const o of titans) if (!o.dying && o !== t && Math.hypot(o.x - s.x, o.y - s.y) < 150) stunTitan(o, 1.6, 'cannon');
       }
-      if (t && !t.dying && s.evo && !t.boss && t.H < 300) cutTitan(t);
+      if (t && !t.dying && !t.boss && ((s.evo && t.H < 300) || (s.killH && t.H < s.killH))) cutTitan(t);
       else if (t && !t.dying) {
         stunTitan(t, s.stun, 'cannon');
         if (!t.boss || t.boss.kind !== 'armored') {
@@ -288,6 +288,11 @@ function updateShots(dt) {
           t.x += Math.cos(a) * 60;
           t.y += Math.sin(a) * 60;
         }
+      }
+      if (s.spear) {
+        for (let i = 0; i < 8; i++) particles.push({ x: s.x + rand(-14, 14), y: s.y - rand(60, 140), vx: rand(-90, 90), vy: rand(-120, 20), life: rand(0.3, 0.6), max: 0.6, size: rand(1, 2), g: 300, kind: 'px', color: pick(['#ffd36e', '#ffffff', '#b3122e']) });
+        sfx(s.killH === 240 ? 'snap' : 'boom', { x: s.x, y: s.y, vol: 0.5, tag: 'spear' });
+        continue;
       }
       for (let i = 0; i < 14; i++) particles.push({ x: s.x + rand(-20, 20), y: s.y - rand(40, 140), vx: rand(-120, 120), vy: rand(-160, 20), life: rand(0.4, 0.8), max: 0.8, size: rand(1, 2.5), g: 300, kind: 'px', color: pick(['#ffd36e', '#ff9a3a', '#5a4a3a']) });
       steam(s.x, s.y - 90, 4, 30);
@@ -867,6 +872,7 @@ function clampTitan(t) {
 function bossHit(t) {
   const b = t.boss, p = player;
   b.hp--;
+  ultGain(2);
   t.flash = 0.15;
   game.hitstop = 0.1;
   game.shake = 12;
@@ -1002,6 +1008,7 @@ function drawCombatAir() {
   }
   for (const s of shots) {
     if (s.done) continue;
+    if (s.spear) { drawSpear(s); continue; }
     const k = Math.min(1, s.t / s.dur);
     const wx = lerp(s.x0, s.x, k), wy = lerp(s.y0, s.y, k), wz = Math.sin(k * Math.PI) * 260 + (1 - k) * 60 + k * 100;
     const x = sx(wx), y = sy(wy, wz);

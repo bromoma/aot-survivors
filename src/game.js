@@ -443,6 +443,7 @@ function reset() {
   combatReset();
   juiceReset();
   lootReset();
+  ultReset();
   if (hero.id === 'levi') stats.skills.spin = 1;
   if (hero.id === 'hange') stats.skills.trap = 1;
   metaRunStart();
@@ -505,6 +506,7 @@ function nape(t) {
 }
 
 function reqZ(t) {
+  if (game.ultFree > 0) return 0;
   let z = nape(t).z * faction.req;
   if (t.stun > 0) z *= 0.6;
   if (t.boss) z = Math.min(z, 210);
@@ -716,7 +718,7 @@ function finishRun(won) {
 
 function hurtPlayer(t) {
   const p = player;
-  if (p.inv > 0) return;
+  if (p.inv > 0 || game.ultShield > 0) return;
   p.hp -= 1;
   p.inv = 2 * (stats.invMul || 1);
   sfx('hurt', { vol: 0.9 });
@@ -750,6 +752,7 @@ function hurtPlayer(t) {
 function killTitan(t) {
   const n = nape(t);
   dexRecord(t);
+  ultGain(t.boss ? 6 : t.elite ? 3 : 1);
   if (t.elite) dropChest(t.x, t.y);
   t.dying = 0.001;
   t.flash = 0.035;
@@ -814,7 +817,7 @@ function gainXp(n) {
     game.need = Math.round(game.need * 1.2 + 3);
     pendingLevels++;
   }
-  if (pendingLevels > 0 && state === 'play') openLevelUp();
+  if (pendingLevels > 0 && state === 'play' && !game.ultFx) openLevelUp();
 }
 
 function openLevelUp() {
@@ -904,6 +907,7 @@ function updateFly(dt) {
   if (fly) { sp = stats.speed; k = 4; }
   else if (onFloor) { sp = RUN; k = moving ? 8 : 10; }
   else { sp = stats.speed * 0.7; k = moving ? 1.2 : 0.5; }
+  if (game.ultSpeed > 0) { sp *= 2.2; k *= 1.5; }
   p.vx = lerp(p.vx, inp.x * sp, 1 - Math.exp(-k * dt));
   p.vy = lerp(p.vy, inp.y * sp, 1 - Math.exp(-k * dt));
   if (fly) {
@@ -1376,8 +1380,10 @@ function update(dt) {
       sfx('victory', { vol: 0.9 });
       return;
     }
-    if (player.mode === 'attack') updateAttack(dt);
-    else updateFly(dt);
+    if (!ultTick(dt)) {
+      if (player.mode === 'attack') updateAttack(dt);
+      else updateFly(dt);
+    }
     player.inv = Math.max(0, player.inv - dt);
     pushTrail();
     player.runPhase += dt * Math.hypot(player.vx, player.vy) * 0.05;
@@ -1636,6 +1642,7 @@ function drawPlayer() {
   if (flying) { oy = Math.round(Math.sin(now * 6)); o.shear = clamp(p.vx / 1800, -0.28, 0.28); }
   if (p.mode === 'attack' && p.phase === 'cut') { o.sx = 1.15; o.sy = 1.15; }
   drawTrail();
+  if (game.ultShield > 0) drawUltAura(p, now);
   drawSprite(p.inv > 1.6 ? variant(img, 'white') : gold ? variant(img, 'gold') : img, sx(p.x), sy(p.y, p.z) + oy, o);
   if (gold && Math.random() < 0.3) particles.push({ x: p.x + rand(-14, 14), y: p.y - KZ * p.z - rand(4, 40), vx: rand(-10, 10), vy: rand(-30, -10), life: 0.6, max: 0.6, size: rand(1, 2.5), g: 0, kind: 'flare', color: '#ffd36e' });
 }
@@ -1743,6 +1750,7 @@ function drawWorld() {
   for (const p of props) if (inView(p.x, p.y, 80)) dl(p.y, drawProp, p);
   for (const a of allies) dl(a.y + a.z * 0.15, drawAlly, a);
   for (const c of chests) if (inView(c.x, c.y, 80)) dl(c.y, drawChestsWorld, c);
+  drawUltWorld();
   if (state !== 'menu') dl(player.y + player.z * 0.15, drawPlayer, null);
   for (let i = 1; i < dlN; i++) {
     const e = DL[i];
@@ -2442,6 +2450,7 @@ addEventListener('keydown', e => {
     return;
   }
   if (state === 'play' && e.code === 'Space') engage();
+  if (state === 'play' && e.code === 'KeyE') ultUse();
 });
 
 addEventListener('keyup', e => {
