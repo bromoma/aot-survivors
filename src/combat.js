@@ -51,6 +51,15 @@ const BOSSES = [
 trFields(Object.values(SKILLS), ['name']);
 trFields(Object.values(PASSIVES), ['name']);
 trFields(BOSSES, ['name', 'wp']);
+const EVOS = {
+  spin: { need: 'orbit', name: 'Ураган Леви', text: 'Вихрь каждые 1,8 с, на 40% шире и рубит титанов на любой высоте' },
+  flash: { need: 'range', name: 'Солнце над стеной', text: 'Раз в 5 с ослепляет всех титанов вокруг на 4 с' },
+  cannon: { need: 'speed', name: 'Громовые копья', text: 'Пять копий: взрыв убивает титанов до 15 м, остальных оглушает' },
+  ally: { need: 'hp', name: 'Отряд Леви', text: 'Четыре элитных разведчика, атакуют каждые 2,5 с' },
+  trap: { need: 'glide', name: 'Паутина Ханджи', text: 'Сеть ловит до шести титанов на 9 с и стягивает их в центр' },
+};
+trFields(Object.values(EVOS), ['name']);
+function evoReady(id) { return stats.skills[id] >= SKILLS[id].max && (stats.pass[EVOS[id].need] || 0) >= 3 && !stats.evo[id]; }
 let allies = [], traps = [], shots = [], rocks = [], marks = [], spikes = [];
 
 function combatReset() {
@@ -61,6 +70,7 @@ function combatReset() {
   marks = [];
   spikes = [];
   stats.skills = { spin: 0, flash: 0, cannon: 0, ally: 0, trap: 0 };
+  stats.evo = {};
   stats.pass = { speed: 0, range: 0, orbit: 0, hp: 0, heal: 0, glide: 0 };
   game.sk = { spin: 3, flash: 2, cannon: 1.5, trap: 3 };
   game.boss = null;
@@ -89,6 +99,8 @@ function rollChoices(n) {
   }
   for (const [id, P] of Object.entries(PASSIVES)) if (stats.pass[id] < P.max) pool.push({ kind: 'pass', id, w: 1 });
   const out = [];
+  const evo = Object.keys(EVOS).filter(evoReady);
+  if (evo.length) out.push({ kind: 'evo', id: pick(evo) });
   if (!owned && game.level <= 4) {
     const fresh = pool.filter(p => p.kind === 'skill');
     if (fresh.length) {
@@ -113,6 +125,24 @@ function rollChoices(n) {
 }
 
 function makeChoice(p) {
+  if (p.kind === 'evo') {
+    const E = EVOS[p.id], S = SKILLS[p.id];
+    return {
+      id: p.id, kind: 'evo', name: E.name, icon: S.icon, lvl: S.max, max: S.max, isNew: true,
+      desc: () => tr(E.text) + ' (' + S.name + ' + ' + PASSIVES[E.need].name + ')',
+      apply: () => {
+        stats.evo[p.id] = true;
+        if (p.id === 'ally') syncAllies();
+        game.sk[p.id] = 0.3;
+        game.banner = { text: tr('Эволюция!'), sub: E.name, t: 2.4, win: true };
+        game.flashT = 0.15;
+        rings.push({ x: player.x, y: player.y, r: 300, life: 0.35, color: '#ffd36e' });
+        for (let i = 0; i < 60; i++) { const a = rand(0, TAU), s = rand(150, 480); particles.push({ x: player.x, y: player.y - KZ * player.z, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 0.9, max: 0.9, size: rand(2, 4), g: 120, kind: 'flare', color: pick(['#ffd36e', '#fff6c8', '#ff9a3a']) }); }
+        sfx('levelup', { vol: 0.9 });
+        sfx('crystal', { vol: 0.7 });
+      },
+    };
+  }
   if (p.kind === 'skill') {
     const S = SKILLS[p.id], l = stats.skills[p.id];
     return {
@@ -151,14 +181,15 @@ function updateSkills(dt) {
   if (L.spin) {
     sk.spin -= dt;
     if (sk.spin <= 0) {
-      const S = SKILLS.spin, rad = S.rad[L.spin - 1];
-      sk.spin = S.cd[L.spin - 1] * stats.cdMul;
-      rings.push({ x: p.x, y: p.y, r: rad, life: 0.35, color: '#dfe8f0' });
-      for (let i = 0; i < 4; i++) slashes.push({ x: p.x, y: p.y - KZ * p.z, ang: i * Math.PI / 2, life: 0.22, big: true });
+      const S = SKILLS.spin, ev = stats.evo.spin, rad = S.rad[L.spin - 1] * (ev ? 1.4 : 1);
+      sk.spin = (ev ? 1.8 : S.cd[L.spin - 1]) * stats.cdMul;
+      rings.push({ x: p.x, y: p.y, r: rad, life: 0.35, color: ev ? '#ffd36e' : '#dfe8f0' });
+      if (ev) rings.push({ x: p.x, y: p.y, r: rad * 0.7, life: 0.3, color: '#ffffff' });
+      for (let i = 0; i < (ev ? 8 : 4); i++) slashes.push({ x: p.x, y: p.y - KZ * p.z, ang: i * TAU / (ev ? 8 : 4), life: 0.22, big: true });
       sfx('spin', { vol: 0.7 });
       for (const t of titans) {
         if (t.dying || t.boss) continue;
-        if (Math.hypot(t.x - p.x, t.y - p.y) < rad + t.H * 0.1 && p.z >= reqZ(t) * 0.5) cutTitan(t);
+        if (Math.hypot(t.x - p.x, t.y - p.y) < rad + t.H * 0.1 && (ev || p.z >= reqZ(t) * 0.5)) cutTitan(t);
       }
     }
   }
@@ -166,6 +197,17 @@ function updateSkills(dt) {
     sk.flash -= dt;
     if (sk.flash <= 0) {
       const S = SKILLS.flash, rad = S.rad[L.flash - 1];
+      if (stats.evo.flash) {
+        const hit = titans.filter(t => !t.dying && dist2(t, p) < 1100);
+        if (hit.length) {
+          sk.flash = 5 * stats.cdMul;
+          game.flashT = 0.2;
+          rings.push({ x: p.x, y: p.y, r: 1100, life: 0.4, color: '#fff6c8' });
+          for (let i = 0; i < 40; i++) { const a = rand(0, TAU), s = rand(200, 600); particles.push({ x: p.x, y: p.y - 260, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 0.8, max: 0.8, size: rand(2, 5), g: 40, kind: 'flare', color: '#fff2b0' }); }
+          sfx('flashbang', { vol: 0.9 });
+          for (const t of hit) stunTitan(t, 4, 'flash');
+        } else sk.flash = 0.5;
+      } else {
       let best = null, bc = 0;
       for (const t of titans) {
         if (t.dying || dist2(t, p) > 750) continue;
@@ -186,6 +228,7 @@ function updateSkills(dt) {
         sfx('flashbang', { x: cx, y: cy, vol: 0.8 });
         for (const t of titans) if (!t.dying && dist2(t, best) < rad) stunTitan(t, S.dur[L.flash - 1], 'flash');
       } else sk.flash = 0.5;
+      }
     }
   }
   if (L.cannon) {
@@ -195,11 +238,11 @@ function updateSkills(dt) {
       const near = titans.filter(t => !t.dying && dist2(t, p) < 650);
       if (near.length) {
         sk.cannon = S.cd[L.cannon - 1] * stats.cdMul;
-        const n = Math.min(near.length, S.shots[L.cannon - 1]);
+        const n = Math.min(near.length, stats.evo.cannon ? 5 : S.shots[L.cannon - 1]);
         for (let i = 0; i < n; i++) {
           const t = near.splice(Math.floor(Math.random() * near.length), 1)[0];
           const side = pick([[-1, 0], [1, 0], [0, -1], [0, 1]]);
-          shots.push({ x0: t.x + side[0] * 900 + rand(-200, 200), y0: t.y + side[1] * 900 + rand(-200, 200), t: 0, dur: 0.55 + i * 0.12, target: t, x: t.x, y: t.y, stun: S.stun[L.cannon - 1] });
+          shots.push({ x0: t.x + side[0] * 900 + rand(-200, 200), y0: t.y + side[1] * 900 + rand(-200, 200), t: 0, dur: 0.55 + i * 0.12, target: t, x: t.x, y: t.y, stun: S.stun[L.cannon - 1], evo: !!stats.evo.cannon });
         }
         sfx('boom', { vol: 0.35, rate: 1.4, tag: 'cannonfire' });
       } else sk.cannon = 0.5;
@@ -214,7 +257,8 @@ function updateSkills(dt) {
       if (tgt) {
         sk.trap = S.cd[L.trap - 1] * stats.cdMul;
         const ahead = 60;
-        traps.push({ x: tgt.x + Math.cos(tgt.face) * ahead, y: tgt.y + Math.sin(tgt.face) * ahead, r: 95, life: 10, caps: S.caps[L.trap - 1], dur: S.dur[L.trap - 1], caught: [], seed: Math.random() * 10 });
+        const ev = stats.evo.trap;
+        traps.push({ x: tgt.x + Math.cos(tgt.face) * ahead, y: tgt.y + Math.sin(tgt.face) * ahead, r: ev ? 150 : 95, life: 10, caps: ev ? 6 : S.caps[L.trap - 1], dur: ev ? 9 : S.dur[L.trap - 1], caught: [], seed: Math.random() * 10, evo: ev });
         sfx('snap', { vol: 0.5, tag: 'trapset' });
       } else sk.trap = 0.6;
     }
@@ -232,7 +276,12 @@ function updateShots(dt) {
     if (s.t >= s.dur && !s.done) {
       s.done = true;
       const t = s.target;
-      if (t && !t.dying) {
+      if (s.evo) {
+        rings.push({ x: s.x, y: s.y, r: 150, life: 0.35, color: '#ffb347' });
+        for (const o of titans) if (!o.dying && o !== t && Math.hypot(o.x - s.x, o.y - s.y) < 150) stunTitan(o, 1.6, 'cannon');
+      }
+      if (t && !t.dying && s.evo && !t.boss && t.H < 300) cutTitan(t);
+      else if (t && !t.dying) {
         stunTitan(t, s.stun, 'cannon');
         if (!t.boss || t.boss.kind !== 'armored') {
           const a = Math.atan2(t.y - player.y, t.x - player.x);
@@ -265,6 +314,7 @@ function updateTraps(dt) {
         if (trp.caught.length >= trp.caps) break;
       }
     }
+    if (trp.evo) for (const t of trp.caught) if (t.bound === trp && !t.dying) { t.x = lerp(t.x, trp.x, 1 - Math.exp(-1.5 * dt)); t.y = lerp(t.y, trp.y, 1 - Math.exp(-1.5 * dt)); }
     for (const t of trp.caught) if (t.bound === trp && (t.stun <= 0 || t.dying)) t.bound = null;
   }
   traps = traps.filter(trp => trp.life > 0 || trp.caught.some(t => t.bound === trp));
@@ -277,7 +327,7 @@ function allyHeroes() {
 }
 
 function syncAllies() {
-  const want = SKILLS.ally.count[stats.skills.ally - 1] || 0;
+  const want = stats.evo && stats.evo.ally ? 4 : SKILLS.ally.count[stats.skills.ally - 1] || 0;
   const pool = allyHeroes();
   while (allies.length < want) {
     const hero = pool[allies.length % pool.length];
@@ -287,7 +337,7 @@ function syncAllies() {
 
 function updateAllies(dt) {
   if (!allies.length) return;
-  const L = stats.skills.ally, cd = SKILLS.ally.cd[L - 1] * stats.cdMul * (stats.allyMul || 1);
+  const L = stats.skills.ally, cd = (stats.evo.ally ? 2.5 : SKILLS.ally.cd[L - 1]) * stats.cdMul * (stats.allyMul || 1);
   const taken = new Set(allies.map(a => a.target).filter(Boolean));
   for (const a of allies) {
     const ox = a.x, oy = a.y;
@@ -372,7 +422,8 @@ function updateRocks(dt) {
 }
 
 function bossPlan() {
-  const slots = [120, 240, 345, 450, 555], tiers = [0, 0, 1, 1, 2], used = new Set();
+  const cp = challengeBossPlan();
+  const slots = cp ? cp.map(x => x[0]) : [120, 240, 345, 450, 555], tiers = cp ? cp.map(x => x[1]) : [0, 0, 1, 1, 2], used = new Set();
   return slots.map((at, i) => {
     let pool = BOSSES.filter(b => b.tier === tiers[i] && !used.has(b.kind) && SPR['boss_' + b.kind + '_down']);
     if (!pool.length) pool = BOSSES.filter(b => b.tier === tiers[i] && !used.has(b.kind));
@@ -396,7 +447,7 @@ function bossRetreat(t) {
 function bossSchedule() {
   if (game.boss) {
     const B = game.boss, nx = game.bossQueue && game.bossQueue[0];
-    if (nx && !B.dying && game.time >= nx.at && game.time - (B.boss.born || 0) > 90) bossRetreat(B);
+    if (nx && !B.dying && game.time >= nx.at && game.time - (B.boss.born || 0) > (faction.challenge === 'bosses' ? 55 : 90)) bossRetreat(B);
     return;
   }
   if (!game.bossQueue || !game.bossQueue.length) {
@@ -837,10 +888,9 @@ function bossHit(t) {
     killTitan(t);
     gainXp(25 + game.bossKills * 10);
     if (player.hp < stats.maxHp) player.hp++;
-    game.banner = { text: b.name, sub: tr('Повержен! Награда — улучшение'), t: 2.6, win: true };
+    game.banner = { text: b.name, sub: tr('Повержен! Забери сундук трофеев'), t: 2.6, win: true };
     sfx('victory', { vol: 0.7 });
-    pendingLevels++;
-    if (state === 'play') openLevelUp();
+    dropChest(t.x, t.y, true);
     return;
   }
   bossRise(t);

@@ -22,6 +22,7 @@
           }
           player.hp = Math.max(player.hp, 3);
           if (state === 'levelup') choose(0);
+          if (state === 'loot') closeLoot();
         }
         update(1 / 60);
       }

@@ -22,7 +22,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     for (const nm of ['update', 'render', 'worldTick', 'drawWorld', 'drawGround', 'drawParticles', 'updateTitans', 'syncWorldLists', 'drawWorldTexts']) wrapT(nm);
     const os2 = UI.sync; UI.sync = function (dt) { const t = performance.now(); os2(dt); (window.__cur = window.__cur || {}).sync = performance.now() - t; };
     window.__ft = []; let l = performance.now(); const f = t => { const d = t - l; __ft.push(d); if (d > 40) __slow.push([Math.round(d), Object.fromEntries(Object.entries(window.__cur || {}).map(([k, v]) => [k, +v.toFixed(1)]))]); window.__cur = {}; l = t; requestAnimationFrame(f); }; requestAnimationFrame(f);
-    let k = 0; window.__steer = setInterval(() => { k++; keys.KeyD = true; keys.KeyW = (k % 80) < 40; keys.KeyS = !keys.KeyW; player.hp = 999; if (state === 'levelup') choose(0); }, 50); })()`);
+    let k = 0; window.__steer = setInterval(() => { k++; keys.KeyD = true; keys.KeyW = (k % 80) < 40; keys.KeyS = !keys.KeyW; player.hp = 999; if (state === 'levelup') choose(0); if (state === 'loot') closeLoot(); }, 50); })()`);
   await sleep(+secs * 1000);
   const r = await ev(`(() => { const a = __ft.slice(10).sort((x, y) => x - y), n = a.length, g = __gen.slice().sort((x, y) => x - y);
     return { frames: n, fps: (1000 / (a.reduce((s, v) => s + v, 0) / n)).toFixed(1), median: a[n >> 1].toFixed(1), p95: a[Math.floor(n * 0.95)].toFixed(1), p99: a[Math.floor(n * 0.99)].toFixed(1), max: a[n - 1].toFixed(0), over33: a.filter(v => v > 33).length, over50: a.filter(v => v > 50).length,

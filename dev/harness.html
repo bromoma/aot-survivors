@@ -3,7 +3,7 @@
 <body><script>window.onerror=(m,s,l,c,e)=>{document.body.setAttribute('data-err',m+' @'+l+':'+c+' '+(e&&e.stack||'').slice(0,400))};window.requestAnimationFrame=()=>0;window.ASSET_BASE='../';window.addEventListener('unhandledrejection',e=>{document.body.setAttribute('data-err','REJ '+(e.reason&&(e.reason.message+' '+(e.reason.stack||'').slice(0,300))))});</script>
 <canvas id="game"></canvas>
 <script src="../src/core.js"></script><script src="../src/i18n.js"></script><script src="../src/terrain.js"></script><script src="../src/fx.js"></script>
-<script src="../src/assets.js"></script><script src="../src/audio.js"></script><script src="../src/combat.js"></script><script src="../src/meta.js"></script><script src="../src/heroes.js"></script><script src="../src/gear.js"></script><script src="../src/gacha.js"></script><script src="../src/world.js"></script><script src="../src/juice.js"></script><script src="../src/game.js"></script>
+<script src="../src/assets.js"></script><script src="../src/audio.js"></script><script src="../src/combat.js"></script><script src="../src/meta.js"></script><script src="../src/heroes.js"></script><script src="../src/gear.js"></script><script src="../src/gacha.js"></script><script src="../src/loot.js"></script><script src="../src/challenge.js"></script><script src="../src/dex.js"></script><script src="../src/world.js"></script><script src="../src/juice.js"></script><script src="../src/game.js"></script>
 <script>
 const LOG = []; let DEATHS = 0;
 const log = s => LOG.push(s);
@@ -15,6 +15,7 @@ function finish() {
   const l = document.createElement('pre'); l.id = 'log'; l.textContent = LOG.join(' | '); document.body.appendChild(l);
 }
 function bot(i) {
+  if (typeof chests !== 'undefined' && chests.length) { const c = chests[0]; for (const k of ['KeyW', 'KeyA', 'KeyS', 'KeyD']) keys[k] = false; const dx = c.x - player.x, dy = c.y - player.y; if (Math.abs(dx) > 30) keys[dx > 0 ? 'KeyD' : 'KeyA'] = true; if (Math.abs(dy) > 30) keys[dy > 0 ? 'KeyS' : 'KeyW'] = true; return; }
   const t = nearestTitan(5000);
   for (const k of ['KeyW', 'KeyA', 'KeyS', 'KeyD']) keys[k] = false;
   if (!t) return;
@@ -55,12 +56,13 @@ function runTest() {
       let a = performance.now();
       update(1 / 60);
       upd += performance.now() - a;
-      if (state === 'levelup') choose(0);
+      if (state === 'levelup') choose(Math.max(0, choices.findIndex(c => c.kind === 'evo')));
+      if (state === 'loot') closeLoot();
       if (state === 'over') { if (!DEATHS) log('FIRSTDEATH ' + game.time.toFixed(0) + ' lvl ' + game.level); DEATHS++; state = 'play'; player.hp = 5; }
       if (i % 3 === 0) { a = performance.now(); render(); const d = performance.now() - a; rnd += d; rn++; worst = Math.max(worst, d); if (d > 120) log(`slow ${d.toFixed(0)}ms t=${game.time.toFixed(1)} ` + JSON.stringify(Object.fromEntries(Object.entries(FP).filter(([k, v]) => v > 3).map(([k, v]) => [k, Math.round(v)])))); for (const k in FP) delete FP[k]; }
     }
     if (HS.includes('meta')) { if (state === 'play') finishRun(false); log(`META tokens ${save.tokens} reward ${game.reward} state ${state} t ${game.time.toFixed(0)} | done ${achievementsState().filter(a => a.done).map(a => a.id).join(',')} | daily ${JSON.stringify(dailyState().map(t => t.value + '/' + t.goal))} | stats ${JSON.stringify(save.stats)}`); }
-    log(`gt ${game.time.toFixed(0)} state ${state} skills ${JSON.stringify(stats.skills)} pass ${JSON.stringify(stats.pass)} bossIdx ${game.bossIdx} bossKills ${game.bossKills} boss ${game.boss ? game.boss.boss.kind + ' hp' + game.boss.boss.hp : '-'} deaths ${DEATHS} hurt ${JSON.stringify(HURT)} | ${BOSSLOG.join(', ')}`); log(`sim: update ${(upd / N).toFixed(2)}ms, render avg ${(rnd / rn).toFixed(2)}ms worst ${worst.toFixed(0)}ms, titans ${titans.length}, kills ${game.kills}, snapAt ${snapAt}`);
+    log(`gt ${game.time.toFixed(0)} state ${state} loot ${game.lootTokens || 0} evo ${JSON.stringify(stats.evo)} skills ${JSON.stringify(stats.skills)} pass ${JSON.stringify(stats.pass)} bossIdx ${game.bossIdx} bossKills ${game.bossKills} boss ${game.boss ? game.boss.boss.kind + ' hp' + game.boss.boss.hp : '-'} deaths ${DEATHS} hurt ${JSON.stringify(HURT)} | ${BOSSLOG.join(', ')}`); log(`sim: update ${(upd / N).toFixed(2)}ms, render avg ${(rnd / rn).toFixed(2)}ms worst ${worst.toFixed(0)}ms, titans ${titans.length}, kills ${game.kills}, snapAt ${snapAt}`);
     const a = performance.now();
     for (let i = 0; i < 20; i++) render();
     log('steady ' + ((performance.now() - a) / 20).toFixed(2) + 'ms');

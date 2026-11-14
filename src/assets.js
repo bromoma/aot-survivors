@@ -79,7 +79,7 @@ function loadAssets(onProgress) {
   return loadAtlas(all, onProgress).then(list => {
     let done = 0;
     const base = all.length - list.length ? 0.9 : 0;
-    return Promise.all(list.map(([key, src]) => loadImage(src).then(im => { SPR[key] = im ? toCanvas(im) : null; done++; if (onProgress) onProgress(base + (1 - base) * done / list.length); })));
+    return Promise.all(list.map(([key, src]) => loadImage(src).then(im => { SPR[key] = im ? toCanvas(im) : null; done++; if (onProgress) onProgress(base + (1 - base) * done / list.length); }))).then(() => { if (onProgress) onProgress(1); });
   }).then(() => {
     for (const t of WALK_BASE) for (const h of sizesOf(t)) {
       for (const d of ['down', 'left', 'up']) { const w = SPR[`titan_${t}_${h}_walk0_${d}`]; if (w) SPR[`titan_${t}_${h}_${d}`] = w; }

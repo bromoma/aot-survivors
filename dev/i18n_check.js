@@ -23,7 +23,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   for (const st of steps) { console.log('step', await ev(st)); await sleep(1500); }
   const ph = []; for (let i = 0; i < 25; i++) { ph.push(await ev("window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Enter', key: 'Enter' })); state + ':' + UI.rvPhase()")); await sleep(700); } console.log(ph.join(' '));
   console.log('after pulls state', await ev('state'));
-  await ev(`(() => { start(); SND.setMuted(true); for (let i = 0; i < 600; i++) { player.hp = 9; update(1 / 30); if (state === 'levelup') { UI.sync(0); choose(0); } } spawnBoss(BOSSES[5]); for (let i = 0; i < 300; i++) { player.hp = 9; if (i % 20 === 0) engage(); update(1 / 30); if (state === 'levelup') { UI.sync(0); choose(0); } } UI.sync(0); state = 'paused'; UI.sync(0); state = 'play'; finishRun(true); state = 'win'; UI.sync(0); return 1; })()`);
+  await ev(`(() => { start(); SND.setMuted(true); for (let i = 0; i < 600; i++) { player.hp = 9; update(1 / 30); if (state === 'levelup') { UI.sync(0); choose(0); } if (state === 'loot') { UI.sync(0); closeLoot(); } } spawnBoss(BOSSES[5]); for (let i = 0; i < 300; i++) { player.hp = 9; if (i % 20 === 0) engage(); update(1 / 30); if (state === 'levelup') { UI.sync(0); choose(0); } if (state === 'loot') { UI.sync(0); closeLoot(); } } UI.sync(0); state = 'paused'; UI.sync(0); state = 'play'; finishRun(true); state = 'win'; UI.sync(0); return 1; })()`);
   await sleep(500);
   const miss = await ev('[...I18N_MISSING]');
   const cyr = await ev(`[...document.querySelectorAll('#ui *')].filter(e => e.children.length === 0 && /[А-Яа-яЁё]/.test(e.textContent) && e.offsetParent).map(e => e.textContent.trim().slice(0, 60)).slice(0, 30)`);

@@ -694,3 +694,79 @@ img.chest-ic { width: 22px; height: 22px; image-rendering: pixelated; }
   .hub-menu .k-btn { min-height: 0; padding-top: 0; padding-bottom: 0; }
   .logo { top: 2%; }
 }
+
+/* evolutions */
+.up-card.evo { box-shadow: 0 0 0 3px #ffcf3a, 0 0 26px 6px rgba(255, 207, 58, 0.75); animation: evoGlow 0.9s ease-in-out infinite alternate; }
+@keyframes evoGlow { from { filter: brightness(1); } to { filter: brightness(1.18); } }
+.up-card.evo .un { color: #b06a00; }
+.evo-tag { color: #b06a00; letter-spacing: 2px; }
+#hud .skills .sk.evo { box-shadow: 0 0 10px 2px rgba(255, 207, 58, 0.8); }
+#hud .skills .sk.evo span { color: #ffd36e; }
+
+/* loot chest */
+#loot { pointer-events: auto; }
+#loot .shade { position: absolute; inset: 0; background: rgba(8, 6, 12, 0.6); }
+.loot-box { position: absolute; left: 50%; top: 48%; transform: translate(-50%, -50%); text-align: center; width: min(520px, 92vw); }
+.loot-title { font-size: 40px; color: #ffd36e; text-shadow: 3px 3px 0 #1e0e06, 0 0 16px #ffcf3a; margin-bottom: 8px; }
+.loot-box .chest { margin: 0 auto 10px; }
+.loot-items { display: flex; flex-direction: column; gap: 6px; align-items: center; min-height: 40px; }
+.loot-it { display: flex; align-items: center; gap: 10px; padding: 4px 14px; width: min(380px, 86vw); text-align: left; animation: cardIn 0.3s steps(4) both; }
+.loot-it canvas { width: calc(16px * var(--u)); height: calc(16px * var(--u)); image-rendering: pixelated; }
+.loot-it .ln { font-size: 20px; }
+.loot-it.evo { box-shadow: 0 0 0 3px #ffcf3a, 0 0 22px 4px rgba(255, 207, 58, 0.7); }
+.loot-extra { margin-top: 6px; font-size: 20px; }
+#loot .next { position: static; transform: none; margin-top: 10px; }
+/* layer stacking: HUD children use z-index for touch controls, keep them inside the HUD layer */
+#ui #hud { z-index: 1; }
+#ui #levelup, #ui #pause, #ui #result, #ui #loot { z-index: 3; }
+#ui #reveal { z-index: 4; }
+.loot-box { top: 50%; }
+@media (max-height: 700px) { .loot-title { font-size: 30px; } .loot-box .chest { width: calc(60px * var(--u)); height: calc(60px * var(--u)); } }
+.loot-items { width: 100%; }
+.loot-it { margin: 0 auto; }
+#loot .shade { background: rgba(8, 6, 12, 0.74); }
+#ui:has(#loot.on) #hud .tip-line, #ui:has(#loot.on) #hud .banner, #ui:has(#levelup.on) #hud .tip-line { display: none; }
+.loot-it { animation: lootIn 0.3s steps(4) both; }
+@keyframes lootIn { from { transform: translateY(12px) scale(0.7); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* weekly challenge */
+.chal { margin: 10px auto 0; padding: 6px 14px; cursor: pointer; pointer-events: auto; text-align: center; max-width: 760px; background-image: linear-gradient(rgba(60, 20, 90, 0.08), rgba(60, 20, 90, 0.16)); }
+.chal .ck { font-size: 15px; color: #7a34b0; letter-spacing: 1px; text-transform: uppercase; }
+.chal .cn { font-size: 26px; line-height: 1.05; }
+.chal .cr { font-size: 15px; color: #b06a00; margin-top: 2px; }
+.chal.done .cr { color: #2c7030; }
+@media (max-height: 820px) { .chal { padding: 3px 12px; margin-top: 6px; } .chal .cn { font-size: 22px; } .faction .desc { min-height: 0; } }
+@media (max-height: 820px) and (min-width: 701px) {
+  .faction canvas { width: calc(24px * var(--u)); height: calc(20px * var(--u)); margin: 2px auto; }
+  .faction .fname { font-size: 24px; }
+  .faction .desc { font-size: 15px; line-height: 1.15; }
+  .faction { padding: 2px 6px; }
+  .threat { margin-top: 6px; }
+  .threat .th { min-width: 38px; padding: 2px 6px; }
+  .chal .muted.small { display: none; }
+  [data-s="battle"] .buttons { margin-top: 6px; }
+  [data-s="battle"] .center.muted { display: none; }
+}
+
+/* titanopedia */
+.dex-v { width: min(980px, 95vw); }
+.dex-v .head { display: flex; align-items: center; gap: 12px; }
+.dex-coll { flex: 1; color: var(--ink-muted); }
+.dex-left { flex: 1.3; min-width: 0; }
+.dex-right { flex: 1; min-width: 0; }
+.dex-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.dex-it { position: relative; text-align: center; padding: 3px; cursor: pointer; pointer-events: auto; min-height: calc(46px * var(--u)); }
+.dex-it canvas { height: calc(30px * var(--u)); width: auto; max-width: 100%; image-rendering: pixelated; display: block; margin: 0 auto; object-fit: contain; }
+.dex-it.unk canvas, .dex-big.unk canvas { filter: brightness(0) opacity(0.55); }
+.dex-it.boss { background-image: linear-gradient(rgba(120, 30, 20, 0.06), rgba(120, 30, 20, 0.14)); }
+.dex-it .dn { font-size: 14px; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dex-it .dt { font-size: 13px; color: #b06a00; letter-spacing: 1px; }
+.dex-it .dx { position: absolute; right: 4px; top: 2px; background: #c0302a; color: #fff; font-size: 13px; padding: 0 5px; }
+.dex-it.cl { box-shadow: 0 0 0 3px #ffcf3a; }
+.dex-info { padding: 8px 10px; margin-bottom: 6px; }
+.dex-big { width: calc(44px * var(--u)); height: calc(52px * var(--u)); flex: none; display: flex; align-items: flex-end; justify-content: center; }
+.dex-big canvas { max-width: 100%; max-height: 100%; image-rendering: pixelated; }
+.dex-next { color: #b06a00; margin-top: 4px; }
+.dex-right .list { font-size: 15px; }
+@media (max-width: 700px) { .dex-v .row { flex-direction: column; } .dex-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (max-height: 820px) { .dex-it { min-height: calc(38px * var(--u)); } .dex-it canvas { height: calc(24px * var(--u)); } }

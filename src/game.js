@@ -385,8 +385,8 @@ function spawnCiv(x, y) {
 
 let worldFor = -1, worldUsed = false;
 function reset() {
-  threat = clamp(save.threatSel && save.threatSel[FACTIONS[factionSel].id] || 1, 1, threatMax(factionSel));
-  faction = withThreat(FACTIONS[factionSel], threat);
+  threat = challengeOn ? 1 : clamp(save.threatSel && save.threatSel[FACTIONS[factionSel].id] || 1, 1, threatMax(factionSel));
+  faction = challengeOn ? applyChallenge(FACTIONS[factionSel]) : withThreat(FACTIONS[factionSel], threat);
   if (worldFor !== factionSel || worldUsed) {
     genWorld();
     worldFor = factionSel;
@@ -439,12 +439,15 @@ function reset() {
   for (let i = 0; i < (faction.map === 'field' ? 10 : 5); i++) spawnFlock();
   pendingLevels = 0;
   game = { time: 0, kills: 0, lost: 0, xp: 0, level: 1, need: 5, spawnT: 2, shake: 0, hitstop: 0, combo: 0, lastKill: -10, healCount: 0, spinT: 3, endless: false, civT: 0, flareT: 15, paidKills: 0, paidTime: 0, reward: 0 };
+  game.winTime = faction.challenge ? CHAL_TIME : WIN_TIME;
   combatReset();
   juiceReset();
+  lootReset();
   if (hero.id === 'levi') stats.skills.spin = 1;
   if (hero.id === 'hange') stats.skills.trap = 1;
   metaRunStart();
   heroRunStart();
+  challengeStart();
   for (let i = 0; i < faction.base; i++) spawnTitan();
 }
 
@@ -455,7 +458,7 @@ function requestReset() {
 
 function start() {
   resetQueued = 0;
-  save.faction = factionSel;
+  if (!challengeOn) save.faction = factionSel;
   persist();
   reset();
   worldUsed = true;
@@ -533,6 +536,8 @@ const KINDS = {
 const kindReady = k => !!SPR[`titan_${k}_${sizesOf(k)[0]}_down`];
 
 function rollKind() {
+  const ck = challengeKind();
+  if (ck) return ck;
   const t = game.time, d = difficulty(), m = faction.map;
   if (t > faction.abFrom && Math.random() < 0.08 + d * faction.abMax) return 'aberrant';
   const opts = [
@@ -679,6 +684,7 @@ function finishRun(won) {
     game.unlocked = threat + 1;
   }
   const greed = 1 + ((save.meta && save.meta.greed) || 0) * 0.1;
+  if (!game.chalChecked) { game.chalChecked = true; game.chalReward = challengeReward(won); }
   const hx = runHeroXp(won, game.kills - game.paidKills, game.time - game.paidTime, game.bossKills - (game.paidBoss || 0));
   if (save.chars[player.char]) {
     const ups = addHeroXp(player.char, hx);
@@ -743,6 +749,8 @@ function hurtPlayer(t) {
 
 function killTitan(t) {
   const n = nape(t);
+  dexRecord(t);
+  if (t.elite) dropChest(t.x, t.y);
   t.dying = 0.001;
   t.flash = 0.035;
   t.fallDir = Math.cos(t.face) >= 0 ? 1 : -1;
@@ -1362,7 +1370,7 @@ function update(dt) {
     if (game.hitstop > 0) { game.hitstop -= dt; return; }
     if (game.slowT > 0) { game.slowT -= dt; dt *= 0.3; }
     game.time += dt;
-    if (!game.endless && game.time >= WIN_TIME) {
+    if (!game.endless && game.time >= (game.winTime || WIN_TIME)) {
       state = 'win';
       finishRun(true);
       sfx('victory', { vol: 0.9 });
@@ -1377,6 +1385,7 @@ function update(dt) {
     updateTitans(dt);
     updateLife(dt);
     updateSkills(dt);
+    updateLoot(dt);
     bossSchedule();
     if (game.flashT > 0) game.flashT -= dt;
     if (game.banner && (game.banner.t -= dt) <= 0) game.banner = null;
@@ -1520,6 +1529,16 @@ function drawTitan(t) {
   const dx = Math.round(x - img.width / 2 + ox), dy = y - img.height + oy;
   drawBoundCables(t, dx, dy, img);
   drawSprite(t.flash > 0 ? variant(img, 'white') : img, x + ox, y + oy, pose);
+  if (t.elite) {
+    const pulse = 0.25 + 0.2 * Math.sin(performance.now() / 160);
+    bctx.globalAlpha = pulse;
+    drawSprite(variant(img, 'gold'), x + ox, y + oy, pose);
+    bctx.globalAlpha = 1;
+    bctx.fillStyle = Math.floor(performance.now() / 200) % 2 ? '#ffd36e' : '#fff2b0';
+    const R = Math.round(t.size * 0.22);
+    for (let a = 0; a < TAU; a += 2 / R) bctx.fillRect(Math.round(x + Math.cos(a) * R), Math.round(y + Math.sin(a) * R * 0.35), 2, 1);
+    for (let i = 0; i < (t.hp || 1); i++) rect(bctx, Math.round(x - (t.hp - 1) * 4 + i * 8) - 2, dy - 8, 5, 5, '#ffd36e');
+  }
   if (t.rageT > 0 && Math.floor(performance.now() / 90) % 3 === 0) { bctx.globalAlpha = 0.25; drawSprite(variant(img, 'tint'), x + ox, y + oy, pose); bctx.globalAlpha = 1; }
   if (t.stun > 0) drawStunStars(dx + img.width / 2, dy - 3, t.boss ? 4 : 3);
   if (t.boss && !(t.boss.kneel > 0)) {
@@ -1723,6 +1742,7 @@ function drawWorld() {
   for (const r of riders) if (inView(r.x, r.y, 100)) dl(r.y, drawRider, r);
   for (const p of props) if (inView(p.x, p.y, 80)) dl(p.y, drawProp, p);
   for (const a of allies) dl(a.y + a.z * 0.15, drawAlly, a);
+  for (const c of chests) if (inView(c.x, c.y, 80)) dl(c.y, drawChestsWorld, c);
   if (state !== 'menu') dl(player.y + player.z * 0.15, drawPlayer, null);
   for (let i = 1; i < dlN; i++) {
     const e = DL[i];
@@ -1900,7 +1920,7 @@ function drawHud() {
     ctx.lineTo(ex + Math.cos(a + 2.4) * (s + UP), ey + Math.sin(a + 2.4) * (s + UP));
     ctx.lineTo(ex + Math.cos(a - 2.4) * (s + UP), ey + Math.sin(a - 2.4) * (s + UP));
     ctx.fill();
-    ctx.fillStyle = t.kind === 'giant' ? '#c58cff' : t.aberrant || t.kind === 'crawler' ? '#ffb347' : '#e5484d';
+    ctx.fillStyle = t.elite ? '#ffd36e' : t.kind === 'giant' ? '#c58cff' : t.aberrant || t.kind === 'crawler' ? '#ffb347' : '#e5484d';
     ctx.beginPath();
     ctx.moveTo(ex + Math.cos(a) * s, ey + Math.sin(a) * s);
     ctx.lineTo(ex + Math.cos(a + 2.4) * s, ey + Math.sin(a + 2.4) * s);
@@ -2287,6 +2307,7 @@ function render() {
   shk.y = game.shake && shakeOn ? Math.round((Math.sin(tt * 53 + 2) * 0.7 + Math.sin(tt * 29) * 0.3) * game.shake / ART) : 0;
   bctx.imageSmoothingEnabled = false;
   drawWorld();
+  drawNight();
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.imageSmoothingEnabled = false;
   const zt = zoomTransform();
@@ -2295,7 +2316,7 @@ function render() {
     ctx.drawImage(buf, Math.round((ox - zt.fx) * zt.z + zt.fx), Math.round((oy - zt.fy) * zt.z + zt.fy), Math.round(bw * PX * zt.z), Math.round(bh * PX * zt.z));
   } else ctx.drawImage(buf, -Math.round(camFrac.x * PX), -Math.round(camFrac.y * PX), bw * PX, bh * PX);
   drawWorldTexts();
-  if (state === 'play' || state === 'levelup') drawArrows();
+  if (state === 'play' || state === 'levelup') { drawArrows(); drawChestArrows(); }
   if (game.flashT > 0) {
     ctx.fillStyle = `rgba(255, 250, 230, ${Math.min(0.6, game.flashT * 5)})`;
     ctx.fillRect(0, 0, W, H);
@@ -2400,6 +2421,10 @@ addEventListener('keydown', e => {
       game.endless = true;
       state = 'play';
     }
+    return;
+  }
+  if (state === 'loot') {
+    if (confirm || e.code === 'Escape') closeLoot();
     return;
   }
   if (state === 'levelup') {
