@@ -451,6 +451,7 @@ function reset() {
   heroRunStart();
   challengeStart();
   for (let i = 0; i < faction.base; i++) spawnTitan();
+  tutStart();
 }
 
 let resetQueued = 0;
@@ -754,7 +755,7 @@ function killTitan(t) {
   const n = nape(t);
   dexRecord(t);
   ultGain(t.boss ? 6 : t.elite ? 3 : 1);
-  if (t.elite) dropChest(t.x, t.y);
+  if (t.elite) { dropChest(t.x, t.y); if (save.stats) save.stats.elites = (save.stats.elites || 0) + 1; }
   t.dying = 0.001;
   t.flash = 0.035;
   t.fallDir = Math.cos(t.face) >= 0 ? 1 : -1;
@@ -1374,7 +1375,7 @@ function update(dt) {
     updateJuice(dt);
     if (game.hitstop > 0) { game.hitstop -= dt; return; }
     if (game.slowT > 0) { game.slowT -= dt; dt *= 0.3; }
-    game.time += dt;
+    if (!tutHold()) game.time += dt;
     if (!game.endless && game.time >= (game.winTime || WIN_TIME)) {
       state = 'win';
       finishRun(true);
@@ -1394,6 +1395,7 @@ function update(dt) {
     updateSkills(dt);
     updateLoot(dt);
     skyTick(dt);
+    tutTick(dt);
     bossSchedule();
     if (game.flashT > 0) game.flashT -= dt;
     if (game.banner && (game.banner.t -= dt) <= 0) game.banner = null;

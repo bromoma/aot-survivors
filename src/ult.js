@@ -43,6 +43,7 @@ function ultUse() {
   game.ult = 0;
   game.ultNeed = Math.min(55, game.ultNeed + 6);
   game.ultUses = (game.ultUses || 0) + 1;
+  if (save.stats) save.stats.ults = (save.stats.ults || 0) + 1;
   game.banner = { text: ULTS[type].name, sub: charById(player.char).name, t: 1.6, win: true };
   sfx('horn', { vol: 0.5, rate: 1.2 });
   rings.push({ x: p.x, y: p.y, r: 260, life: 0.35, color: '#ffd36e' });

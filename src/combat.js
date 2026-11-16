@@ -132,6 +132,7 @@ function makeChoice(p) {
       desc: () => tr(E.text) + ' (' + S.name + ' + ' + PASSIVES[E.need].name + ')',
       apply: () => {
         stats.evo[p.id] = true;
+        if (save.stats) { save.stats.evos = save.stats.evos || {}; save.stats.evos[p.id] = 1; }
         if (p.id === 'ally') syncAllies();
         game.sk[p.id] = 0.3;
         game.banner = { text: tr('Evolution!'), sub: E.name, t: 2.4, win: true };

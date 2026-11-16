@@ -48,6 +48,7 @@ function lootRoll() {
 }
 
 function openChest(c) {
+  if (save.stats) save.stats.chests = (save.stats.chests || 0) + 1;
   const n = c.boss ? 3 : Math.random() < 0.15 ? 3 : 1;
   const items = [];
   for (let i = 0; i < n; i++) {

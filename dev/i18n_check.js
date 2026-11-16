@@ -11,9 +11,10 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   for (let i = 0; i < 60 && !ws; i++) { try { const l = await (await fetch(`http://127.0.0.1:${port}/json`)).json(); const p = l.find(t => t.type === 'page'); if (p) ws = new WebSocket(p.webSocketDebuggerUrl); } catch (e) {} if (!ws) await sleep(250); }
   await new Promise(r => ws.addEventListener('open', r, { once: true }));
   let id = 0; const pend = new Map();
-  ws.addEventListener('message', e => { const m = JSON.parse(e.data); if (m.id && pend.has(m.id)) { pend.get(m.id)(m.result); pend.delete(m.id); } });
+  ws.addEventListener('message', e => { const m = JSON.parse(e.data); if (m.id && pend.has(m.id)) { pend.get(m.id)(m.result); pend.delete(m.id); } if (m.method === 'Runtime.exceptionThrown') { const d = m.params.exceptionDetails; console.log('EXC', ((d.exception && d.exception.description) || d.text).slice(0, 300)); } });
   const send = (method, params = {}) => new Promise(r => { const i = ++id; pend.set(i, r); ws.send(JSON.stringify({ id: i, method, params })); });
   const ev = async x => { const r = await send('Runtime.evaluate', { expression: x, returnByValue: true, awaitPromise: true }); return r.exceptionDetails ? 'EXC ' + r.exceptionDetails.exception.description.slice(0, 200) : r.result.value; };
+  await send('Runtime.enable');
   await send('Page.navigate', { url: `http://localhost:5520/?lang=${lang}&all=1&tokens=9000&stats=1` });
   for (let i = 0; i < 100; i++) { await sleep(200); if (await ev('typeof UI !== "undefined" && !!document.getElementById("ui")')) break; }
   await ev('SND.setMuted(true); for (let i = 0; i < 30; i++) grantGear(GEAR[i % GEAR.length].id, 1 + i % 5); 1');

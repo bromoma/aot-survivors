@@ -57,6 +57,7 @@ function skyTick(dt) {
       ? { text: tr('Night'), sub: tr('Without sunlight titans weaken and move slower'), t: 2.6 }
       : { text: tr('Dawn'), sub: tr('The sun rises — titans regain their strength'), t: 2.4 };
     if (night) sfx('heartbeat', { vol: 0.35 });
+    else if (save.stats) save.stats.nights = (save.stats.nights || 0) + 1;
   }
   if (S.wx) {
     S.wxLeft -= dt;

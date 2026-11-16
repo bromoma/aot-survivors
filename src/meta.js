@@ -39,6 +39,14 @@ const ACHIEVEMENTS = [
   { id: 'arsenal', get name() { return tr('Full Arsenal'); }, get text() { return tr('Get all 5 skills in one run'); }, goal: 5, reward: 250, get: () => stat('maxSkillsRun') },
   { id: 'train5', get name() { return tr('Recruit'); }, get text() { return tr('Buy {0} training levels', 5); }, goal: 5, reward: 100, get: trainingTotal },
   { id: 'train20', get name() { return tr('Boot Camp Done'); }, get text() { return tr('Buy {0} training levels', 20); }, goal: 20, reward: 300, get: trainingTotal },
+  ...[[10, 80], [50, 200], [200, 500]].map(([n, r], i) => ({ id: 'ult' + i, get name() { return tr(['Signature Move', 'Hope of Humanity', "Humanity's Strongest"][i]); }, get text() { return tr('Use ultimates {0} times', n); }, goal: n, reward: r, get: () => stat('ults') })),
+  ...[[1, 150], [5, 600]].map(([n, r], i) => ({ id: 'evo' + i, get name() { return tr(['First Evolution', 'Evolved Arsenal'][i]); }, get text() { return n === 1 ? tr('Evolve a skill') : tr('Discover all {0} evolutions', n); }, goal: n, reward: r, get: () => Object.keys((save.stats && save.stats.evos) || {}).length })),
+  ...[[10, 100], [50, 300]].map(([n, r], i) => ({ id: 'chest' + i, get name() { return tr(['Supply Run', 'Quartermaster'][i]); }, get text() { return tr('Open {0} supply chests', n); }, goal: n, reward: r, get: () => stat('chests') })),
+  { id: 'elite0', get name() { return tr('Elite Slayer'); }, get text() { return tr('Kill {0} golden elite titans', 25); }, goal: 25, reward: 250, get: () => stat('elites') },
+  ...[[1, 80], [10, 300]].map(([n, r], i) => ({ id: 'night' + i, get name() { return tr(['Night Watch', 'Child of the Night'][i]); }, get text() { return n === 1 ? tr('Survive a night until dawn') : tr('Survive {0} nights until dawn', n); }, goal: n, reward: r, get: () => stat('nights') })),
+  ...[[1, 200], [5, 600]].map(([n, r], i) => ({ id: 'chal' + i, get name() { return tr(['Weekly Challenger', 'Challenge Veteran'][i]); }, get text() { return n === 1 ? tr('Win a weekly challenge') : tr('Win {0} weekly challenges', n); }, goal: n, reward: r, get: () => stat('chalWins') })),
+  { id: 'dexall', get name() { return tr('Titanologist'); }, get text() { return tr('Discover all {0} Titanpedia entries', DEX.length); }, get goal() { return DEX.length; }, reward: 500, get: () => dexSeen() },
+  ...[[7, 150], [30, 500]].map(([n, r], i) => ({ id: 'login' + i, get name() { return tr(['Loyal Soldier', 'Dedicated Heart'][i]); }, get text() { return tr('Collect daily supplies {0} times', n); }, goal: n, reward: r, get: () => stat('loginDays') })),
   { id: 'saver', get name() { return tr('City Defender'); }, get text() { return tr('Survive 10 minutes as the Military Police losing no more than 3 citizens'); }, goal: 1, reward: 300, get: () => stat('cleanCity') },
 ];
 
@@ -64,7 +72,8 @@ function ensureMeta() {
   const st = save.stats;
   if (!st.bosses) st.bosses = {};
   if (!st.winsBy) st.winsBy = {};
-  for (const k of ['maxCombo', 'maxBossRun', 'maxSkill', 'maxSkillsRun', 'cleanCity']) if (typeof st[k] !== 'number') st[k] = 0;
+  for (const k of ['maxCombo', 'maxBossRun', 'maxSkill', 'maxSkillsRun', 'cleanCity', 'ults', 'chests', 'elites', 'nights', 'chalWins', 'loginDays']) if (typeof st[k] !== 'number') st[k] = 0;
+  if (!st.evos) st.evos = {};
   if (!save.claimed) save.claimed = {};
   const day = todayKey();
   if (!save.daily || save.daily.day !== day) {

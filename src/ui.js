@@ -207,7 +207,7 @@ const UI = (() => {
         <div class="train-grid" id="training"></div>
       </div></div></div>
       <div class="screen" data-s="missions"><div class="panel-wrap"><div class="panel k-frame" style="width:min(820px,94vw)">
-        <div class="head"><span class="h2">${tr('Missions')}</span><span class="rank" id="rank"></span><button class="k-icon" data-back>${img('close')}</button></div>
+        <div class="head"><span class="h2">${tr('Missions')}</span><span class="rank" id="rank"></span><button class="k-btn mis-login" id="mis-login">${img('coin')} ${tr('Daily supplies')}<span class="badge" id="login-badge"></span></button><button class="k-icon" data-back>${img('close')}</button></div>
         <div class="sec">${tr('Today')}</div>
         <div class="mis-list" id="daily"></div>
         <div class="sec">${tr('Achievements')}</div>
@@ -219,6 +219,12 @@ const UI = (() => {
           <div class="dex-left"><div class="dex-grid" id="dex-grid"></div></div>
           <div class="dex-right"><div class="dex-info k-card" id="dex-info"></div><div class="sec">${tr('Records')}</div><div class="list" id="records"></div></div>
         </div>
+      </div></div></div>
+      <div class="screen" data-s="login"><div class="panel-wrap"><div class="panel k-frame login-v">
+        <div class="head"><span class="h2">${tr('Daily supplies')}</span><button class="k-icon" data-back>${img('close')}</button></div>
+        <div class="muted">${tr('Come back every day: the Survey Corps sends supplies. Day 7 brings a ×10 ticket!')}</div>
+        <div class="login-days" id="login-days"></div>
+        <div class="buttons"><button class="k-btn big" id="login-claim"></button></div>
       </div></div></div>
       <div class="screen" data-s="profile"><div class="panel-wrap"><div class="panel k-frame" style="width:min(560px,92vw)">
         <div class="head"><span class="h2">${tr('Profile')}</span><button class="k-icon" data-back>${img('close')}</button></div>
@@ -243,6 +249,18 @@ const UI = (() => {
     M.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', () => go('hub')));
     $('#go', M).addEventListener('click', () => start());
     $('#prof-chip', M).addEventListener('click', () => go('profile'));
+    $('#mis-login', M).addEventListener('click', () => go('login'));
+    $('#login-claim', M).addEventListener('click', () => {
+      const r = loginClaim();
+      if (!r) return;
+      snd('chime5', { vol: 0.8, tag: 'chime' });
+      snd('reveal', { vol: 0.5 });
+      const card = $('#login-days .today', M);
+      if (card) { card.classList.add('done', 'claimed'); if (r.gear) { const ic = $('.ld-ic', card); ic.innerHTML = ''; ic.appendChild(cv(gearIcon(r.gear.id))); } }
+      toast(r.gear ? tr('You got: {0}', tr(r.gear.name)) : tr('You got: {0}', loginLabel(r.d)));
+      refreshFooter();
+      setTimeout(() => { if (screen === 'login') refreshLogin(true); }, 900);
+    });
   }
 
   function buildHud() {
@@ -266,6 +284,7 @@ const UI = (() => {
       </div>
       <div class="lvl wood-text" id="hud-lvl"></div>
       <div class="xp k-field"><div class="bar" id="hud-xp"></div></div>
+      <div class="tut k-card" id="hud-tut"><div class="tk" id="hud-tut-k"></div><div class="tt" id="hud-tut-t"></div><button class="tskip" id="hud-tut-skip">${tr('Skip training')}</button></div>
       <button class="ult" id="hud-ult"><i class="uf"></i><span class="uk">${IS_TOUCH ? '★' : 'E'}</span><span class="un wood-text"></span></button>
       <div class="tip-line k-tip" id="hud-tip">${IS_TOUCH ? tr('Drag your finger to fly on your cables to rooftops and trees. From above, the round button: strike the nape') : tr('WASD: fly on your cables up to rooftops and trees. From above, Space: attack')}</div>
       ${IS_TOUCH ? '<div class="tzone" id="tzone"></div><div class="tstick" id="tstick"><i></i></div><button class="tatk" id="tatk">⚔</button>' : ''}`;
@@ -273,8 +292,10 @@ const UI = (() => {
       face: $('#hud-face', Hd), hearts: $('#hud-hearts', Hd), name: $('#hud-name', Hd), gauge: $('#hud-gauge', Hd),
       fill: $('#hud-gauge .fill', Hd), need: $('#hud-gauge .need', Hd), timer: $('#hud-timer', Hd), kills: $('#hud-kills', Hd),
       combo: $('#hud-combo', Hd), boss: $('#hud-boss', Hd), bossName: $('#hud-boss-name', Hd), bossSegs: $('#hud-boss-segs', Hd), skills: $('#hud-skills', Hd), banner: $('#hud-banner', Hd), bannerT: $('#hud-banner-t', Hd), bannerS: $('#hud-banner-s', Hd), civ: $('#hud-civ', Hd), lvl: $('#hud-lvl', Hd), xp: $('#hud-xp', Hd), tip: $('#hud-tip', Hd),
+      tut: $('#hud-tut', Hd), tutK: $('#hud-tut-k', Hd), tutT: $('#hud-tut-t', Hd), gaugeBox: $('#hud-gauge', Hd).parentNode,
       sky: $('#hud-sky', Hd), ult: $('#hud-ult', Hd), ultFace: $('#hud-ult .uf', Hd), ultName: $('#hud-ult .un', Hd),
     });
+    $('#hud-tut-skip', Hd).addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); tutSkip(); });
     hud.ult.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); if (ultUse()) { hud.ult.classList.add('hit'); setTimeout(() => hud.ult.classList.remove('hit'), 150); } });
     $('#hud-pause', Hd).addEventListener('click', () => { if (state === 'play') state = 'paused'; });
     if (IS_TOUCH) {
@@ -322,6 +343,7 @@ const UI = (() => {
     if (id === 'missions') refreshMissions();
     if (id === 'settings') refreshSettings();
     if (id === 'profile') refreshProfile();
+    if (id === 'login') refreshLogin();
     refreshFooter();
   }
 
@@ -337,11 +359,13 @@ const UI = (() => {
     }
     const rk = rankInfo();
     $('#rank-foot').textContent = rk.name;
-    const n = claimableCount();
+    const n = claimableCount() + (loginClaimable() ? 1 : 0);
     const bd = $('#mis-badge');
     if (bd) { bd.textContent = n || ''; bd.style.display = n ? '' : 'none'; }
     const gb = $('#gacha-badge'), gt = (freeAvailable() ? 1 : 0) + tickets() + (gachaState().tickets10 || 0);
     if (gb) { gb.textContent = gt ? (freeAvailable() && gt === 1 ? '!' : gt) : ''; gb.style.display = gt ? '' : 'none'; }
+    const lb = $('#login-badge'), lc = loginClaimable();
+    if (lb) { lb.textContent = lc ? '!' : ''; lb.style.display = lc ? '' : 'none'; }
     const db = $('#dex-badge'), dn = dexClaimCount();
     if (db) { db.textContent = dn || ''; db.style.display = dn ? '' : 'none'; }
     const nb = $('#gear-badge'), gs = gearSave(), nn = Object.keys(gs.items).filter(k => !(gs.seen || {})[k]).length;
@@ -773,6 +797,7 @@ const UI = (() => {
         <button class="k-btn" id="code-copy">${tr('Copy my code')}</button>
         <button class="k-btn" id="code-load">${tr('Load code')}</button>
         <button class="k-btn" id="full">${tr('Fullscreen')}</button>
+        <button class="k-btn" id="tut-again">${tr('Replay training')}</button>
         <button class="k-btn" id="wipe">${confirmReset ? tr('Really erase?') : tr('Erase progress')}</button>
       </div>
       <div class="muted" style="margin-top:10px;font-size:16px">${tr('A non-commercial Attack on Titan fan game. Pixellari font by Zacchary Dempsey-Plante. Music by RandomMind, Komiku, Will Carpenter, cynicmusic (CC0). Sounds by Kenney (CC0). Details in CREDITS.md.')}</div>`;
@@ -817,6 +842,7 @@ const UI = (() => {
       if (document.fullscreenElement) document.exitFullscreen();
       else if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
     });
+    $('#tut-again').addEventListener('click', () => { save.tutForce = true; persist(); toast(tr('Training will start in your next battle')); });
     $('#wipe').addEventListener('click', () => {
       if (!confirmReset) { confirmReset = true; refreshSettings(); return; }
       try { localStorage.removeItem(SAVE_KEY); } catch (e) {}
@@ -1480,7 +1506,22 @@ const UI = (() => {
       hud.banner.classList.toggle('win', !!(bn && bn.win));
       if (bn) { hud.bannerT.textContent = bn.text; hud.bannerS.textContent = bn.sub; }
     }
-    const showTip = settings().hints && game.time < 16;
+    const ts = tutStep(), tk = ts ? ts.id + LANG : '';
+    if (cache.tut !== tk) {
+      cache.tut = tk;
+      hud.tut.classList.toggle('on', !!ts);
+      hud.tut.classList.toggle('done', !!ts && ts.id === 'done');
+      if (ts) {
+        hud.tutK.textContent = ts.id === 'done' ? tr('Training complete') : tr('Training {0}/{1}', tut.i + 1, TUT_STEPS.length - 1);
+        hud.tutT.textContent = ts.text();
+        hud.tut.classList.remove('pop'); void hud.tut.offsetWidth; hud.tut.classList.add('pop');
+      }
+      hud.gaugeBox.classList.toggle('tut-glow', !!ts && ts.focus === 'gauge');
+      hud.ult.classList.toggle('tut-glow', !!ts && ts.focus === 'ult');
+      const ta = $('#tatk', layers.hud);
+      if (ta) ta.classList.toggle('tut-glow', !!ts && ts.id === 'attack');
+    }
+    const showTip = settings().hints && game.time < 16 && !ts;
     if (cache.tip !== showTip) { cache.tip = showTip; hud.tip.style.display = showTip ? '' : 'none'; }
   }
 
@@ -1535,6 +1576,22 @@ const UI = (() => {
   const LOADED_SAVE = SAVE_KEY;
   let authMode = null;
 
+  function refreshLogin(after) {
+    const box = $('#login-days'), can = loginClaimable(), n = loginState().n, D = LOGIN_DAYS.length;
+    const cur = can ? n % D : (n - 1 + D) % D;
+    box.innerHTML = '';
+    LOGIN_DAYS.forEach((d, i) => {
+      const done = i < cur || (!can && i === cur), today = i === cur;
+      const c = el('div', 'ld k-card' + (done ? ' done' : '') + (today ? ' today' : '') + (today && can ? ' ready' : '') + (i === D - 1 ? ' big' : ''));
+      c.innerHTML = `<div class="ld-d">${tr('Day {0}', i + 1)}</div><div class="ld-ic">${img(loginIcon(d))}</div><div class="ld-l">${loginLabel(d)}</div><img class="ld-ok" src="assets/ui/seal_green.png" alt="">`;
+      box.appendChild(c);
+    });
+    const b = $('#login-claim');
+    b.innerHTML = can ? tr('Claim') : tr('Come back tomorrow');
+    b.classList.toggle('off', !can);
+    refreshFooter();
+  }
+
   function refreshProfile() {
     const box = $('#profile'), p = profCur();
     if (!p) return;
@@ -1571,6 +1628,7 @@ const UI = (() => {
     profPersist();
     authHide();
     toast(tr('Welcome back, {0}!', p.name));
+    if (loginClaimable()) go('login');
   }
 
   function authShow(mode, p) {
@@ -1645,7 +1703,7 @@ const UI = (() => {
         const first = !PROF.list.length;
         const np = profCreate(name, av, pin);
         snd('levelup', { vol: 0.6 });
-        if (first || profSaveKey(np.id) === LOADED_SAVE) { authHide(); toast(tr('Welcome to the Survey Corps, {0}!', np.name)); return; }
+        if (first || profSaveKey(np.id) === LOADED_SAVE) { authHide(); toast(tr('Welcome to the Survey Corps, {0}!', np.name)); if (loginClaimable()) go('login'); return; }
         location.reload();
       });
     } else if (mode === 'who') {
@@ -1698,6 +1756,7 @@ const UI = (() => {
     const devSkip = devHost && !P.get('auth') && [...P.keys()].some(k => k !== 'lang' && k !== 'sound');
     const gate = devSkip ? null : profGate();
     if (gate) authShow(gate, profCur());
+    else if (!devSkip && loginClaimable()) go('login');
     if (!devHost) return;
     if ([...P.keys()].some(k => k !== 'lang' && k !== 'sound')) SND.setMuted(true);
     if (P.get('tokens')) save.tokens = +P.get('tokens');
