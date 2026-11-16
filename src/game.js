@@ -21,30 +21,30 @@ const SHIRTS = ['#5a6878', '#7a5048', '#5c6a4a', '#8a7650', '#665a70', '#a8a090'
 const PANTS = ['#5a4a3a', '#3e4a5a', '#6b5a48', '#4a4038'];
 
 const FACTIONS = [
-  { id: 'mp', name: 'Военная полиция', diff: 'Легко', color: '#7cfc9a', map: 'city', civs: 40, desc: 'Бескрайний город: улицы, площади и парки. Летай по крышам, титанов немного', base: 3, per: 1 / 45, cap: 11, spawn0: 5, spawnMin: 2.2, decay: 1 / 100, group: 2, abFrom: 240, abMax: 0.18, speed: 0.82, big: 0.12, heal: 10, grab: 1.25, turn: 0.85, req: 0.45 },
-  { id: 'garrison', name: 'Гарнизон', diff: 'Средне', color: '#ffd27a', map: 'ruins', civs: 22, desc: 'Руины Шиганшины во все стороны: пожары, обломки, рощи. Титанов много', base: 4, per: 1 / 20, cap: 22, spawn0: 3.2, spawnMin: 0.95, decay: 1 / 50, group: 3, abFrom: 100, abMax: 0.32, speed: 1, big: 0.25, heal: 12, grab: 1.08, turn: 1, req: 0.5 },
-  { id: 'scouts', name: 'Разведкорпус', diff: 'Сложно', color: '#ff6b6b', map: 'field', civs: 12, desc: 'Бескрайние поля, деревни и леса. Между рощами высоту набрать трудно', base: 4, per: 1 / 17, cap: 24, spawn0: 3.4, spawnMin: 0.85, decay: 1 / 45, group: 4, abFrom: 60, abMax: 0.42, speed: 1.12, big: 0.35, heal: 16, grab: 0.92, turn: 1.3, req: 0.6 },
+  { id: 'mp', name: 'Military Police', diff: 'Easy', color: '#7cfc9a', map: 'city', civs: 40, desc: 'An endless city of streets, squares and parks. Fly over the rooftops, few titans here', base: 3, per: 1 / 45, cap: 11, spawn0: 5, spawnMin: 2.2, decay: 1 / 100, group: 2, abFrom: 240, abMax: 0.18, speed: 0.82, big: 0.12, heal: 10, grab: 1.25, turn: 0.85, req: 0.45 },
+  { id: 'garrison', name: 'Garrison', diff: 'Medium', color: '#ffd27a', map: 'ruins', civs: 22, desc: 'The ruins of Shiganshina stretch in every direction: fires, rubble, groves. Many titans', base: 4, per: 1 / 20, cap: 22, spawn0: 3.2, spawnMin: 0.95, decay: 1 / 50, group: 3, abFrom: 100, abMax: 0.32, speed: 1, big: 0.25, heal: 12, grab: 1.08, turn: 1, req: 0.5 },
+  { id: 'scouts', name: 'Survey Corps', diff: 'Hard', color: '#ff6b6b', map: 'field', civs: 12, desc: 'Endless fields, villages and forests. Hard to gain height between the groves', base: 4, per: 1 / 17, cap: 24, spawn0: 3.4, spawnMin: 0.85, decay: 1 / 45, group: 4, abFrom: 60, abMax: 0.42, speed: 1.12, big: 0.35, heal: 16, grab: 0.92, turn: 1.3, req: 0.6 },
 ];
 
 const RARITY = {
-  3: { name: 'Редкий', color: '#6fb6ff', flare: '#4a8cff' },
-  4: { name: 'Эпический', color: '#c58cff', flare: '#a24aff' },
-  5: { name: 'Легендарный', color: '#ffd36e', flare: '#ffcf3a' },
+  3: { name: 'Rare', color: '#6fb6ff', flare: '#4a8cff' },
+  4: { name: 'Epic', color: '#c58cff', flare: '#a24aff' },
+  5: { name: 'Legendary', color: '#ffd36e', flare: '#ffcf3a' },
 };
 
 const CHARS = [
-  { id: 'cadet', name: 'Кадет', rarity: 3, hair: '#3b2b22', look: 'short', ability: 'Обычный выпускник кадетского корпуса' },
-  { id: 'connie', name: 'Конни', rarity: 3, hair: '#8d8780', look: 'buzz', ability: 'Шустрый: летает на 10% быстрее' },
-  { id: 'sasha', name: 'Саша', rarity: 3, hair: '#7a4a2a', look: 'ponytail', ability: 'Картошка: +1 сердце и лечение чаще' },
-  { id: 'jean', name: 'Жан', rarity: 3, hair: '#a07a4a', look: 'short', ability: 'Лидер: атака достаёт на 20% дальше' },
-  { id: 'eren', name: 'Эрен', rarity: 4, hair: '#4a3020', look: 'long', ability: 'Ярость: комбо x3 лечит сердце' },
-  { id: 'armin', name: 'Армин', rarity: 4, hair: '#e2c46a', look: 'bob', ability: 'Стратег: +25% опыта, ракеты предупреждают о титанах' },
-  { id: 'hange', name: 'Ханджи', rarity: 4, hair: '#6a4028', look: 'goggles', ability: 'Учёный: убийство оглушает титанов рядом, с собой ловушка из тросов' },
-  { id: 'mikasa', name: 'Микаса', rarity: 5, hair: '#151214', look: 'scarf', ability: 'Облёт +35%, после убийства сразу летит к следующему' },
-  { id: 'levi', name: 'Леви', rarity: 5, hair: '#121014', look: 'undercut', ability: 'Сильнейший: вихрь клинков с начала, быстрее во всём' },
-  { id: 'erwin', name: 'Эрвин', rarity: 5, hair: '#d8b860', look: 'short', ability: 'Командор: с начала световая ракета и боевой товарищ' },
-  { id: 'historia', name: 'Хистория', rarity: 4, hair: '#f0d070', look: 'ponytail', ability: 'Королева: +2 сердца и лечение чаще' },
-  { id: 'mike', name: 'Майк', rarity: 4, hair: '#c8a870', look: 'short', ability: 'Чутьё: атака дальше на 15%, +10% опыта, ракеты предупреждают о титанах' },
+  { id: 'cadet', name: 'Cadet', rarity: 3, hair: '#3b2b22', look: 'short', ability: 'An ordinary graduate of the Cadet Corps' },
+  { id: 'connie', name: 'Connie', rarity: 3, hair: '#8d8780', look: 'buzz', ability: 'Nimble: flies 10% faster' },
+  { id: 'sasha', name: 'Sasha', rarity: 3, hair: '#7a4a2a', look: 'ponytail', ability: 'Potato: +1 heart and heals more often' },
+  { id: 'jean', name: 'Jean', rarity: 3, hair: '#a07a4a', look: 'short', ability: 'Leader: attacks reach 20% farther' },
+  { id: 'eren', name: 'Eren', rarity: 4, hair: '#4a3020', look: 'long', ability: 'Rage: a x3 combo heals a heart' },
+  { id: 'armin', name: 'Armin', rarity: 4, hair: '#e2c46a', look: 'bob', ability: 'Strategist: +25% XP, flares warn about titans' },
+  { id: 'hange', name: 'Hange', rarity: 4, hair: '#6a4028', look: 'goggles', ability: 'Scientist: kills stun nearby titans, starts with a cable trap' },
+  { id: 'mikasa', name: 'Mikasa', rarity: 5, hair: '#151214', look: 'scarf', ability: 'Orbit +35%, after a kill flies straight to the next titan' },
+  { id: 'levi', name: 'Levi', rarity: 5, hair: '#121014', look: 'undercut', ability: 'Strongest soldier: starts with Blade Whirl, faster at everything' },
+  { id: 'erwin', name: 'Erwin', rarity: 5, hair: '#d8b860', look: 'short', ability: 'Commander: starts with Flash Flare and a Comrade' },
+  { id: 'historia', name: 'Historia', rarity: 4, hair: '#f0d070', look: 'ponytail', ability: 'Queen: +2 hearts and heals more often' },
+  { id: 'mike', name: 'Mike', rarity: 4, hair: '#c8a870', look: 'short', ability: 'Keen nose: attacks reach 15% farther, +10% XP, flares warn about titans' },
 ];
 trFields(FACTIONS, ['name', 'diff', 'desc']);
 trFields(Object.values(RARITY), ['name']);
@@ -103,11 +103,11 @@ let menuTab = 0, squadSel = 0, menuMsg = '', menuMsgT = 0, pullRes = [], pullIdx
 let buildings, trees, anchors, titans, particles, texts, rings, slashes, decals, clouds, fogs, motes, emitters, civs, riders, flocks, flares;
 let player, stats, game, cam;
 let choices = [], pendingLevels = 0, sel = 1;
-const SAVE_KEY = 'aot-td-save';
+const SAVE_KEY = profSaveKey();
 let save = loadSave();
 LANG = pickLang(save);
 document.documentElement.lang = LANG;
-document.title = tr('Атака титанов: Survivors');
+document.title = tr('Attack on Titan: Survivors');
 factionSel = clamp(save.faction || 0, 0, 2);
 
 function loadSave() {
@@ -444,6 +444,7 @@ function reset() {
   juiceReset();
   lootReset();
   ultReset();
+  skyReset();
   if (hero.id === 'levi') stats.skills.spin = 1;
   if (hero.id === 'hange') stats.skills.trap = 1;
   metaRunStart();
@@ -601,7 +602,7 @@ function titanHit(t) {
   slashes.push({ x: n.x, y: n.y - KZ * n.z, ang: t.face + Math.PI, life: 0.22 });
   sfx('slash', { vol: 1 });
   sfx('cut', { vol: 0.9, rate: 0.7 });
-  addText(tr('Ещё удар!'), n.x, n.y - KZ * n.z - 40, '#ffd27a');
+  addText(tr('One more cut!'), n.x, n.y - KZ * n.z - 40, '#ffd27a');
   if (p.target === t) {
     p.mode = 'fly';
     p.target = null;
@@ -736,7 +737,7 @@ function hurtPlayer(t) {
     game.revives--;
     p.hp = Math.min(2, stats.maxHp);
     p.inv = 3;
-    game.banner = { text: tr('Второе дыхание!'), sub: tr('Вставай, солдат!'), t: 2.2, win: true };
+    game.banner = { text: tr('Second wind!'), sub: tr('Get up, soldier!'), t: 2.2, win: true };
     for (const o of titans) if (!o.dying && Math.hypot(o.x - p.x, o.y - p.y) < 450) stunTitan(o, 2, 'flash');
     rings.push({ x: p.x, y: p.y, r: 450, life: 0.35, color: '#fff6c8' });
     sfx('levelup', { vol: 0.8 });
@@ -777,7 +778,7 @@ function killTitan(t) {
   game.lastKill = game.time;
   if (stats.rage && game.combo === 3 && player.hp < stats.maxHp) {
     player.hp++;
-    addText(tr('ЯРОСТЬ! +1 ♥'), player.x, player.y - KZ * player.z - 60, '#ff6b4a');
+    addText(tr('RAGE! +1 ♥'), player.x, player.y - KZ * player.z - 60, '#ff6b4a');
   }
   if (stats.stun) {
     for (const o of titans) {
@@ -795,7 +796,7 @@ function killTitan(t) {
   steam(n.x, n.y - KZ * n.z, 10);
   slashes.push({ x: n.x, y: n.y - KZ * n.z, ang: t.face + Math.PI, life: 0.22 });
   splatDecal(t.x + Math.cos(t.face) * t.H * 0.55, t.y + Math.sin(t.face) * t.H * 0.3, Math.max(6, Math.round(t.Hp * 0.12)));
-  addText(game.combo > 1 ? tr('КОМБО x{0}', game.combo) : tr('ЗАТЫЛОК!'), n.x, n.y - KZ * n.z - 40, game.combo > 1 ? '#ffd27a' : '#ffffff');
+  addText(game.combo > 1 ? tr('COMBO x{0}', game.combo) : tr('NAPE!'), n.x, n.y - KZ * n.z - 40, game.combo > 1 ? '#ffd27a' : '#ffffff');
   if (player.target === t || game.slowT > 0) texts[texts.length - 1].big = true;
   game.healCount++;
   if (game.healCount >= stats.healEvery) {
@@ -861,7 +862,7 @@ function engage() {
   }
   p.wp = foundWp;
   if (!found) {
-    addText(tooLow ? tr('Слишком низко! Набери высоту') : hard ? tr('Затылок затвердел — подожди!') : tr('Рядом нет титанов'), p.x, p.y - KZ * p.z - 40, tooLow ? '#ffb347' : hard ? '#9fe8ff' : '#e9e4da');
+    addText(tooLow ? tr('Too low! Gain height') : hard ? tr('The nape hardened, wait!') : tr('No titans nearby'), p.x, p.y - KZ * p.z - 40, tooLow ? '#ffb347' : hard ? '#9fe8ff' : '#e9e4da');
     sfx('tick', { vol: 0.6 });
     if (tooLow) p.lowT = 0.8;
     return;
@@ -1075,7 +1076,7 @@ function updateTitans(dt) {
       t.stun -= dt;
       if (t.boss) {
         t.boss.harden = Math.max(0, t.boss.harden - dt);
-        if (t.boss.kneel > 0 && (t.boss.kneel -= dt) <= 0) { bossRise(t); addText(tr('Сухожилия срослись!'), t.x, t.y - KZ * t.H * 0.9, '#9fe8ff'); }
+        if (t.boss.kneel > 0 && (t.boss.kneel -= dt) <= 0) { bossRise(t); addText(tr('The tendons healed!'), t.x, t.y - KZ * t.H * 0.9, '#9fe8ff'); }
       }
       continue;
     }
@@ -1099,7 +1100,7 @@ function updateTitans(dt) {
     const dx = tx - t.x, dy = ty - t.y, d = Math.hypot(dx, dy) || 1;
     const to = Math.atan2(dy, dx);
     const turn = (t.aberrant ? lerp(1.8, 3.4, diff) : lerp(0.9, 2.4, diff)) * faction.turn * (t.state === 'grab' ? 0.3 : 1);
-    const speed = t.speed * (1 + diff * 0.6) * (t.prey ? 1.3 : 1) * (t.rageT > 0 ? 1.5 : 1);
+    const speed = t.speed * (1 + diff * 0.6) * (t.prey ? 1.3 : 1) * (t.rageT > 0 ? 1.5 : 1) * (t.boss ? 1 : skyTitanSpeed());
     if (t.state !== 'eat') t.face += clamp(wrapAngle(to - t.face), -turn * dt, turn * dt);
     const reach = reachOf(t);
     const pto = Math.atan2(p.y - t.y, p.x - t.x);
@@ -1392,6 +1393,7 @@ function update(dt) {
     updateLife(dt);
     updateSkills(dt);
     updateLoot(dt);
+    skyTick(dt);
     bossSchedule();
     if (game.flashT > 0) game.flashT -= dt;
     if (game.banner && (game.banner.t -= dt) <= 0) game.banner = null;
@@ -1879,26 +1881,26 @@ function drawHud() {
   ctx.rotate(-Math.PI / 2);
   ctx.textAlign = 'left';
   ctx.font = font(UP * 5);
-  shadowText('ВЫСОТА', 0, 0, '#cfe3f0');
+  shadowText('HEIGHT', 0, 0, '#cfe3f0');
   ctx.restore();
 
   ctx.textAlign = 'center';
   ctx.font = font(UP * 11);
   shadowText(game.endless ? fmtTime(game.time) : `${fmtTime(game.time)} / ${fmtTime(WIN_TIME)}`, W / 2, 14 + UP * 9);
   ctx.font = font(UP * 6, 400);
-  shadowText(`Титанов убито: ${game.kills}`, W / 2, 20 + UP * 16);
+  shadowText(`Titans killed: ${game.kills}`, W / 2, 20 + UP * 16);
   if (faction.civs) {
     ctx.textAlign = 'right';
-    shadowText(`Горожан погибло: ${game.lost}`, W - 14, 14 + UP * 6, game.lost ? '#ff9a8a' : '#e9e4da');
+    shadowText(`Citizens lost: ${game.lost}`, W - 14, 14 + UP * 6, game.lost ? '#ff9a8a' : '#e9e4da');
     ctx.textAlign = 'center';
   }
   if (game.combo > 1 && game.time - game.lastKill < 4) {
     ctx.font = font(UP * 10);
-    shadowText(`КОМБО x${game.combo}`, W / 2, 26 + UP * 27, '#ffd27a');
+    shadowText(`COMBO x${game.combo}`, W / 2, 26 + UP * 27, '#ffd27a');
   }
   if (game.time < 16) {
     ctx.font = font(UP * 6, 400);
-    shadowText('WASD — летишь на тросах вверх, на крыши и деревья. С высоты — Пробел: атака', W / 2, H - UP * 12, '#e9e4da');
+    shadowText('WASD: fly on your cables up to rooftops and trees. From above, Space: attack', W / 2, H - UP * 12, '#e9e4da');
   }
 
   const bh2 = UP * 3;
@@ -1912,7 +1914,7 @@ function drawHud() {
   ctx.fillRect(0, H - bh2, Math.round(W * game.xp / game.need / UP) * UP, UP);
   ctx.textAlign = 'left';
   ctx.font = font(UP * 6);
-  shadowText(`УР. ${game.level}`, 12, H - bh2 - UP * 3);
+  shadowText(`LV. ${game.level}`, 12, H - bh2 - UP * 3);
 
   const cx = W / 2, cy = H / 2;
   for (const t of titans) {
@@ -1965,7 +1967,7 @@ function pointIn(x, y, r) {
   return x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h;
 }
 
-const TABS = ['Бой', 'Отряд', 'Призыв'];
+const TABS = ['Battle', 'Squad', 'Summon'];
 
 function tabRects() {
   const tw = UP * 40, gap = UP * 4, x0 = W / 2 - (tw * 3 + gap * 2) / 2, y = H * 0.17 + UP * 20;
@@ -2005,7 +2007,7 @@ function drawMenu() {
   dim(0.62);
   ctx.textAlign = 'center';
   ctx.font = font(Math.min(UP * 22, W / 11));
-  shadowText('АТАКА ТИТАНОВ', W / 2, H * 0.15, '#c0262e');
+  shadowText('ATTACK ON TITAN', W / 2, H * 0.15, '#c0262e');
   ctx.font = font(UP * 8);
   shadowText('S U R V I V O R S', W / 2, H * 0.15 + UP * 11, '#a8a49c');
   tabRects().forEach((r, i) => {
@@ -2016,20 +2018,20 @@ function drawMenu() {
     ctx.fillText(TABS[i], r.x + r.w / 2, r.y + UP * 7.5);
   });
   ctx.font = font(UP * 5, 400);
-  shadowText('Tab / Q / E — вкладки', W / 2, tabRects()[0].y + UP * 18, 'rgba(255,255,255,0.55)');
+  shadowText('Tab / Q / E — tabs', W / 2, tabRects()[0].y + UP * 18, 'rgba(255,255,255,0.55)');
   if (menuTab === 0) drawBattleTab();
   else if (menuTab === 1) drawSquadTab();
   else drawGachaTab();
   ctx.textAlign = 'left';
   ctx.font = font(UP * 7);
-  shadowText(`Жетоны: ${save.tokens}`, 16, H - UP * 6, '#ffd27a');
+  shadowText(`Tokens: ${save.tokens}`, 16, H - UP * 6, '#ffd27a');
   const hero = charById(save.selected);
   ctx.textAlign = 'right';
   shadowText(`${hero.name} ${stars(save.chars[hero.id] || 1)}`, W - 16, H - UP * 6, RARITY[hero.rarity].color);
   if (resetQueued) {
     ctx.textAlign = 'center';
     ctx.font = font(UP * 9);
-    shadowText(tr('Строим карту…'), W / 2, H / 2 + UP * 4, '#ffd27a');
+    shadowText(tr('Building the map…'), W / 2, H / 2 + UP * 4, '#ffd27a');
   }
   if (menuMsgT > 0) {
     ctx.textAlign = 'center';
@@ -2052,22 +2054,22 @@ function drawBattleTab() {
     ctx.fillText(f.name, r.x + r.w / 2, y + UP * 50);
     ctx.font = font(UP * 6);
     ctx.fillStyle = f.color;
-    ctx.fillText(`${f.diff} · жетоны x${[1, 1.5, 2][i]}`, r.x + r.w / 2, y + UP * 58);
+    ctx.fillText(`${f.diff} · tokens x${[1, 1.5, 2][i]}`, r.x + r.w / 2, y + UP * 58);
     ctx.font = font(UP * 4.5, 400);
     ctx.fillStyle = '#cfd6dc';
     wrap(f.desc, r.w - UP * 10).forEach((l, j) => ctx.fillText(l, r.x + r.w / 2, y + UP * 66 + j * UP * 6));
     const b = bestOf(f);
     if (b > 0) {
       ctx.fillStyle = 'rgba(255,255,255,0.55)';
-      ctx.fillText(`Рекорд: ${fmtTime(b)}`, r.x + r.w / 2, y + r.h - UP * 3);
+      ctx.fillText(`Best: ${fmtTime(b)}`, r.x + r.w / 2, y + r.h - UP * 3);
     }
   });
   const yb = rects[0].y + rects[0].h + UP * 12;
   ctx.textAlign = 'center';
   ctx.font = font(UP * 5, 400);
-  shadowText('WASD — летишь на тросах, они поднимают тебя на крыши и деревья. С высоты — Пробел: атака', W / 2, yb, '#e9e4da');
+  shadowText('WASD — fly on your cables up to roofs and trees. From above — Space: attack', W / 2, yb, '#e9e4da');
   ctx.font = font(UP * 8);
-  if (Math.floor(performance.now() / 500) % 2 === 0) shadowText('← → выбрать, Enter — в бой', W / 2, yb + UP * 14, '#7cfc9a');
+  if (Math.floor(performance.now() / 500) % 2 === 0) shadowText('← → choose, Enter — to battle', W / 2, yb + UP * 14, '#7cfc9a');
 }
 
 function squadRects() {
@@ -2095,11 +2097,11 @@ function drawSquadTab() {
   const y = last.y + last.h + UP * 12;
   ctx.textAlign = 'center';
   ctx.font = font(UP * 8);
-  shadowText(owned ? c.name : 'Не открыт', W / 2, y, owned ? RARITY[c.rarity].color : '#8a8296');
+  shadowText(owned ? c.name : 'Locked', W / 2, y, owned ? RARITY[c.rarity].color : '#8a8296');
   ctx.font = font(UP * 5.5, 400);
-  shadowText(owned ? c.ability : `${RARITY[c.rarity].name} — можно получить во вкладке «Призыв»`, W / 2, y + UP * 9, '#e9e4da');
+  shadowText(owned ? c.ability : `${RARITY[c.rarity].name} — get it in the Summon tab`, W / 2, y + UP * 9, '#e9e4da');
   ctx.font = font(UP * 5, 400);
-  shadowText('Стрелки — выбрать, Enter — взять в бой.   C — скопировать код сохранения, V — вставить код', W / 2, y + UP * 20, 'rgba(255,255,255,0.6)');
+  shadowText('Arrows — choose, Enter — take into battle.   C — copy save code, V — paste code', W / 2, y + UP * 20, 'rgba(255,255,255,0.6)');
 }
 
 function drawGachaTab() {
@@ -2115,23 +2117,23 @@ function drawGachaTab() {
   drawPortrait('levi', x + pw - UP * 5 - ps, y + ph / 2 - ps / 2, ps, false);
   ctx.textAlign = 'center';
   ctx.font = font(UP * 10);
-  shadowText('ПРИЗЫВ РАЗВЕДЧИКОВ', W / 2, y + UP * 16, '#ffd36e');
+  shadowText('SCOUT SUMMON', W / 2, y + UP * 16, '#ffd36e');
   ctx.font = font(UP * 5.5, 400);
-  shadowText('Сигнальная ракета покажет, кто откликнулся', W / 2, y + UP * 25, '#e9e4da');
+  shadowText('The signal flare shows who answered', W / 2, y + UP * 25, '#e9e4da');
   shadowText('★★★★★ 4%   ★★★★ 21%   ★★★ 75%', W / 2, y + UP * 36, '#cfd6dc');
-  shadowText(`Эпический гарантирован через ${Math.max(1, 10 - save.pity4)}, легендарный — через ${Math.max(1, 40 - save.pity5)}`, W / 2, y + UP * 45, '#c58cff');
-  shadowText('Повтор даёт звезду (+3% скорости), на 5★ — жетоны', W / 2, y + UP * 54, 'rgba(255,255,255,0.6)');
+  shadowText(`Epic guaranteed in ${Math.max(1, 10 - save.pity4)}, legendary in ${Math.max(1, 40 - save.pity5)}`, W / 2, y + UP * 45, '#c58cff');
+  shadowText('A duplicate gives a star (+3% speed), at 5★ — tokens', W / 2, y + UP * 54, 'rgba(255,255,255,0.6)');
   const bw2 = UP * 70, bh2 = UP * 16, by = y + UP * 66;
   const can1 = save.tokens >= 100, can10 = save.tokens >= 900;
   panel(W / 2 - bw2 - UP * 4, by, bw2, bh2, can1 ? '#2f4a3a' : '#2a2630', can1 ? '#7cfc9a' : '#5a5268');
   panel(W / 2 + UP * 4, by, bw2, bh2, can10 ? '#4a3a20' : '#2a2630', can10 ? '#ffd36e' : '#5a5268');
   ctx.font = font(UP * 6);
   ctx.fillStyle = can1 ? '#fff' : '#6a6276';
-  ctx.fillText('[1] Один — 100', W / 2 - bw2 / 2 - UP * 4, by + UP * 10);
+  ctx.fillText('[1] One — 100', W / 2 - bw2 / 2 - UP * 4, by + UP * 10);
   ctx.fillStyle = can10 ? '#fff' : '#6a6276';
-  ctx.fillText('[0] Десять — 900', W / 2 + bw2 / 2 + UP * 4, by + UP * 10);
+  ctx.fillText('[0] Ten — 900', W / 2 + bw2 / 2 + UP * 4, by + UP * 10);
   ctx.font = font(UP * 5, 400);
-  shadowText('Жетоны дают за каждый забег: за убийства, время и победу', W / 2, y + ph + UP * 10, 'rgba(255,255,255,0.6)');
+  shadowText('Every run gives tokens: for kills, time and victory', W / 2, y + ph + UP * 10, 'rgba(255,255,255,0.6)');
 }
 
 function rollRarity() {
@@ -2147,7 +2149,7 @@ function rollRarity() {
 function pull(n) {
   const cost = n === 10 ? 900 : 100;
   if (save.tokens < cost) {
-    menuMsg = 'Не хватает жетонов — сыграй забег';
+    menuMsg = 'Not enough tokens, play a run';
     menuMsgT = 2;
     return;
   }
@@ -2187,7 +2189,7 @@ function drawPull() {
   ctx.textAlign = 'center';
   if (pullIdx >= pullRes.length) {
     ctx.font = font(UP * 10);
-    shadowText('ИТОГИ ПРИЗЫВА', W / 2, H * 0.14, '#ffd36e');
+    shadowText('SUMMON RESULTS', W / 2, H * 0.14, '#ffd36e');
     const size = Math.min(UP * 34, (W - 80) / 5.8), gap = UP * 4;
     pullRes.forEach((r, i) => {
       const col = i % 5, row = Math.floor(i / 5);
@@ -2198,10 +2200,10 @@ function drawPull() {
       ctx.fillStyle = '#fff';
       ctx.fillText(r.c.name, x + size / 2, y + size + UP * 4);
       ctx.fillStyle = r.isNew ? '#7cfc9a' : RARITY[r.c.rarity].color;
-      ctx.fillText(r.isNew ? 'НОВЫЙ!' : r.refund ? `+${r.refund} жет.` : stars(r.stars), x + size / 2, y + size + UP * 10);
+      ctx.fillText(r.isNew ? 'NEW!' : r.refund ? `+${r.refund} tok.` : stars(r.stars), x + size / 2, y + size + UP * 10);
     });
     ctx.font = font(UP * 7);
-    if (Math.floor(performance.now() / 500) % 2 === 0) shadowText('Enter — назад', W / 2, H - UP * 14, '#7cfc9a');
+    if (Math.floor(performance.now() / 500) % 2 === 0) shadowText('Enter — back', W / 2, H - UP * 14, '#7cfc9a');
     return;
   }
   const r = pullRes[pullIdx], rar = RARITY[r.c.rarity];
@@ -2240,9 +2242,9 @@ function drawPull() {
     ctx.font = font(UP * 7);
     shadowText(`${rar.name} ${stars(r.stars)}`, W / 2, H * 0.42 + size / 2 + UP * 27, rar.color);
     ctx.font = font(UP * 6, 400);
-    shadowText(r.isNew ? 'НОВЫЙ БОЕЦ! ' + r.c.ability : r.refund ? `Уже 5★ — возвращено ${r.refund} жетонов` : 'Повтор: +1 звезда', W / 2, H * 0.42 + size / 2 + UP * 37, r.isNew ? '#7cfc9a' : '#e9e4da');
+    shadowText(r.isNew ? 'NEW SOLDIER! ' + r.c.ability : r.refund ? `Already 5★ — ${r.refund} tokens returned` : 'Duplicate: +1 star', W / 2, H * 0.42 + size / 2 + UP * 37, r.isNew ? '#7cfc9a' : '#e9e4da');
     ctx.font = font(UP * 6);
-    if (Math.floor(performance.now() / 500) % 2 === 0) shadowText(`Enter — дальше (${pullIdx + 1}/${pullRes.length})`, W / 2, H - UP * 10, 'rgba(255,255,255,0.7)');
+    if (Math.floor(performance.now() / 500) % 2 === 0) shadowText(`Enter — next (${pullIdx + 1}/${pullRes.length})`, W / 2, H - UP * 10, 'rgba(255,255,255,0.7)');
   }
 }
 
@@ -2250,9 +2252,9 @@ function drawLevelUp() {
   dim(0.6);
   ctx.textAlign = 'center';
   ctx.font = font(UP * 14);
-  shadowText(`УРОВЕНЬ ${game.level - pendingLevels + 1}!`, W / 2, H / 2 - UP * 42, '#7cfc9a');
+  shadowText(`LEVEL ${game.level - pendingLevels + 1}!`, W / 2, H / 2 - UP * 42, '#7cfc9a');
   ctx.font = font(UP * 6, 400);
-  shadowText('← → выбрать, Enter — взять (или 1 / 2 / 3)', W / 2, H / 2 - UP * 31, '#e9e4da');
+  shadowText('← → choose, Enter — take (or 1 / 2 / 3)', W / 2, H / 2 - UP * 31, '#e9e4da');
   cardRects().forEach((r, i) => {
     const c = choices[i];
     const on = i === sel;
@@ -2274,32 +2276,32 @@ function drawOver() {
   dim();
   ctx.textAlign = 'center';
   ctx.font = font(UP * 22);
-  shadowText('ТЫ ПАЛ', W / 2, H * 0.32, '#e5484d');
+  shadowText('YOU FELL', W / 2, H * 0.32, '#e5484d');
   ctx.font = font(UP * 6, 400);
-  shadowText(`${faction.name} · отдай своё сердце…`, W / 2, H * 0.32 + UP * 13, 'rgba(255,255,255,0.7)');
+  shadowText(`${faction.name} · dedicate your heart…`, W / 2, H * 0.32 + UP * 13, 'rgba(255,255,255,0.7)');
   ctx.font = font(UP * 8);
-  shadowText(`Продержался: ${fmtTime(game.time)}   Титанов: ${game.kills}   Уровень: ${game.level}`, W / 2, H * 0.48);
+  shadowText(`Survived: ${fmtTime(game.time)}   Titans: ${game.kills}   Level: ${game.level}`, W / 2, H * 0.48);
   ctx.font = font(UP * 6, 400);
-  shadowText(`Рекорд: ${fmtTime(bestOf(faction))}`, W / 2, H * 0.48 + UP * 12, 'rgba(255,255,255,0.7)');
+  shadowText(`Best: ${fmtTime(bestOf(faction))}`, W / 2, H * 0.48 + UP * 12, 'rgba(255,255,255,0.7)');
   ctx.font = font(UP * 8);
-  shadowText(`+${game.reward} жетонов`, W / 2, H * 0.48 + UP * 22, '#ffd27a');
+  shadowText(`+${game.reward} tokens`, W / 2, H * 0.48 + UP * 22, '#ffd27a');
   ctx.font = font(UP * 8);
-  shadowText('Enter — ещё раз   Esc — выбор фракции', W / 2, H * 0.48 + UP * 32, '#7cfc9a');
+  shadowText('Enter — again   Esc — choose faction', W / 2, H * 0.48 + UP * 32, '#7cfc9a');
 }
 
 function drawWin() {
   dim();
   ctx.textAlign = 'center';
   ctx.font = font(UP * 22);
-  shadowText(faction.map === 'field' ? 'ВЫЛАЗКА УДАЛАСЬ!' : 'ГОРОД ОТБИТ!', W / 2, H * 0.32, '#7cfc9a');
+  shadowText(faction.map === 'field' ? 'EXPEDITION SUCCEEDED!' : 'CITY RETAKEN!', W / 2, H * 0.32, '#7cfc9a');
   ctx.font = font(UP * 6, 400);
-  shadowText(`${faction.name} гордится тобой`, W / 2, H * 0.32 + UP * 13, 'rgba(255,255,255,0.7)');
+  shadowText(`${faction.name} is proud of you`, W / 2, H * 0.32 + UP * 13, 'rgba(255,255,255,0.7)');
   ctx.font = font(UP * 8);
-  shadowText(`Титанов: ${game.kills}   Уровень: ${game.level}${faction.civs ? `   Горожан погибло: ${game.lost}` : ''}`, W / 2, H * 0.48);
-  shadowText(`+${game.reward} жетонов`, W / 2, H * 0.48 + UP * 11, '#ffd27a');
-  shadowText('Enter — играть дальше без конца', W / 2, H * 0.48 + UP * 24, '#7cfc9a');
+  shadowText(`Titans: ${game.kills}   Level: ${game.level}${faction.civs ? `   Citizens lost: ${game.lost}` : ''}`, W / 2, H * 0.48);
+  shadowText(`+${game.reward} tokens`, W / 2, H * 0.48 + UP * 11, '#ffd27a');
+  shadowText('Enter — keep playing endlessly', W / 2, H * 0.48 + UP * 24, '#7cfc9a');
   ctx.font = font(UP * 6, 400);
-  shadowText('R — новая игра   Esc — выбор фракции', W / 2, H * 0.48 + UP * 36, '#e9e4da');
+  shadowText('R — new game   Esc — choose faction', W / 2, H * 0.48 + UP * 36, '#e9e4da');
 }
 
 
@@ -2316,6 +2318,8 @@ function render() {
   bctx.imageSmoothingEnabled = false;
   drawWorld();
   drawNight();
+  drawSky();
+  if (state !== 'play' && typeof SND !== 'undefined') SND.setRain(0);
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.imageSmoothingEnabled = false;
   const zt = zoomTransform();
@@ -2391,21 +2395,21 @@ addEventListener('keydown', e => {
         if (save.chars[c.id]) {
           save.selected = c.id;
           persist();
-          menuMsg = `${c.name} идёт в бой`;
-        } else menuMsg = 'Этот боец ещё не открыт';
+          menuMsg = `${c.name} goes into battle`;
+        } else menuMsg = 'This soldier is not unlocked yet';
         menuMsgT = 2;
       }
       if (e.code === 'KeyC') {
         const code = exportCode();
-        const fallback = () => prompt('Код сохранения — скопируй и сохрани:', code);
-        if (navigator.clipboard) navigator.clipboard.writeText(code).then(() => { menuMsg = 'Код сохранения скопирован в буфер'; menuMsgT = 3; }, fallback);
+        const fallback = () => prompt('Save code — copy and keep it:', code);
+        if (navigator.clipboard) navigator.clipboard.writeText(code).then(() => { menuMsg = 'Save code copied to clipboard'; menuMsgT = 3; }, fallback);
         else fallback();
       }
       if (e.code === 'KeyV') {
-        const code = prompt('Вставь код сохранения:');
+        const code = prompt('Paste your save code:');
         if (code) {
           const ok = importCode(code);
-          menuMsg = ok ? 'Сохранение загружено' : 'Код не подходит';
+          menuMsg = ok ? 'Save loaded' : 'Invalid code';
           menuMsgT = 3;
           if (ok) { factionSel = clamp(save.faction || 0, 0, 2); reset(); }
         }
@@ -2507,7 +2511,7 @@ function drawLoading() {
   ctx.fillRect(0, 0, W, H);
   ctx.textAlign = 'center';
   ctx.font = font(UP * 10);
-  shadowText(tr('АТАКА ТИТАНОВ'), W / 2, H / 2 - UP * 12, '#e8c45a');
+  shadowText(tr('ATTACK ON TITAN'), W / 2, H / 2 - UP * 12, '#e8c45a');
   ctx.fillStyle = '#0e140a';
   ctx.fillRect(W / 2 - UP * 60, H / 2, UP * 120, UP * 5);
   ctx.fillStyle = '#7cc84a';

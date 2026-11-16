@@ -8,7 +8,7 @@ const GOLD_CHANCE = 0.03;
 const FEATURE5 = ['levi', 'mikasa', 'erwin'];
 const FEATURE4 = ['eren', 'armin', 'hange', 'historia', 'mike'];
 const FEATURE_GEAR = ['blade4', 'relic2', 'odm4', 'relic1', 'relic3', 'gas4'];
-const BANNER_TITLES = { levi: 'Сильнейший солдат', mikasa: 'Алый шарф', erwin: 'Отдайте свои сердца' };
+const BANNER_TITLES = { levi: "Humanity's Strongest", mikasa: 'The Red Scarf', erwin: 'Dedicate Your Hearts' };
 
 function weekIndex() { return Math.floor((Date.now() / 86400000 + 3) / 7); }
 
@@ -138,24 +138,24 @@ function gachaPull(n, banner, mode) {
 
 const ANOMALY_CHANCE = 0.08;
 const SHOP = [
-  { id: 'ticket', cost: 30, icon: 'pearl', name: 'Билет призыва', text: 'Один призыв на любом баннере' },
-  { id: 'manual', cost: 8, icon: 'scroll', name: 'Наставление', text: '+150 опыта любому герою' },
-  { id: 'pick4', cost: 160, icon: 'seal_red', name: 'Эпический на выбор', text: 'Любой эпический герой или +1 звезда ему' },
-  { id: 'pick5', cost: 450, icon: 'ribbon', name: 'Легендарный на выбор', text: 'Любой легендарный герой или +1 звезда ему' },
+  { id: 'ticket', cost: 30, icon: 'pearl', name: 'Summon Ticket', text: 'One summon on any banner' },
+  { id: 'manual', cost: 8, icon: 'scroll', name: 'Manual', text: '+150 XP for any hero' },
+  { id: 'pick4', cost: 160, icon: 'seal_red', name: 'Epic of your choice', text: 'Any epic hero, or +1 star for them' },
+  { id: 'pick5', cost: 450, icon: 'ribbon', name: 'Legendary of your choice', text: 'Any legendary hero, or +1 star for them' },
 ];
 const QUOTES = {
-  cadet: 'Я готов отдать сердце человечеству!',
-  connie: 'Я самый быстрый в отряде — догоняйте!',
-  sasha: 'А картошка у вас есть?..',
-  jean: 'Я не герой. Просто делаю, что должен.',
-  eren: 'Я вырежу их всех до последнего!',
-  armin: 'Чтобы что-то изменить, придётся рискнуть.',
-  hange: 'Титаны — это же так интересно!',
-  mikasa: 'Я буду защищать тебя. Всегда.',
-  levi: 'Выбирай сам — и не оглядывайся.',
-  erwin: 'Вперёд! За стену, к правде!',
-  historia: 'Я сама выбираю, кем мне быть.',
-  mike: '*принюхивается* Титаны близко.',
+  cadet: "I'm ready to give my heart to humanity!",
+  connie: "I'm the fastest in the squad, try to keep up!",
+  sasha: 'Do you have any potatoes?..',
+  jean: "I'm no hero. I just do what I must.",
+  eren: "I'll cut down every last one of them!",
+  armin: 'To change anything, you have to take a risk.',
+  hange: 'Titans are just so fascinating!',
+  mikasa: 'I will protect you. Always.',
+  levi: "Make your own choice, and don't look back.",
+  erwin: 'Forward! Beyond the Wall, to the truth!',
+  historia: 'I choose who I want to be.',
+  mike: '*sniffs* Titans are close.',
 };
 
 function feathers() { return gachaState().feathers || 0; }

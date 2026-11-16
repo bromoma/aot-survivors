@@ -1,14 +1,14 @@
 'use strict';
 
 const ULTS = {
-  whirl: { name: 'Танец Аккермана', text: 'Проносится через ближайших титанов и рубит каждому затылок' },
-  rage: { name: 'Неукротимая ярость', text: '8 секунд неуязвимости: облёт вдвое быстрее, атаковать можно с любой высоты' },
-  flares: { name: 'План Армина', text: 'Залп ракет ослепляет всех титанов вокруг на 4 секунды' },
-  spears: { name: 'Громовые копья', text: 'Копья летят в ближайших титанов: убивают до 15 м, остальных оглушают' },
-  cavalry: { name: 'Атака Разведкорпуса', text: 'Конница проносится по полю, сбивает титанов и добивает мелких' },
-  blessing: { name: 'Королевская милость', text: 'Полное лечение и 6 секунд защиты' },
-  arrows: { name: 'Охотничий залп', text: 'Дюжина стрел оглушает титанов и добивает мелких' },
-  dash: { name: 'Газовый рывок', text: '3 секунды бешеной скорости, неуязвимость и взлёт под облака' },
+  whirl: { name: 'Ackerman Dance', text: 'Blazes through the nearest titans and cuts every nape' },
+  rage: { name: 'Untamed Rage', text: '8 seconds invulnerable: orbit twice as fast, attack from any height' },
+  flares: { name: "Armin's Plan", text: 'A flare volley blinds every titan around for 4 seconds' },
+  spears: { name: 'Thunder Spears', text: 'Spears hit the nearest titans: kill up to 15 m, stun the rest' },
+  cavalry: { name: 'Survey Corps Charge', text: 'Cavalry sweeps the field, knocking titans down and finishing small ones' },
+  blessing: { name: 'Royal Grace', text: 'Full heal and 6 seconds of protection' },
+  arrows: { name: "Hunter's Volley", text: 'A dozen arrows stun titans and finish small ones' },
+  dash: { name: 'Gas Burst', text: '3 seconds of crazy speed, invulnerability and a climb to the clouds' },
 };
 trFields(Object.values(ULTS), ['name', 'text']);
 const HERO_ULT = {
@@ -33,7 +33,7 @@ function ultGain(x) {
   game.ult = Math.min(1, game.ult + x / (game.ultNeed || 25));
   if (was < 1 && game.ult >= 1) {
     sfx('chime6', { vol: 0.6, tag: 'chime' });
-    addText(tr('Суперприём готов!'), player.x, player.y - KZ * player.z - 70, '#ffd36e');
+    addText(tr('Ultimate ready!'), player.x, player.y - KZ * player.z - 70, '#ffd36e');
   }
 }
 

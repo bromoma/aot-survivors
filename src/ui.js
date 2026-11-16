@@ -24,14 +24,14 @@ const UI = (() => {
   const cache = {};
 
   const HUB_ITEMS = [
-    { id: 'battle', get label() { return tr('В бой'); }, icon: 'play' },
-    { id: 'squad', get label() { return tr('Отряд'); }, icon: 'square' },
-    { id: 'gear', get label() { return tr('Снаряжение'); }, icon: 'seal_red' },
-    { id: 'training', get label() { return tr('Тренировки'); }, icon: 'pearl' },
-    { id: 'gacha', get label() { return tr('Призыв'); }, icon: 'coin' },
-    { id: 'missions', get label() { return tr('Задания'); }, icon: 'ribbon' },
-    { id: 'records', get label() { return tr('Титанопедия'); }, icon: 'seal_green' },
-    { id: 'settings', get label() { return tr('Настройки'); }, icon: 'gear' },
+    { id: 'battle', get label() { return tr('Battle'); }, icon: 'play' },
+    { id: 'squad', get label() { return tr('Squad'); }, icon: 'square' },
+    { id: 'gear', get label() { return tr('Gear'); }, icon: 'seal_red' },
+    { id: 'training', get label() { return tr('Training'); }, icon: 'pearl' },
+    { id: 'gacha', get label() { return tr('Summon'); }, icon: 'coin' },
+    { id: 'missions', get label() { return tr('Missions'); }, icon: 'ribbon' },
+    { id: 'records', get label() { return tr('Titanpedia'); }, icon: 'seal_green' },
+    { id: 'settings', get label() { return tr('Settings'); }, icon: 'gear' },
   ];
 
   function settings() {
@@ -150,7 +150,7 @@ const UI = (() => {
     root = el('div');
     root.id = 'ui';
     document.body.appendChild(root);
-    for (const id of ['menu', 'hud', 'levelup', 'pause', 'result', 'reveal', 'loot']) {
+    for (const id of ['menu', 'hud', 'levelup', 'pause', 'result', 'reveal', 'loot', 'auth']) {
       const L = el('div', 'layer');
       L.id = id;
       root.appendChild(L);
@@ -164,7 +164,7 @@ const UI = (() => {
     const M = layers.menu;
     M.innerHTML = `
       <div class="screen" data-s="hub">
-        <div class="logo"><div class="title">${tr('АТАКА ТИТАНОВ')}</div><div class="sub">SURVIVORS</div></div>
+        <div class="logo"><div class="title">${tr('ATTACK ON TITAN')}</div><div class="sub">SURVIVORS</div></div>
         <div class="hub-hero k-frame">
           <div class="stage"><img id="hub-hero-img" alt=""></div>
           <div class="name" id="hub-hero-name"></div>
@@ -174,58 +174,62 @@ const UI = (() => {
         <div class="hub-menu" id="hub-menu"></div>
       </div>
       <div class="screen" data-s="battle"><div class="panel-wrap"><div class="panel k-frame">
-        <div class="head"><span class="h2">${tr('Выбери вылазку')}</span><button class="k-icon" data-back>${img('close')}</button></div>
+        <div class="head"><span class="h2">${tr('Choose your sortie')}</span><button class="k-icon" data-back>${img('close')}</button></div>
         <div class="factions" id="factions"></div>
         <div class="threat" id="threat"></div>
         <div class="chal k-card" id="chal"></div>
-        <div class="buttons"><button class="k-btn big" id="go">${img('play')} ${tr('В бой!')}</button></div>
-        <div class="center muted" style="margin-top:8px">${tr('WASD — летишь на тросах вверх, на крыши и деревья. С высоты — Пробел: атака по затылку')}</div>
+        <div class="buttons"><button class="k-btn big" id="go">${img('play')} ${tr('Fight!')}</button></div>
+        <div class="center muted" style="margin-top:8px">${tr('WASD: fly on your cables up to rooftops and trees. From above, Space: strike the nape')}</div>
       </div></div></div>
       <div class="screen" data-s="squad"><div class="panel-wrap"><div class="panel k-frame">
-        <div class="head"><span class="h2">${tr('Отряд')}</span><button class="k-icon" data-back>${img('close')}</button></div>
+        <div class="head"><span class="h2">${tr('Squad')}</span><button class="k-icon" data-back>${img('close')}</button></div>
         <div class="row" style="align-items:flex-start">
           <div class="squad" id="squad"></div>
           <div class="squad-detail k-card" id="squad-detail"></div>
         </div>
       </div></div></div>
       <div class="screen" data-s="gacha"><div class="panel-wrap"><div class="panel k-frame gacha-v2">
-        <div class="head"><span class="h2">${tr('Призыв')}</span><div class="g-tabs" id="g-tabs"></div><button class="k-icon" data-back>${img('close')}</button></div>
+        <div class="head"><span class="h2">${tr('Summon')}</span><div class="g-tabs" id="g-tabs"></div><button class="k-icon" data-back>${img('close')}</button></div>
         <div class="g-stage" id="g-stage"></div>
         <div class="g-row"><div class="g-info" id="g-info"></div><div class="g-btns" id="g-btns"></div></div>
         <div class="g-history k-card hid" id="g-history"></div>
       </div></div></div>
       <div class="screen" data-s="gear"><div class="panel-wrap"><div class="panel k-frame gear-v">
-        <div class="head"><span class="h2">${tr('Снаряжение')}</span><span class="gear-coll" id="gear-coll"></span><button class="k-icon" data-back>${img('close')}</button></div>
+        <div class="head"><span class="h2">${tr('Gear')}</span><span class="gear-coll" id="gear-coll"></span><button class="k-icon" data-back>${img('close')}</button></div>
         <div class="row" style="align-items:flex-start">
           <div class="gear-left"><div class="gear-slots" id="gear-slots"></div><div class="gear-tot k-card" id="gear-tot"></div></div>
           <div class="gear-right"><div class="gear-inv" id="gear-inv"></div><div class="gear-info k-card" id="gear-info"></div></div>
         </div>
       </div></div></div>
       <div class="screen" data-s="training"><div class="panel-wrap"><div class="panel k-frame" style="width:min(1000px,94vw)">
-        <div class="head"><span class="h2">${tr('Тренировки кадетского корпуса')}</span><button class="k-icon" data-back>${img('close')}</button></div>
-        <div class="muted" style="margin-bottom:8px">${tr('Постоянные улучшения за жетоны — действуют в каждом забеге')}</div>
+        <div class="head"><span class="h2">${tr('Cadet Corps Training')}</span><button class="k-icon" data-back>${img('close')}</button></div>
+        <div class="muted" style="margin-bottom:8px">${tr('Permanent upgrades for tokens, active in every run')}</div>
         <div class="train-grid" id="training"></div>
       </div></div></div>
       <div class="screen" data-s="missions"><div class="panel-wrap"><div class="panel k-frame" style="width:min(820px,94vw)">
-        <div class="head"><span class="h2">${tr('Задания')}</span><span class="rank" id="rank"></span><button class="k-icon" data-back>${img('close')}</button></div>
-        <div class="sec">${tr('Сегодня')}</div>
+        <div class="head"><span class="h2">${tr('Missions')}</span><span class="rank" id="rank"></span><button class="k-icon" data-back>${img('close')}</button></div>
+        <div class="sec">${tr('Today')}</div>
         <div class="mis-list" id="daily"></div>
-        <div class="sec">${tr('Достижения')}</div>
+        <div class="sec">${tr('Achievements')}</div>
         <div class="mis-list" id="achievements"></div>
       </div></div></div>
       <div class="screen" data-s="records"><div class="panel-wrap"><div class="panel k-frame dex-v">
-        <div class="head"><span class="h2">${tr('Титанопедия')}</span><span class="dex-coll" id="dex-coll"></span><button class="k-icon" data-back>${img('close')}</button></div>
+        <div class="head"><span class="h2">${tr('Titanpedia')}</span><span class="dex-coll" id="dex-coll"></span><button class="k-icon" data-back>${img('close')}</button></div>
         <div class="row" style="align-items:flex-start">
           <div class="dex-left"><div class="dex-grid" id="dex-grid"></div></div>
-          <div class="dex-right"><div class="dex-info k-card" id="dex-info"></div><div class="sec">${tr('Рекорды')}</div><div class="list" id="records"></div></div>
+          <div class="dex-right"><div class="dex-info k-card" id="dex-info"></div><div class="sec">${tr('Records')}</div><div class="list" id="records"></div></div>
         </div>
       </div></div></div>
+      <div class="screen" data-s="profile"><div class="panel-wrap"><div class="panel k-frame" style="width:min(560px,92vw)">
+        <div class="head"><span class="h2">${tr('Profile')}</span><button class="k-icon" data-back>${img('close')}</button></div>
+        <div id="profile"></div>
+      </div></div></div>
       <div class="screen" data-s="settings"><div class="panel-wrap"><div class="panel k-frame" style="width:min(560px,92vw)">
-        <div class="head"><span class="h2">${tr('Настройки')}</span><button class="k-icon" data-back>${img('close')}</button></div>
+        <div class="head"><span class="h2">${tr('Settings')}</span><button class="k-icon" data-back>${img('close')}</button></div>
         <div id="settings"></div>
       </div></div></div>
       <div class="bottom-bar">
-        <div class="row" style="gap:10px"><div class="coins k-card"><img src="assets/ui/coin.png" alt=""><span id="tokens"></span></div><div class="coins k-card rank-plate"><img src="assets/ui/ribbon.png" alt=""><span id="rank-foot"></span></div></div>
+        <div class="row" style="gap:10px"><button class="coins k-card prof-chip" id="prof-chip"><span class="pav" id="prof-av"></span><span id="prof-name"></span></button><div class="coins k-card"><img src="assets/ui/coin.png" alt=""><span id="tokens"></span></div><div class="coins k-card rank-plate"><img src="assets/ui/ribbon.png" alt=""><span id="rank-foot"></span></div></div>
         <div class="hint" id="menu-hint"></div>
       </div>
       <div class="msg k-tip" id="msg"></div>`;
@@ -238,6 +242,7 @@ const UI = (() => {
     });
     M.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', () => go('hub')));
     $('#go', M).addEventListener('click', () => start());
+    $('#prof-chip', M).addEventListener('click', () => go('profile'));
   }
 
   function buildHud() {
@@ -245,10 +250,10 @@ const UI = (() => {
     Hd.innerHTML = `
       <div class="tl">
         <div class="plate wood-text"><span id="hud-face"></span><div class="hearts" id="hud-hearts"></div><span id="hud-name"></span></div>
-        <div style="position:relative"><div class="gauge k-field" id="hud-gauge"><div class="fill"></div><div class="need"></div></div><div class="gauge-label wood-text">${tr('ВЫСОТА')}</div></div>
+        <div style="position:relative"><div class="gauge k-field" id="hud-gauge"><div class="fill"></div><div class="need"></div></div><div class="gauge-label wood-text">${tr('HEIGHT')}</div></div>
       </div>
       <div class="top">
-        <div class="plate wood-text timer" id="hud-timer"></div>
+        <div class="plate wood-text timer" id="hud-timer"></div><span class="sky-ico" id="hud-sky"></span>
         <div class="wood-text kills" id="hud-kills"></div>
         <div class="bossbar k-card" id="hud-boss"><div class="bname" id="hud-boss-name"></div><div class="segs" id="hud-boss-segs"></div></div>
         <div class="combo" id="hud-combo"></div>
@@ -262,13 +267,13 @@ const UI = (() => {
       <div class="lvl wood-text" id="hud-lvl"></div>
       <div class="xp k-field"><div class="bar" id="hud-xp"></div></div>
       <button class="ult" id="hud-ult"><i class="uf"></i><span class="uk">${IS_TOUCH ? '★' : 'E'}</span><span class="un wood-text"></span></button>
-      <div class="tip-line k-tip" id="hud-tip">${IS_TOUCH ? tr('Веди пальцем — полёт на тросах к крышам и деревьям. С высоты — круглая кнопка: атака по затылку') : tr('WASD — летишь на тросах вверх, на крыши и деревья. С высоты — Пробел: атака')}</div>
+      <div class="tip-line k-tip" id="hud-tip">${IS_TOUCH ? tr('Drag your finger to fly on your cables to rooftops and trees. From above, the round button: strike the nape') : tr('WASD: fly on your cables up to rooftops and trees. From above, Space: attack')}</div>
       ${IS_TOUCH ? '<div class="tzone" id="tzone"></div><div class="tstick" id="tstick"><i></i></div><button class="tatk" id="tatk">⚔</button>' : ''}`;
     Object.assign(hud, {
       face: $('#hud-face', Hd), hearts: $('#hud-hearts', Hd), name: $('#hud-name', Hd), gauge: $('#hud-gauge', Hd),
       fill: $('#hud-gauge .fill', Hd), need: $('#hud-gauge .need', Hd), timer: $('#hud-timer', Hd), kills: $('#hud-kills', Hd),
       combo: $('#hud-combo', Hd), boss: $('#hud-boss', Hd), bossName: $('#hud-boss-name', Hd), bossSegs: $('#hud-boss-segs', Hd), skills: $('#hud-skills', Hd), banner: $('#hud-banner', Hd), bannerT: $('#hud-banner-t', Hd), bannerS: $('#hud-banner-s', Hd), civ: $('#hud-civ', Hd), lvl: $('#hud-lvl', Hd), xp: $('#hud-xp', Hd), tip: $('#hud-tip', Hd),
-      ult: $('#hud-ult', Hd), ultFace: $('#hud-ult .uf', Hd), ultName: $('#hud-ult .un', Hd),
+      sky: $('#hud-sky', Hd), ult: $('#hud-ult', Hd), ultFace: $('#hud-ult .uf', Hd), ultName: $('#hud-ult .un', Hd),
     });
     hud.ult.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); if (ultUse()) { hud.ult.classList.add('hit'); setTimeout(() => hud.ult.classList.remove('hit'), 150); } });
     $('#hud-pause', Hd).addEventListener('click', () => { if (state === 'play') state = 'paused'; });
@@ -316,11 +321,20 @@ const UI = (() => {
     if (id === 'training') refreshTraining();
     if (id === 'missions') refreshMissions();
     if (id === 'settings') refreshSettings();
+    if (id === 'profile') refreshProfile();
     refreshFooter();
   }
 
   function refreshFooter() {
     $('#tokens').textContent = save.tokens;
+    const pc = profCur(), chip = $('#prof-chip');
+    chip.style.display = pc ? '' : 'none';
+    if (pc && cache.chip !== pc.avatar + pc.name) {
+      cache.chip = pc.avatar + pc.name;
+      $('#prof-av').innerHTML = '';
+      $('#prof-av').appendChild(face(pc.avatar));
+      $('#prof-name').textContent = pc.name;
+    }
     const rk = rankInfo();
     $('#rank-foot').textContent = rk.name;
     const n = claimableCount();
@@ -332,7 +346,7 @@ const UI = (() => {
     if (db) { db.textContent = dn || ''; db.style.display = dn ? '' : 'none'; }
     const nb = $('#gear-badge'), gs = gearSave(), nn = Object.keys(gs.items).filter(k => !(gs.seen || {})[k]).length;
     if (nb) { nb.textContent = nn || ''; nb.style.display = nn ? '' : 'none'; }
-    const hints = { records: tr('Клик по титану — подробнее, Esc — назад'), gear: tr('Клик по ячейке — фильтр, по предмету — подробнее, Esc — назад'), hub: tr('↑↓ — выбрать, Enter — открыть'), battle: tr('← → — фракция, ↑↓ — угроза, Enter — в бой, Esc — назад'), squad: tr('Стрелки — выбрать, Enter — взять в бой, Esc — назад'), gacha: tr('1 — один призыв, 0 — десять, F — бесплатный, T — билет, Tab — баннер, Esc — назад'), records: tr('Esc — назад'), settings: tr('Esc — назад'), training: tr('Клик — купить уровень, Esc — назад'), missions: tr('Клик — забрать награду, Esc — назад') };
+    const hints = { records: tr('Click a titan for details, Esc: back'), gear: tr('Click a slot to filter, an item for details, Esc: back'), hub: tr('↑↓: select, Enter: open'), battle: tr('← →: faction, ↑↓: threat, Enter: fight, Esc: back'), squad: tr('Arrows: select, Enter: take into battle, Esc: back'), gacha: tr('1: one summon, 0: ten, F: free, T: ticket, Tab: banner, Esc: back'), records: tr('Esc: back'), settings: tr('Esc: back'), training: tr('Click: buy a level, Esc: back'), missions: tr('Click: claim reward, Esc: back') };
     $('#menu-hint').textContent = hints[screen] || '';
   }
 
@@ -358,7 +372,7 @@ const UI = (() => {
       const c = el('div', 'faction k-card' + (i === factionSel && !challengeOn ? ' sel' : ''));
       c.appendChild(emblem(f.id));
       const b = bestOf(f);
-      c.insertAdjacentHTML('beforeend', `<div class="fname">${f.name}</div><div class="diff" style="color:${['#2c7030', '#a8681a', '#b8302a'][i]}">${tr('{0} · жетоны x{1}', f.diff, [1, 1.5, 2][i])}</div><div class="desc">${f.desc}</div><div class="muted">${b ? tr('Рекорд: {0}', fmtTime(b)) : tr('Ещё не пройдено')}</div>`);
+      c.insertAdjacentHTML('beforeend', `<div class="fname">${f.name}</div><div class="diff" style="color:${['#2c7030', '#a8681a', '#b8302a'][i]}">${tr('{0} · tokens x{1}', f.diff, [1, 1.5, 2][i])}</div><div class="desc">${f.desc}</div><div class="muted">${b ? tr('Best: {0}', fmtTime(b)) : tr('Not cleared yet')}</div>`);
       c.addEventListener('click', () => {
         if (i === factionSel && !challengeOn) start();
         else { challengeOn = false; factionSel = i; requestReset(); refreshBattle(); }
@@ -367,8 +381,8 @@ const UI = (() => {
     });
     const ch = weekChallenge(), cd = $('#chal');
     cd.className = 'chal k-card' + (challengeOn ? ' sel' : '') + (challengeDone() ? ' done' : '');
-    cd.innerHTML = `<div class="ck">${tr('Испытание недели')} · ${FACTIONS[ch.map].name} · 5:00</div><div class="cn">${ch.name}</div><div class="muted small">${ch.text}</div>
-      <div class="cr">${challengeDone() ? tr('Награда этой недели получена ✓') : tr('Награда: билет ×10 и 30 перьев')} · ${tr('Смена через {0}', fmtDur(bannerInfo().endsIn))}</div>`;
+    cd.innerHTML = `<div class="ck">${tr('Weekly challenge')} · ${FACTIONS[ch.map].name} · 5:00</div><div class="cn">${ch.name}</div><div class="muted small">${ch.text}</div>
+      <div class="cr">${challengeDone() ? tr("This week's reward claimed ✓") : tr('Reward: ×10 ticket and 30 feathers')} · ${tr('Changes in {0}', fmtDur(bannerInfo().endsIn))}</div>`;
     cd.onclick = () => {
       if (challengeOn) { start(); return; }
       challengeOn = true; factionSel = ch.map; requestReset(); refreshBattle();
@@ -378,14 +392,14 @@ const UI = (() => {
     const f = FACTIONS[factionSel], max = threatMax(factionSel);
     save.threatSel = save.threatSel || {};
     const cur = clamp(save.threatSel[f.id] || 1, 1, max);
-    tb.innerHTML = '<span class="tl">' + tr('Угроза:') + '</span>';
+    tb.innerHTML = '<span class="tl">' + tr('Threat:') + '</span>';
     THREAT_NAMES.forEach((n, k) => {
       const b = el('button', 'k-btn th' + (k + 1 === cur ? ' sel' : '') + (k + 1 > max ? ' off' : ''), n);
-      b.title = k + 1 > max ? tr('Открой: выживи 10 минут на угрозе {0}', THREAT_NAMES[k - 1]) : tr('Больше титанов, они быстрее и злее. Жетоны x{0}', (1 + 0.3 * k).toFixed(1));
+      b.title = k + 1 > max ? tr('Unlock: survive 10 minutes on threat {0}', THREAT_NAMES[k - 1]) : tr('More titans, faster and fiercer. Tokens x{0}', (1 + 0.3 * k).toFixed(1));
       b.addEventListener('click', () => setThreat(k + 1));
       tb.appendChild(b);
     });
-    tb.insertAdjacentHTML('beforeend', `<span class="muted">${cur > 1 ? tr('титаны злее, жетоны x{0}', (1 + 0.3 * (cur - 1)).toFixed(1)) : tr('выживи 10 минут, чтобы открыть следующую')}</span>`);
+    tb.insertAdjacentHTML('beforeend', `<span class="muted">${cur > 1 ? tr('fiercer titans, tokens x{0}', (1 + 0.3 * (cur - 1)).toFixed(1)) : tr('survive 10 minutes to unlock the next one')}</span>`);
   }
 
   function setThreat(k) {
@@ -406,7 +420,7 @@ const UI = (() => {
       const owned = save.chars[c.id];
       const d = el('div', 'hero-card k-card' + (i === squadSel ? ' sel' : '') + (owned ? '' : ' locked') + (save.selected === c.id ? ' chosen' : ''));
       d.appendChild(face(c.id));
-      d.insertAdjacentHTML('beforeend', `<div class="hn">${owned ? c.name : '???'}</div><div class="${rarityClass(c.rarity)}">${owned ? starsHTML(owned) : RARITY[c.rarity].name}</div>${owned ? '<div class="hlv">' + tr('Ур. {0}', heroLevel(c.id)) + '</div>' : ''}`);
+      d.insertAdjacentHTML('beforeend', `<div class="hn">${owned ? c.name : '???'}</div><div class="${rarityClass(c.rarity)}">${owned ? starsHTML(owned) : RARITY[c.rarity].name}</div>${owned ? '<div class="hlv">' + tr('Lv. {0}', heroLevel(c.id)) + '</div>' : ''}`);
       d.addEventListener('click', () => { squadSel = i; refreshSquad(); });
       d.addEventListener('dblclick', () => { squadSel = i; pickHero(); });
       box.appendChild(d);
@@ -416,35 +430,35 @@ const UI = (() => {
     det.innerHTML = '';
     det.appendChild(face(c.id));
     const L = heroLevelOf(heroXp(c.id));
-    det.insertAdjacentHTML('beforeend', `<div class="center h2 ${rarityClass(c.rarity)}" style="line-height:1">${owned ? c.name : tr('Не открыт')}</div>
+    det.insertAdjacentHTML('beforeend', `<div class="center h2 ${rarityClass(c.rarity)}" style="line-height:1">${owned ? c.name : tr('Locked')}</div>
       <div class="center ${rarityClass(c.rarity)}">${RARITY[c.rarity].name} ${owned ? starsHTML(owned) : ''}</div>
-      <div class="center muted ab">${owned ? c.ability : tr('Можно получить в «Призыве»')}</div>`);
+      <div class="center muted ab">${owned ? c.ability : tr('Can be recruited in “Summon”')}</div>`);
     const U = heroUlt(c.id), UD = ULTS[U[0]];
     det.insertAdjacentHTML('beforeend', `<div class="ultd"><b>★ ${UD.name}</b>${U[1] ? ' ×' + U[1] : ''}<div>${UD.text}</div></div>`);
     if (owned) {
-      det.insertAdjacentHTML('beforeend', `<div class="hx"><b>${tr('Ур. {0}', L.level)}</b> / ${HERO_MAX}<div class="xpb"><i style="width:${L.need ? Math.round(L.into / L.need * 100) : 100}%"></i></div><span class="muted">${L.need ? L.into + ' / ' + L.need : tr('Максимум')}</span></div>
-        <div class="muted small">${L.level > 1 ? heroBonusText(L.level) : tr('Каждый уровень: +1% к скорости и облёту')}</div>
-        <div class="perks">${HERO_PERKS.map(p => `<div class="perk${L.level >= p.at ? ' on' : ''}"><span class="pl">${tr('Ур. {0}', p.at)}</span>${p.text(c.id)}</div>`).join('')}</div>`);
+      det.insertAdjacentHTML('beforeend', `<div class="hx"><b>${tr('Lv. {0}', L.level)}</b> / ${HERO_MAX}<div class="xpb"><i style="width:${L.need ? Math.round(L.into / L.need * 100) : 100}%"></i></div><span class="muted">${L.need ? L.into + ' / ' + L.need : tr('Max')}</span></div>
+        <div class="muted small">${L.level > 1 ? heroBonusText(L.level) : tr('Each level: +1% speed and orbit')}</div>
+        <div class="perks">${HERO_PERKS.map(p => `<div class="perk${L.level >= p.at ? ' on' : ''}"><span class="pl">${tr('Lv. {0}', p.at)}</span>${p.text(c.id)}</div>`).join('')}</div>`);
     }
-    const btn = el('button', 'k-btn' + (owned && save.selected !== c.id ? '' : ' off'), save.selected === c.id ? tr('Уже в бою') : owned ? tr('Взять в бой') : tr('Закрыт'));
+    const btn = el('button', 'k-btn' + (owned && save.selected !== c.id ? '' : ' off'), save.selected === c.id ? tr('Already in battle') : owned ? tr('Take into battle') : tr('Locked'));
     btn.style.width = '100%';
     btn.addEventListener('click', pickHero);
     det.appendChild(btn);
     if (save.golden && save.golden[c.id]) {
       save.goldOff = save.goldOff || {};
       const on = !save.goldOff[c.id];
-      const gb = el('button', 'k-btn gold-btn' + (on ? ' sel' : ''), '✦ ' + (on ? tr('Золотой мундир: вкл') : tr('Золотой мундир: выкл')));
+      const gb = el('button', 'k-btn gold-btn' + (on ? ' sel' : ''), '✦ ' + (on ? tr('Golden uniform: on') : tr('Golden uniform: off')));
       gb.style.width = '100%';
       gb.addEventListener('click', () => { save.goldOff[c.id] = on; persist(); snd('click', { vol: 0.6 }); refreshSquad(); });
       det.appendChild(gb);
     }
     if (owned && L.level < HERO_MAX) {
       const row = el('div', 'row hbtns');
-      const tb = el('button', 'k-btn' + (save.tokens >= TRAIN_COST ? '' : ' off'), `${tr('Тренировать +{0}', TRAIN_XP)} · <img src="assets/ui/coin.png" alt="">${TRAIN_COST}`);
-      tb.addEventListener('click', () => { const r = trainHero(c.id); if (!r) { toast(tr('Не хватает жетонов — сыграй забег')); snd('error', { vol: 0.6 }); return; } snd(r > 1 ? 'levelup' : 'confirm', { vol: 0.6 }); if (r > 1) toast(tr('{0}: уровень {1}!', c.name, heroLevel(c.id))); refreshSquad(); refreshFooter(); });
+      const tb = el('button', 'k-btn' + (save.tokens >= TRAIN_COST ? '' : ' off'), `${tr('Train +{0}', TRAIN_XP)} · <img src="assets/ui/coin.png" alt="">${TRAIN_COST}`);
+      tb.addEventListener('click', () => { const r = trainHero(c.id); if (!r) { toast(tr('Not enough tokens, play a run')); snd('error', { vol: 0.6 }); return; } snd(r > 1 ? 'levelup' : 'confirm', { vol: 0.6 }); if (r > 1) toast(tr('{0}: level {1}!', c.name, heroLevel(c.id))); refreshSquad(); refreshFooter(); });
       const mb = el('button', 'k-btn' + ((save.manuals || 0) > 0 ? '' : ' off'), `<img src="assets/ui/scroll.png" alt=""> +${MANUAL_XP} (${save.manuals || 0})`);
-      mb.title = tr('Наставление: +{0} опыта герою', MANUAL_XP);
-      mb.addEventListener('click', () => { const r = useManual(c.id); if (!r) { toast(tr('Наставления выпадают в «Призыве»')); snd('error', { vol: 0.6 }); return; } snd(r > 1 ? 'levelup' : 'confirm', { vol: 0.6 }); if (r > 1) toast(tr('{0}: уровень {1}!', c.name, heroLevel(c.id))); refreshSquad(); });
+      mb.title = tr('Manual: +{0} hero XP', MANUAL_XP);
+      mb.addEventListener('click', () => { const r = useManual(c.id); if (!r) { toast(tr('Manuals drop from “Summon”')); snd('error', { vol: 0.6 }); return; } snd(r > 1 ? 'levelup' : 'confirm', { vol: 0.6 }); if (r > 1) toast(tr('{0}: level {1}!', c.name, heroLevel(c.id))); refreshSquad(); });
       row.appendChild(tb);
       row.appendChild(mb);
       det.appendChild(row);
@@ -456,27 +470,27 @@ const UI = (() => {
     if (!save.chars[c.id]) return;
     save.selected = c.id;
     persist();
-    toast(tr('{0} идёт в бой', c.name));
+    toast(tr('{0} joins the fight', c.name));
     refreshSquad();
   }
 
   let gBanner = 'event';
   function fmtDur(ms) {
     const h = Math.max(0, Math.floor(ms / 3600000));
-    return h >= 24 ? tr('{0} д {1} ч', Math.floor(h / 24), h % 24) : tr('{0} ч', h);
+    return h >= 24 ? tr('{0}d {1}h', Math.floor(h / 24), h % 24) : tr('{0}h', h);
   }
 
   const TIERC = { 1: '#d8d4cc', 2: '#7cdc7c', 3: '#6fb6ff', 4: '#c58cff', 5: '#ffd36e' };
   function rarName(r) { return r.kind === 'hero' ? RARITY[r.rarity].name : GEAR_RAR[r.rarity].name; }
-  function resName(r) { return r.kind === 'hero' ? r.c.name : r.kind === 'gear' ? tr(r.gear.name) : tr('Наставление'); }
+  function resName(r) { return r.kind === 'hero' ? r.c.name : r.kind === 'gear' ? tr(r.gear.name) : tr('Manual'); }
   function resIcon(r, big) {
     if (r.kind === 'hero') { const c = big ? cv(heroImg(r.c.id, 'down', false)) : face(r.c.id); if (r.golden) { const v = cv(variant(big ? heroImg(r.c.id, 'down', false) : (heroPortrait(r.c.id) || portrait(r.c.id)), 'gold')); return v; } return c; }
     if (r.kind === 'gear') return cv(gearIcon(r.gear.id));
     const im = document.createElement('img'); im.src = 'assets/ui/scroll.png'; return im;
   }
   function resNote(r) {
-    if (r.kind === 'hero') return r.golden ? tr('ЗОЛОТОЙ!') : r.isNew ? tr('Новый!') : r.refund ? '+' + r.refund : '★' + r.stars;
-    if (r.kind === 'gear') return r.isNew ? tr('Новое!') : r.maxed ? tr('Макс.') : tr('Ур. {0}', r.lvl);
+    if (r.kind === 'hero') return r.golden ? tr('GOLDEN!') : r.isNew ? tr('New!') : r.refund ? '+' + r.refund : '★' + r.stars;
+    if (r.kind === 'gear') return r.isNew ? tr('New!#item') : r.maxed ? tr('Max#short') : tr('Lv. {0}', r.lvl);
     return '+' + MANUAL_XP;
   }
   function collStats() {
@@ -487,7 +501,7 @@ const UI = (() => {
     const B = bannerInfo(), g = gachaState();
     const tabs = $('#g-tabs');
     tabs.innerHTML = '';
-    for (const [k, label] of [['event', tr('Особый')], ['arsenal', tr('Арсенал')], ['standard', tr('Стандартный')], ['shop', tr('Обмен')]]) {
+    for (const [k, label] of [['event', tr('Featured')], ['arsenal', tr('Arsenal')], ['standard', tr('Standard')], ['shop', tr('Exchange')]]) {
       const b = el('button', 'k-btn gt' + (k === gBanner ? ' sel' : ''), label);
       b.addEventListener('click', () => { gBanner = k; snd('click', { vol: 0.6 }); refreshGacha(); });
       tabs.appendChild(b);
@@ -505,13 +519,13 @@ const UI = (() => {
       hero.appendChild(body(c.id));
       st.appendChild(hero);
       st.insertAdjacentHTML('beforeend', `<div class="g-title">
-        <div class="g-kicker">${tr('Особый призыв')}</div>
+        <div class="g-kicker">${tr('Featured Summon')}</div>
         <div class="g-name">${tr(B.title)}</div>
         <div class="g-sub r5">${c.name} · ${RARITY[5].name}</div>
         <div class="g-quote">«${tr(QUOTES[c.id] || '')}»</div>
-        <div class="g-up">${tr('Шанс ×2: каждый второй легендарный боец — {0}', c.name)}</div>
+        <div class="g-up">${tr('Rate up: every other legendary soldier is {0}', c.name)}</div>
         <div class="g-fours" id="g-fours"></div>
-        <div class="g-timer">${tr('Смена баннера через {0}', fmtDur(B.endsIn))}</div></div>`);
+        <div class="g-timer">${tr('Banner changes in {0}', fmtDur(B.endsIn))}</div></div>`);
       const fb = $('#g-fours', st);
       for (const id of B.fours) { const ch = charById(id), w = el('div', 'g-four'); w.appendChild(face(id)); w.insertAdjacentHTML('beforeend', `<span class="r4">${ch.name}</span>`); fb.appendChild(w); }
     } else if (gBanner === 'arsenal') {
@@ -520,39 +534,39 @@ const UI = (() => {
       big.appendChild(cv(gearIcon(m.id)));
       st.appendChild(big);
       st.insertAdjacentHTML('beforeend', `<div class="g-title">
-        <div class="g-kicker">${tr('Арсенал Гарнизона')}</div>
+        <div class="g-kicker">${tr('Garrison Arsenal')}</div>
         <div class="g-name">${tr(m.name)}</div>
         <div class="g-sub t5">${tr(SLOT_NAMES[m.slot])} · ${GEAR_RAR[5].name}</div>
-        <div class="g-up">${tr('Только снаряжение. Каждое второе легендарное — {0}', tr(m.name))}</div>
+        <div class="g-up">${tr('Gear only. Every other legendary is {0}', tr(m.name))}</div>
         <div class="g-fours" id="g-slots"></div>
-        <div class="g-timer">${tr('Смена баннера через {0}', fmtDur(B.endsIn))}</div></div>`);
+        <div class="g-timer">${tr('Banner changes in {0}', fmtDur(B.endsIn))}</div></div>`);
       const sb = $('#g-slots', st);
       for (const slot of GEAR_SLOTS) { const it = GEAR.find(x => x.slot === slot && x.id !== m.id) || GEAR.find(x => x.slot === slot); const w = el('div', 'g-four'); w.appendChild(cv(gearIcon(it.id))); sb.appendChild(w); }
     } else {
       const row = el('div', 'g-std');
       for (const c of CHARS.filter(x => x.rarity === 5)) { const w = el('div', 'g-four'); w.appendChild(body(c.id)); w.insertAdjacentHTML('beforeend', `<span class="r5">${c.name}</span>`); row.appendChild(w); }
       st.appendChild(row);
-      st.insertAdjacentHTML('beforeend', `<div class="g-title std"><div class="g-name">${tr('Стандартный')}</div><div class="g-sub">${tr('Все бойцы и всё снаряжение без повышенных шансов')}</div></div>`);
+      st.insertAdjacentHTML('beforeend', `<div class="g-title std"><div class="g-name">${tr('Standard')}</div><div class="g-sub">${tr('All soldiers and all gear, no rate-up')}</div></div>`);
     }
-    st.insertAdjacentHTML('beforeend', `<div class="g-coll"><span>${tr('Бойцы {0}/{1}', cs.heroes, CHARS.length)}</span><span class="gold">${tr('Золотые {0}/{1}', cs.gold, CHARS.length)}</span><span>${tr('Снаряжение {0}/{1}', cs.gear, GEAR_TOTAL)}</span></div>`);
+    st.insertAdjacentHTML('beforeend', `<div class="g-coll"><span>${tr('Soldiers {0}/{1}', cs.heroes, CHARS.length)}</span><span class="gold">${tr('Golden {0}/{1}', cs.gold, CHARS.length)}</span><span>${tr('Gear {0}/{1}', cs.gear, GEAR_TOTAL)}</span></div>`);
     const p5 = save.pity5 || 0, p4 = save.pity4 || 0, ck = gBanner, chest = g.chest[ck] || 0;
-    $('#g-info').innerHTML = `<div class="pity"><span class="t5">${tr('Леген.')}</span><div class="pbar"><i style="width:${Math.round(p5 / PITY5 * 100)}%"></i></div><span>${tr('гарантия через {0}', PITY5 - p5)}</span></div>
-      <div class="pity"><span class="t4">${tr('Эпич.')}</span><div class="pbar p4"><i style="width:${Math.round(p4 / PITY4 * 100)}%"></i></div><span>${tr('гарантия через {0}', PITY4 - p4)}</span></div>
-      <div class="pity"><img class="chest-ic" src="assets/sprites/ui_chest.png" alt=""><div class="pbar pc"><i style="width:${Math.round(chest * 10)}%"></i></div><span>${tr('Сундук трофеев: {0}/10 призывов ×10', Math.floor(chest))}</span></div>
-      ${gBanner === 'event' && g.guar ? '<div class="guar">' + tr('Следующий легендарный боец — точно {0}!', charById(B.five).name) + '</div>' : ''}
-      ${gBanner === 'arsenal' && g.guarG ? '<div class="guar">' + tr('Следующее легендарное — точно {0}!', tr(gearById(B.gear).name)) + '</div>' : ''}
+    $('#g-info').innerHTML = `<div class="pity"><span class="t5">${tr('Leg.')}</span><div class="pbar"><i style="width:${Math.round(p5 / PITY5 * 100)}%"></i></div><span>${tr('guaranteed in {0}', PITY5 - p5)}</span></div>
+      <div class="pity"><span class="t4">${tr('Epic#short')}</span><div class="pbar p4"><i style="width:${Math.round(p4 / PITY4 * 100)}%"></i></div><span>${tr('guaranteed in {0}', PITY4 - p4)}</span></div>
+      <div class="pity"><img class="chest-ic" src="assets/sprites/ui_chest.png" alt=""><div class="pbar pc"><i style="width:${Math.round(chest * 10)}%"></i></div><span>${tr('Trophy chest: {0}/10 ×10 summons', Math.floor(chest))}</span></div>
+      ${gBanner === 'event' && g.guar ? '<div class="guar">' + tr('Next legendary soldier is guaranteed to be {0}!', charById(B.five).name) + '</div>' : ''}
+      ${gBanner === 'arsenal' && g.guarG ? '<div class="guar">' + tr('Next legendary is guaranteed to be {0}!#item', tr(gearById(B.gear).name)) + '</div>' : ''}
 
-      <div class="g-wallet"><a class="lnk" id="g-hist-btn">${tr('Шансы и история')}</a><span><img src="assets/ui/ribbon.png" alt="">${tr('Перья: {0}', feathers())}</span><span><img src="assets/ui/pearl.png" alt="">${tr('Билеты: {0}', tickets())}</span><span><img src="assets/ui/pearl.png" alt="">${tr('Билеты ×10: {0}', g.tickets10 || 0)}</span></div>`;
+      <div class="g-wallet"><a class="lnk" id="g-hist-btn">${tr('Rates & history')}</a><span><img src="assets/ui/ribbon.png" alt="">${tr('Feathers: {0}', feathers())}</span><span><img src="assets/ui/pearl.png" alt="">${tr('Tickets: {0}', tickets())}</span><span><img src="assets/ui/pearl.png" alt="">${tr('×10 tickets: {0}', g.tickets10 || 0)}</span></div>`;
     $('#g-hist-btn').addEventListener('click', () => { $('#g-history').classList.toggle('hid'); refreshHistory(); });
     const bb = $('#g-btns');
     bb.innerHTML = '';
     const btn = (cls, html, fn, title) => { const b = el('button', 'k-btn big ' + cls, html); if (title) b.title = title; b.addEventListener('click', fn); bb.appendChild(b); };
-    if (freeAvailable()) btn('free', `${img('pearl')} ${tr('Бесплатно')}`, () => doPull(1, 'free'), tr('Один бесплатный призыв каждый день'));
-    if (tickets() > 0) btn('free', `${img('pearl')} ×1 (${tickets()})`, () => doPull(1, 'ticket'), tr('Билет призыва'));
-    if ((g.tickets10 || 0) > 0) btn('free', `${img('pearl')} ×10 (${g.tickets10})`, () => doPull(10, 'ticket'), tr('Билет ×10'));
+    if (freeAvailable()) btn('free', `${img('pearl')} ${tr('Free')}`, () => doPull(1, 'free'), tr('One free summon every day'));
+    if (tickets() > 0) btn('free', `${img('pearl')} ×1 (${tickets()})`, () => doPull(1, 'ticket'), tr('Summon Ticket'));
+    if ((g.tickets10 || 0) > 0) btn('free', `${img('pearl')} ×10 (${g.tickets10})`, () => doPull(10, 'ticket'), tr('×10 ticket'));
     btn(save.tokens < PULL_COST ? 'off' : '', `${img('coin')} ×1 — ${PULL_COST}`, () => doPull(1));
-    btn(save.tokens < PULL10_COST ? 'off' : '', `${img('coin')} ×10 — ${PULL10_COST}`, () => doPull(10), tr('Десять за цену девяти, минимум один эпический'));
-    btn('x100' + (save.tokens < PULL100_COST ? ' off' : ''), `${img('coin')} ×100 — ${PULL100_COST}`, () => doPull(100), tr('Сто призывов разом: в каждой десятке минимум один эпический, сундук трофеев сразу'));
+    btn(save.tokens < PULL10_COST ? 'off' : '', `${img('coin')} ×10 — ${PULL10_COST}`, () => doPull(10), tr('Ten for the price of nine, at least one epic'));
+    btn('x100' + (save.tokens < PULL100_COST ? ' off' : ''), `${img('coin')} ×100 — ${PULL100_COST}`, () => doPull(100), tr('A hundred summons at once: at least one epic in every ten, and a trophy chest right away'));
     refreshFooter();
   }
 
@@ -563,7 +577,7 @@ const UI = (() => {
     for (const k of Object.keys(gs.items)) gs.seen[k] = 1;
     persist();
     refreshFooter();
-    $('#gear-coll').textContent = tr('Собрано {0}/{1}', gearOwned(), GEAR_TOTAL);
+    $('#gear-coll').textContent = tr('Collected {0}/{1}', gearOwned(), GEAR_TOTAL);
     const sl = $('#gear-slots');
     sl.innerHTML = '';
     for (const slot of GEAR_SLOTS) {
@@ -572,18 +586,18 @@ const UI = (() => {
         const { m, r } = parseGear(k);
         d.classList.add('t' + r);
         d.appendChild(cv(gearIcon(m.id)));
-        d.insertAdjacentHTML('beforeend', `<div class="gl t${r}">${tr('Ур. {0}', gs.items[k].lvl)}</div>`);
+        d.insertAdjacentHTML('beforeend', `<div class="gl t${r}">${tr('Lv. {0}', gs.items[k].lvl)}</div>`);
       } else d.insertAdjacentHTML('beforeend', '<div class="gempty">+</div>');
       d.insertAdjacentHTML('beforeend', `<div class="gn">${tr(SLOT_NAMES[slot])}</div>`);
       d.addEventListener('click', () => { gearSlot = gearSlot === slot ? null : slot; gearSel = null; refreshGear(); });
       sl.appendChild(d);
     }
     const t = gearEffects(), lines = Object.entries(t).filter(([e, v]) => v && FX_TEXT[e]).map(([e, v]) => tr(FX_TEXT[e], e === 'hp' || e === 'heal' ? v : Math.round(v * 10) / 10));
-    $('#gear-tot').innerHTML = `<div class="sec">${tr('Бонусы снаряжения')}</div>` + (lines.length ? lines.map(x => '<div>' + x + '</div>').join('') : '<div class="muted">' + tr('Пока ничего не надето') + '</div>');
+    $('#gear-tot').innerHTML = `<div class="sec">${tr('Gear bonuses')}</div>` + (lines.length ? lines.map(x => '<div>' + x + '</div>').join('') : '<div class="muted">' + tr('Nothing equipped yet') + '</div>');
     const inv = $('#gear-inv');
     inv.innerHTML = '';
     const keys = Object.keys(gs.items).filter(k => !gearSlot || parseGear(k).m.slot === gearSlot).sort((a, b) => parseGear(b).r - parseGear(a).r || a.localeCompare(b));
-    if (!keys.length) inv.innerHTML = '<div class="muted">' + tr('Снаряжение выпадает в «Призыве» — особенно во вкладке «Арсенал»') + '</div>';
+    if (!keys.length) inv.innerHTML = '<div class="muted">' + tr('Gear drops from “Summon”, especially the “Arsenal” tab') + '</div>';
     for (const k of keys) {
       const { m, r } = parseGear(k), it = gs.items[k], eq = gs.eq[m.slot] === k;
       const d = el('div', 'gitem t' + r + (gearSel === k ? ' sel' : '') + (eq ? ' eq' : ''));
@@ -595,13 +609,13 @@ const UI = (() => {
     const info = $('#gear-info');
     if (gearSel && gs.items[gearSel]) {
       const { m, r } = parseGear(gearSel), it = gs.items[gearSel], eq = gs.eq[m.slot] === gearSel;
-      info.innerHTML = `<div class="row" style="gap:10px"><div class="gbig t${r}" id="gbig"></div><div><div class="h2 t${r}" style="line-height:1">${tr(m.name)}</div><div class="t${r}">${tr(SLOT_NAMES[m.slot])} · ${GEAR_RAR[r].name} · ${tr('Ур. {0}', it.lvl)}/5</div>
-        <div class="small">${gearFxLines(m, r, it.lvl).join('<br>')}</div><div class="muted small">${it.lvl < 5 ? tr('Повторы из призыва повышают уровень') : tr('Максимальный уровень')}</div></div></div>`;
+      info.innerHTML = `<div class="row" style="gap:10px"><div class="gbig t${r}" id="gbig"></div><div><div class="h2 t${r}" style="line-height:1">${tr(m.name)}</div><div class="t${r}">${tr(SLOT_NAMES[m.slot])} · ${GEAR_RAR[r].name} · ${tr('Lv. {0}', it.lvl)}/5</div>
+        <div class="small">${gearFxLines(m, r, it.lvl).join('<br>')}</div><div class="muted small">${it.lvl < 5 ? tr('Duplicates from summons raise its level') : tr('Max level')}</div></div></div>`;
       $('#gbig', info).appendChild(cv(gearIcon(m.id)));
-      const b = el('button', 'k-btn' + (eq ? ' off' : ''), eq ? tr('Надето') : tr('Надеть'));
+      const b = el('button', 'k-btn' + (eq ? ' off' : ''), eq ? tr('Equipped') : tr('Equip'));
       b.addEventListener('click', () => { if (equipGear(gearSel)) { snd('confirm', { vol: 0.7 }); refreshGear(); } });
       info.appendChild(b);
-    } else info.innerHTML = '<div class="muted">' + tr('Выбери предмет, чтобы увидеть бонусы и надеть его') + '</div>';
+    } else info.innerHTML = '<div class="muted">' + tr('Pick an item to see its bonuses and equip it') + '</div>';
   }
 
   let shopPick = null;
@@ -614,21 +628,21 @@ const UI = (() => {
       const d = el('div', 'shop-it k-card' + (feathers() < it.cost ? ' poor' : '') + (shopPick === it.id ? ' sel' : ''));
       d.innerHTML = `<img src="assets/ui/${it.icon}.png" alt=""><div class="sn">${tr(it.name)}</div><div class="muted small">${tr(it.text)}</div><div class="sc"><img src="assets/ui/ribbon.png" alt="">${it.cost}</div>`;
       d.addEventListener('click', () => {
-        if (feathers() < it.cost) { toast(tr('Не хватает перьев — они даются за каждый призыв')); snd('error', { vol: 0.6 }); return; }
+        if (feathers() < it.cost) { toast(tr('Not enough feathers, you get them from every summon')); snd('error', { vol: 0.6 }); return; }
         if (it.id === 'pick4' || it.id === 'pick5') { shopPick = shopPick === it.id ? null : it.id; refreshShop(); return; }
-        if (buyShop(it.id)) { snd('confirm', { vol: 0.8 }); toast(tr('Куплено: {0}', tr(it.name))); refreshGacha(); }
+        if (buyShop(it.id)) { snd('confirm', { vol: 0.8 }); toast(tr('Bought: {0}', tr(it.name))); refreshGacha(); }
       });
       grid.appendChild(d);
     }
     if (shopPick) {
       const rar = shopPick === 'pick4' ? 4 : 5;
       const row = el('div', 'shop-pick');
-      row.insertAdjacentHTML('beforeend', `<div class="sec">${tr('Выбери героя')}</div>`);
+      row.insertAdjacentHTML('beforeend', `<div class="sec">${tr('Choose a hero')}</div>`);
       const fl = el('div', 'row');
       for (const c of CHARS.filter(x => x.rarity === rar)) {
         const h = el('div', 'hero-card k-card');
         h.appendChild(face(c.id));
-        h.insertAdjacentHTML('beforeend', `<div class="hn">${c.name}</div><div class="r${rar}">${save.chars[c.id] ? starsHTML(save.chars[c.id]) : tr('Новый!')}</div>`);
+        h.insertAdjacentHTML('beforeend', `<div class="hn">${c.name}</div><div class="r${rar}">${save.chars[c.id] ? starsHTML(save.chars[c.id]) : tr('New!')}</div>`);
         h.addEventListener('click', () => {
           const r = buyShop(shopPick, c.id);
           if (!r) return;
@@ -644,7 +658,7 @@ const UI = (() => {
       row.appendChild(fl);
       st.appendChild(row);
     }
-    $('#g-info').innerHTML = `<div class="g-wallet big"><span><img src="assets/ui/ribbon.png" alt="">${tr('Перья: {0}', feathers())}</span><span><img src="assets/ui/pearl.png" alt="">${tr('Билеты: {0}', tickets())}</span></div><div class="muted small">${tr('Перья даются за каждый призыв, за повторы — вдвое больше')}</div>`;
+    $('#g-info').innerHTML = `<div class="g-wallet big"><span><img src="assets/ui/ribbon.png" alt="">${tr('Feathers: {0}', feathers())}</span><span><img src="assets/ui/pearl.png" alt="">${tr('Tickets: {0}', tickets())}</span></div><div class="muted small">${tr('You get feathers from every summon, double for duplicates')}</div>`;
     $('#g-btns').innerHTML = '';
     refreshFooter();
   }
@@ -653,8 +667,8 @@ const UI = (() => {
     const h = $('#g-history');
     if (h.classList.contains('hid')) return;
     const list = gachaState().history;
-    const nm = e => e.k === 'gear' ? tr(parseGear(e.id).m.name) : e.id === 'manual' ? tr('Наставление') : (charById(e.id) || { name: e.id }).name;
-    h.innerHTML = '<div class="muted small">' + tr('Шансы: легендарное 1,5% (в среднем 1 из ~37 с гарантией) · эпическое 7% (минимум раз в 10) · редкое 17,5% · необычное 30% · обычное 44%; бойцы — 12%, золотой мундир — 3% от бойцов') + '</div><div class="sec">' + tr('История призывов') + '</div>' + (list.length ? list.map(e => `<span class="hi t${e.r}">${nm(e)}${e.gold ? ' ✦✦' : e.f ? ' ✦' : ''}</span>`).join('') : '<span class="muted">' + tr('Пока пусто') + '</span>');
+    const nm = e => e.k === 'gear' ? tr(parseGear(e.id).m.name) : e.id === 'manual' ? tr('Manual') : (charById(e.id) || { name: e.id }).name;
+    h.innerHTML = '<div class="muted small">' + tr('Rates: legendary 1.5% (about 1 in ~37 with pity) · epic 7% (at least once per 10) · rare 17.5% · uncommon 30% · common 44%; soldiers are 12%, golden uniform is 3% of soldiers') + '</div><div class="sec">' + tr('Summon history') + '</div>' + (list.length ? list.map(e => `<span class="hi t${e.r}">${nm(e)}${e.gold ? ' ✦✦' : e.f ? ' ✦' : ''}</span>`).join('') : '<span class="muted">' + tr('Nothing yet') + '</span>');
   }
 
   function refreshTraining() {
@@ -667,12 +681,12 @@ const UI = (() => {
       d.appendChild(cv(upIcon(t.icon)));
       const pips = Array.from({ length: t.max }, (_, i) => '<i class="' + (i < l ? 'on' : '') + '"></i>').join('');
       d.insertAdjacentHTML('beforeend', `<div class="tn">${t.name}</div><div class="pips">${pips}</div>
-        <div class="ud">${cost === null ? t.text(l) : (l ? tr('Ур. {0}: ', l + 1) : '') + t.text(l + 1)}</div>`);
-      const b = el('button', 'k-btn' + (cost === null || save.tokens < cost ? ' off' : ''), cost === null ? tr('Максимум') : `<img src="assets/ui/coin.png" alt=""> ${cost}`);
+        <div class="ud">${cost === null ? t.text(l) : (l ? tr('Lv. {0}: ', l + 1) : '') + t.text(l + 1)}</div>`);
+      const b = el('button', 'k-btn' + (cost === null || save.tokens < cost ? ' off' : ''), cost === null ? tr('Max') : `<img src="assets/ui/coin.png" alt=""> ${cost}`);
       b.addEventListener('click', () => {
         if (cost === null) return;
-        if (save.tokens < cost) { toast(tr('Не хватает жетонов — сыграй забег')); snd('error', { vol: 0.6 }); return; }
-        if (buyTraining(t.id)) { snd('levelup', { vol: 0.6 }); toast(tr('{0}: уровень {1}', t.name, save.meta[t.id])); refreshTraining(); refreshFooter(); }
+        if (save.tokens < cost) { toast(tr('Not enough tokens, play a run')); snd('error', { vol: 0.6 }); return; }
+        if (buyTraining(t.id)) { snd('levelup', { vol: 0.6 }); toast(tr('{0}: level {1}', t.name, save.meta[t.id])); refreshTraining(); refreshFooter(); }
       });
       d.appendChild(b);
       box.appendChild(d);
@@ -685,11 +699,11 @@ const UI = (() => {
     row.innerHTML = `<div class="mt"><div class="mn">${name}</div><div class="muted">${text}</div>
       <div class="bar"><i style="width:${pct}%"></i></div></div>
       <div class="mv">${goal > 1 ? value + ' / ' + goal : ''}</div>`;
-    const b = el('button', 'k-btn' + (done && !claimed ? '' : ' off'), claimed ? tr('Получено') : `<img src="assets/ui/coin.png" alt=""> ${reward}`);
+    const b = el('button', 'k-btn' + (done && !claimed ? '' : ' off'), claimed ? tr('Claimed') : `<img src="assets/ui/coin.png" alt=""> ${reward}`);
     b.addEventListener('click', () => {
       if (!done || claimed) return;
       const got = onClaim();
-      if (got) { snd('chime5', { vol: 0.7, tag: 'chime' }); snd('bong', { vol: 0.5 }); toast(tr('+{0} жетонов', got)); refreshMissions(); refreshFooter(); }
+      if (got) { snd('chime5', { vol: 0.7, tag: 'chime' }); snd('bong', { vol: 0.5 }); toast(tr('+{0} tokens', got)); refreshMissions(); refreshFooter(); }
     });
     row.appendChild(b);
     return row;
@@ -697,10 +711,10 @@ const UI = (() => {
 
   function refreshMissions() {
     const rk = rankInfo();
-    $('#rank').innerHTML = `${tr('Звание:')} <b>${rk.name}</b>${rk.next ? tr(' · до «{0}»: {1}', rk.next.name, rk.next.at - rk.n) : ''}`;
+    $('#rank').innerHTML = `${tr('Rank:')} <b>${rk.name}</b>${rk.next ? tr(' · to “{0}”: {1}', rk.next.name, rk.next.at - rk.n) : ''}`;
     const dbox = $('#daily');
     dbox.innerHTML = '';
-    for (const t of dailyState()) dbox.appendChild(misRow(tr('Задание дня'), t.text, t.value, t.goal, t.reward, t.done, t.claimed, () => claimDaily(t.i)));
+    for (const t of dailyState()) dbox.appendChild(misRow(tr('Daily task'), t.text, t.value, t.goal, t.reward, t.done, t.claimed, () => claimDaily(t.i)));
     const abox = $('#achievements');
     abox.innerHTML = '';
     const list = achievementsState().sort((a, b) => ((b.done && !b.claimed) - (a.done && !a.claimed)) || (a.claimed - b.claimed));
@@ -709,7 +723,7 @@ const UI = (() => {
 
   let dexSel = null;
   function refreshRecords() {
-    $('#dex-coll').textContent = tr('Изучено {0}/{1}', dexSeen(), DEX.length);
+    $('#dex-coll').textContent = tr('Studied {0}/{1}', dexSeen(), DEX.length);
     const grid = $('#dex-grid');
     grid.innerHTML = '';
     for (const e of DEX) {
@@ -724,22 +738,22 @@ const UI = (() => {
     const info = $('#dex-info'), e = DEX.find(x => x.key === dexSel) || DEX[0];
     const n = dexCount(e.key), T = DEX_TIERS[e.boss ? 'boss' : 'titan'], tier = dexTier(e), next = T[tier];
     info.innerHTML = `<div class="row" style="gap:10px"><div class="dex-big${n ? '' : ' unk'}" id="dex-big"></div><div><div class="h2" style="line-height:1">${n ? e.name : '???'}</div>
-      <div class="muted small">${e.boss ? tr('Шифтер') : tr('Титан')} · ${tr('Срублено: {0}', n)}</div><div class="small">${n ? e.lore : tr('Сруби такого, чтобы узнать о нём больше')}</div>
-      <div class="small dex-next">${next ? tr('Следующая звезда: {0}/{1} · +{2} жетонов, +{3} перьев', n, next, DEX_REWARD[tier][0], DEX_REWARD[tier][1]) : tr('Все звёзды собраны!')}</div></div></div>`;
+      <div class="muted small">${e.boss ? tr('Shifter') : tr('Titan')} · ${tr('Cut down: {0}', n)}</div><div class="small">${n ? e.lore : tr('Cut one down to learn more about it')}</div>
+      <div class="small dex-next">${next ? tr('Next star: {0}/{1} · +{2} tokens, +{3} feathers', n, next, DEX_REWARD[tier][0], DEX_REWARD[tier][1]) : tr('All stars collected!')}</div></div></div>`;
     if (SPR[e.spr]) $('#dex-big', info).appendChild(cv(SPR[e.spr]));
     if (dexClaimable(e)) {
-      const b = el('button', 'k-btn', tr('Забрать награду'));
-      b.addEventListener('click', () => { const [tk, fe] = dexClaimAll(e); snd('chime5', { vol: 0.7, tag: 'chime' }); toast(tr('+{0} жетонов', tk) + ' · ' + tr('+{0} перьев', fe)); refreshRecords(); refreshFooter(); });
+      const b = el('button', 'k-btn', tr('Claim reward'));
+      b.addEventListener('click', () => { const [tk, fe] = dexClaimAll(e); snd('chime5', { vol: 0.7, tag: 'chime' }); toast(tr('+{0} tokens', tk) + ' · ' + tr('+{0} feathers', fe)); refreshRecords(); refreshFooter(); });
       info.appendChild(b);
     }
     const s = statsOf();
     const rows = FACTIONS.map(f => [f.name, bestOf(f) ? fmtTime(bestOf(f)) : '—']);
-    rows.push([tr('Забегов'), s.runs], [tr('Победы'), s.wins], [tr('Титанов убито'), s.kills], [tr('Лучший уровень'), s.bestLevel], [tr('Время в бою'), fmtTime(s.time)], [tr('Призывов'), save.pulls], [tr('Бойцов открыто'), `${Object.keys(save.chars).length} / ${CHARS.length}`]);
+    rows.push([tr('Runs'), s.runs], [tr('Wins'), s.wins], [tr('Titans killed'), s.kills], [tr('Best level'), s.bestLevel], [tr('Time in battle'), fmtTime(s.time)], [tr('Summons'), save.pulls], [tr('Soldiers unlocked'), `${Object.keys(save.chars).length} / ${CHARS.length}`]);
     $('#records').innerHTML = rows.map(([k, v]) => `<div>${k}</div><div class="v">${v}</div>`).join('');
   }
 
   function langRow() {
-    return '<div class="langs"><span>' + tr('Язык') + '</span>' + LANGS.map(([k, n]) => '<button class="k-btn lang' + (k === LANG ? ' sel' : '') + '" data-lang="' + k + '">' + n + '</button>').join('') + '</div>';
+    return '<div class="langs"><span>' + tr('Language') + '</span>' + LANGS.map(([k, n]) => '<button class="k-btn lang' + (k === LANG ? ' sel' : '') + '" data-lang="' + k + '">' + n + '</button>').join('') + '</div>';
   }
 
   function refreshSettings() {
@@ -748,20 +762,20 @@ const UI = (() => {
     const chk = (key, label) => `<div class="check" data-k="${key}"><img src="assets/ui/${st[key] ? 'check_on' : 'check_off'}.png" alt=""><span>${label}</span></div>`;
     box.innerHTML = `
       ${langRow()}
-      ${chk('shake', tr('Тряска экрана при ударах'))}
-      ${chk('hints', tr('Подсказки в бою'))}
-      ${chk('mute', tr('Выключить весь звук (M)'))}
-      <div class="vol"><span>${tr('Музыка')}</span><input type="range" min="0" max="100" id="vol-music" value="${Math.round((st.music ?? 0.6) * 100)}"><span id="vol-music-v">${Math.round((st.music ?? 0.6) * 100)}</span></div>
-      <div class="vol"><span>${tr('Эффекты')}</span><input type="range" min="0" max="100" id="vol-sfx" value="${Math.round((st.sfx ?? 0.8) * 100)}"><span id="vol-sfx-v">${Math.round((st.sfx ?? 0.8) * 100)}</span></div>
-      <div style="margin-top:10px">${tr('Код сохранения — перенос прогресса на другой компьютер:')}</div>
+      ${chk('shake', tr('Screen shake on hits'))}
+      ${chk('hints', tr('Hints in battle'))}
+      ${chk('mute', tr('Mute all sound (M)'))}
+      <div class="vol"><span>${tr('Music')}</span><input type="range" min="0" max="100" id="vol-music" value="${Math.round((st.music ?? 0.6) * 100)}"><span id="vol-music-v">${Math.round((st.music ?? 0.6) * 100)}</span></div>
+      <div class="vol"><span>${tr('Effects')}</span><input type="range" min="0" max="100" id="vol-sfx" value="${Math.round((st.sfx ?? 0.8) * 100)}"><span id="vol-sfx-v">${Math.round((st.sfx ?? 0.8) * 100)}</span></div>
+      <div style="margin-top:10px">${tr('Save code, to move your progress to another computer:')}</div>
       <textarea class="code-box" id="code" rows="3" spellcheck="false"></textarea>
       <div class="buttons" style="justify-content:flex-start">
-        <button class="k-btn" id="code-copy">${tr('Скопировать мой код')}</button>
-        <button class="k-btn" id="code-load">${tr('Загрузить код')}</button>
-        <button class="k-btn" id="full">${tr('Во весь экран')}</button>
-        <button class="k-btn" id="wipe">${confirmReset ? tr('Точно стереть?') : tr('Стереть прогресс')}</button>
+        <button class="k-btn" id="code-copy">${tr('Copy my code')}</button>
+        <button class="k-btn" id="code-load">${tr('Load code')}</button>
+        <button class="k-btn" id="full">${tr('Fullscreen')}</button>
+        <button class="k-btn" id="wipe">${confirmReset ? tr('Really erase?') : tr('Erase progress')}</button>
       </div>
-      <div class="muted" style="margin-top:10px;font-size:16px">${tr('Фан-игра по «Атаке титанов», некоммерческая. Шрифт Pixellari — Zacchary Dempsey-Plante. Музыка — RandomMind, Komiku, Will Carpenter, cynicmusic (CC0). Звуки — Kenney (CC0). Подробно — CREDITS.md.')}</div>`;
+      <div class="muted" style="margin-top:10px;font-size:16px">${tr('A non-commercial Attack on Titan fan game. Pixellari font by Zacchary Dempsey-Plante. Music by RandomMind, Komiku, Will Carpenter, cynicmusic (CC0). Sounds by Kenney (CC0). Details in CREDITS.md.')}</div>`;
     box.querySelectorAll('[data-lang]').forEach(b => b.addEventListener('click', () => {
       const k = b.dataset.lang;
       if (k === LANG) return;
@@ -792,12 +806,12 @@ const UI = (() => {
       const code = exportCode();
       ta.value = code;
       ta.select();
-      if (navigator.clipboard) navigator.clipboard.writeText(code).then(() => toast(tr('Код скопирован')), () => toast(tr('Выдели код и скопируй вручную')));
+      if (navigator.clipboard) navigator.clipboard.writeText(code).then(() => toast(tr('Code copied')), () => toast(tr('Select the code and copy it manually')));
     });
     $('#code-load').addEventListener('click', () => {
-      if (!ta.value.trim()) { toast(tr('Вставь код в поле')); return; }
-      if (importCode(ta.value)) { toast(tr('Сохранение загружено')); factionSel = clamp(save.faction || 0, 0, 2); requestReset(); refreshSettings(); }
-      else toast(tr('Код не подходит'));
+      if (!ta.value.trim()) { toast(tr('Paste the code into the field')); return; }
+      if (importCode(ta.value)) { toast(tr('Save loaded')); factionSel = clamp(save.faction || 0, 0, 2); requestReset(); refreshSettings(); }
+      else toast(tr('Invalid code'));
     });
     $('#full').addEventListener('click', () => {
       if (document.fullscreenElement) document.exitFullscreen();
@@ -809,7 +823,7 @@ const UI = (() => {
       save = loadSave();
       persist();
       confirmReset = false;
-      toast(tr('Прогресс стёрт'));
+      toast(tr('Progress erased'));
       refreshSettings();
     });
   }
@@ -826,7 +840,7 @@ const UI = (() => {
     st.mute = !st.mute;
     persist();
     applyAudio();
-    toast(st.mute ? tr('Звук выключен') : tr('Звук включён'));
+    toast(st.mute ? tr('Sound off') : tr('Sound on'));
     if (screen === 'settings' && state === 'menu') refreshSettings();
   }
 
@@ -845,7 +859,7 @@ const UI = (() => {
   function doPull(n, mode) {
     if (performance.now() < pullLock) return;
     const res = gachaPull(n, gBanner === 'shop' ? 'event' : gBanner, mode);
-    if (!res) { toast(mode === 'ticket' ? tr('Нет билетов') : tr('Не хватает жетонов — сыграй забег')); snd('error', { vol: 0.6 }); return; }
+    if (!res) { toast(mode === 'ticket' ? tr('No tickets') : tr('Not enough tokens, play a run')); snd('error', { vol: 0.6 }); return; }
     if (res.length <= 10) {
       const w = r => r.rarity * 10 + (r.golden ? 5 : 0) + (r.kind === 'hero' ? 1 : 0) + Math.random();
       const keep = { feathers: res.feathers, anomaly: res.anomaly, chest: res.chest };
@@ -974,8 +988,8 @@ const UI = (() => {
     rvClear();
     rv = { phase: 'aim', timers: [], max, golden: pullRes.some(r => r.golden), tease: max === 4 && Math.random() < 0.3, anomaly: !!pullRes.anomaly, charge: 0, charging: false };
     rvShell(L);
-    $('#rv-stage', L).insertAdjacentHTML('afterend', `<div class="rv-aim" id="rv-aim"><div class="ring"><i id="rv-ring"></i><b>✦</b></div><div class="wood-text">${tr('Зажми, чтобы выпустить ракету')}</div></div>`);
-    rvNext(tr('Esc — пропустить'));
+    $('#rv-stage', L).insertAdjacentHTML('afterend', `<div class="rv-aim" id="rv-aim"><div class="ring"><i id="rv-ring"></i><b>✦</b></div><div class="wood-text">${tr('Hold to fire the flare')}</div></div>`);
+    rvNext(tr('Esc: skip'));
     rvLater(4500, () => rvAimDone());
   }
 
@@ -998,7 +1012,7 @@ const UI = (() => {
   function rvLaunch() {
     rv.phase = 'launch';
     rv.flare = { t: 0, dur: 1.5, speed: 1, col: 0 };
-    rvNext(tr('Клик — пропустить'));
+    rvNext(tr('Click to skip'));
     snd('flare', { vol: 0.9 });
     snd('rise', { vol: 0.7 });
   }
@@ -1018,7 +1032,7 @@ const UI = (() => {
     tgt.style.top = (nap.fy * 100) + '%';
     box.appendChild(tgt);
     st.appendChild(box);
-    st.insertAdjacentHTML('beforeend', `<div class="rv-alert">${tr('Аномалия! Титан у стены — бей в затылок!')}</div>`);
+    st.insertAdjacentHTML('beforeend', `<div class="rv-alert">${tr('Anomaly! A titan at the Wall, strike its nape!')}</div>`);
     snd('roar', { vol: 0.8 });
     snd('horn', { vol: 0.5 });
     rvNext('');
@@ -1033,10 +1047,10 @@ const UI = (() => {
         snd('cut', { vol: 0.9 });
         anomalyReward();
         box.classList.add('slain');
-        if (al) al.textContent = tr('Отбито! +1 билет призыва и 10 перьев');
+        if (al) al.textContent = tr('Repelled! +1 summon ticket and 10 feathers');
       } else {
         box.classList.add('away');
-        if (al) al.textContent = tr('Титан скрылся…');
+        if (al) al.textContent = tr('The titan got away…');
       }
       rvLater(1300, () => { box.remove(); if (al) al.remove(); rvLaunch(); });
     };
@@ -1067,19 +1081,19 @@ const UI = (() => {
   function rvBody(r) {
     if (r.kind === 'hero') {
       const quote = `<div class="rv-quote">«${tr(QUOTES[r.c.id] || QUOTES.cadet)}»</div>`;
-      return `<div class="rname t${r.rarity}">${r.c.name}</div><div class="rrar t${r.rarity}">${rarName(r)}${r.golden ? ' · <b class="gold">' + tr('Золотой мундир') + '</b>' : ''}</div><div class="rstars">${rvStars(r)}</div>
-        <div class="rv-txt">${r.isNew ? r.c.ability : r.refund ? tr('Уже 5★ — возвращено {0} жетонов', r.refund) : tr('Повтор: +1 звезда')}</div>${quote}`;
+      return `<div class="rname t${r.rarity}">${r.c.name}</div><div class="rrar t${r.rarity}">${rarName(r)}${r.golden ? ' · <b class="gold">' + tr('Golden uniform') + '</b>' : ''}</div><div class="rstars">${rvStars(r)}</div>
+        <div class="rv-txt">${r.isNew ? r.c.ability : r.refund ? tr('Already 5★, {0} tokens refunded', r.refund) : tr('Duplicate: +1 star')}</div>${quote}`;
     }
     if (r.kind === 'gear') {
       return `<div class="rname t${r.rarity}">${tr(r.gear.name)}</div><div class="rrar t${r.rarity}">${tr(SLOT_NAMES[r.gear.slot])} · ${rarName(r)}</div>
-        <div class="rv-txt">${gearFxLines(r.gear, r.rarity, r.lvl).join(' · ')}</div><div class="rv-quote">${r.isNew ? tr('Новое в коллекции!') : r.maxed ? tr('Уже максимального уровня') : tr('Повтор: уровень {0}', r.lvl)}</div>`;
+        <div class="rv-txt">${gearFxLines(r.gear, r.rarity, r.lvl).join(' · ')}</div><div class="rv-quote">${r.isNew ? tr('New in your collection!') : r.maxed ? tr('Already at max level') : tr('Duplicate: level {0}', r.lvl)}</div>`;
     }
-    return `<div class="rname t${r.rarity}">${tr('Наставление')}</div><div class="rv-txt">${tr('+{0} опыта любому герою — используй в «Отряде»', MANUAL_XP)}</div>`;
+    return `<div class="rname t${r.rarity}">${tr('Manual')}</div><div class="rv-txt">${tr('+{0} XP for any hero, use it in “Squad”', MANUAL_XP)}</div>`;
   }
 
   function rvShow(i, host) {
     const r = pullRes[i] || i, st = host || $('#rv-stage', layers.reveal);
-    if (!host) { rv.phase = 'card'; rvNext(tr('Enter или клик — дальше')); }
+    if (!host) { rv.phase = 'card'; rvNext(tr('Enter or click: next')); }
     if (isBig(r) && r.kind !== 'item') { rvCinema(r, st, false); return; }
     st.innerHTML = `<div class="rv-rays m${Math.max(3, r.rarity)}"></div><div class="rv-card t${r.rarity}" id="rv-card"></div>`;
     const card = $('#rv-card', st);
@@ -1087,9 +1101,9 @@ const UI = (() => {
     ic.classList.add(r.kind === 'gear' ? 'gearbig' : 'herobig');
     if (r.kind === 'hero') ic.classList.add('sil');
     card.appendChild(ic);
-    if (r.isNew && r.kind !== 'item') card.insertAdjacentHTML('beforeend', '<div class="stamp">' + (r.kind === 'gear' ? tr('Новое!') : tr('Новый!')) + '</div>');
-    if (r.featured) card.insertAdjacentHTML('beforeend', '<div class="feat">' + tr('Шанс ×2') + '</div>');
-    card.insertAdjacentHTML('beforeend', rvBody(r) + `<div class="rv-fe">+${r.feathers || 0} ${tr('перьев')}</div>`);
+    if (r.isNew && r.kind !== 'item') card.insertAdjacentHTML('beforeend', '<div class="stamp">' + (r.kind === 'gear' ? tr('New!#item') : tr('New!')) + '</div>');
+    if (r.featured) card.insertAdjacentHTML('beforeend', '<div class="feat">' + tr('Rate up') + '</div>');
+    card.insertAdjacentHTML('beforeend', rvBody(r) + `<div class="rv-fe">+${r.feathers || 0} ${tr('feathers')}</div>`);
     if (r.kind === 'hero') setTimeout(() => ic.classList.remove('sil'), 420);
     if (r.rarity === 4) { snd('bong', { vol: 0.7 }); snd('chime6', { vol: 0.6, tag: 'chime' }); }
     else snd('chime' + Math.min(5, r.rarity + 1), { vol: 0.6, tag: 'chime' });
@@ -1100,10 +1114,10 @@ const UI = (() => {
     if (!overlay) host.innerHTML = '';
     const gear = r.kind === 'gear';
     const q = gear ? gearFxLines(r.gear, r.rarity, r.lvl).join(' · ') : '«' + tr(QUOTES[r.c.id] || QUOTES.cadet) + '»';
-    const kick = gear ? tr('Легендарное снаряжение') : r.golden ? tr('Золотой боец!') : tr('Легендарный боец');
+    const kick = gear ? tr('Legendary gear') : r.golden ? tr('Golden soldier!') : tr('Legendary soldier');
     box.insertAdjacentHTML('beforeend', `<div class="cine${r.golden ? ' golden' : ''}"><div class="cine-black"></div><div class="cine-rays"></div><div class="cine-emblem" id="ce"></div>${gear ? '' : '<div class="cine-cables"><i></i><i></i></div>'}<div class="cine-hero${gear ? ' gear' : ''}" id="chero"></div>
       <div class="cine-text"><div class="cine-kick">${kick}</div><div class="cine-name${resName(r).length > 14 ? ' long' : ''}">${resName(r)}</div>${gear ? `<div class="rrar t5">${tr(SLOT_NAMES[r.gear.slot])}</div>` : `<div class="rstars">${rvStars(r)}</div>`}<div class="cine-quote" id="cq"></div>
-      <div class="cine-sub">${gear ? (r.isNew ? '<b>' + tr('Новое в коллекции!') + '</b>' : tr('Повтор: уровень {0}', r.lvl)) : (r.isNew ? '<b>' + tr('Новый!') + '</b> ' + r.c.ability : r.refund ? tr('Уже 5★ — возвращено {0} жетонов', r.refund) : tr('Повтор: +1 звезда'))}${r.golden ? ' · <b class="gold">' + tr('Золотой мундир открыт!') + '</b>' : ''}</div><div class="rv-fe">+${r.feathers || 0} ${tr('перьев')}</div></div></div>`);
+      <div class="cine-sub">${gear ? (r.isNew ? '<b>' + tr('New in your collection!') + '</b>' : tr('Duplicate: level {0}', r.lvl)) : (r.isNew ? '<b>' + tr('New!') + '</b> ' + r.c.ability : r.refund ? tr('Already 5★, {0} tokens refunded', r.refund) : tr('Duplicate: +1 star'))}${r.golden ? ' · <b class="gold">' + tr('Golden uniform unlocked!') + '</b>' : ''}</div><div class="rv-fe">+${r.feathers || 0} ${tr('feathers')}</div></div></div>`);
     if (overlay) host.appendChild(box);
     if (SPR.ui_emblem) $('#ce', box).appendChild(cv(SPR.ui_emblem)); else $('#ce', box).appendChild(emblem('scouts'));
     const hc = resIcon(r, true);
@@ -1141,7 +1155,7 @@ const UI = (() => {
     });
     void gr.offsetWidth;
     rv.cards.forEach((d, i) => rvLater(i * 70, () => { d.style.transition = 'transform 0.42s cubic-bezier(.2,.9,.3,1.2), opacity 0.2s'; d.style.transform = ''; d.style.opacity = '1'; snd('whoosh', { vol: 0.35 }); }));
-    rvNext(tr('Клик — открыть все'));
+    rvNext(tr('Click to reveal all'));
     rvLater(rv.cards.length * 70 + 450, () => { rv.phase = 'grid'; flipNext(0); });
   }
 
@@ -1155,7 +1169,7 @@ const UI = (() => {
       snd('choir', { vol: 0.6 });
       rv.phase = 'cine-grid';
       rv.resume = () => { rv.phase = 'grid'; flipNext(i + 1); };
-      rvLater(500, () => { if (rv.phase === 'cine-grid') { rv.over = rvCinema(r, $('#rv-stage', layers.reveal), true); rvNext(tr('Клик — дальше')); } });
+      rvLater(500, () => { if (rv.phase === 'cine-grid') { rv.over = rvCinema(r, $('#rv-stage', layers.reveal), true); rvNext(tr('Click to continue')); } });
       return;
     }
     if (r.rarity === 4) { fxAt(d, 50, RCOL[4], 240); snd('shimmer', { vol: 0.5 }); }
@@ -1170,7 +1184,7 @@ const UI = (() => {
     const gr = $('#rv-g100', st);
     const order = pullRes.map((r, i) => i);
     rv.cards = pullRes.map((r, i) => { const d = cardEl(r, i, true); d.classList.add('hid'); gr.appendChild(d); return d; });
-    rvNext(tr('Клик — показать всё'));
+    rvNext(tr('Click to show everything'));
     let t = 200, cnt = { 5: 0, 4: 0, n: 0 };
     order.forEach(i => {
       const r = pullRes[i];
@@ -1189,14 +1203,14 @@ const UI = (() => {
 
   function rvSum(cnt) {
     const s = $('#rv-sum', layers.reveal);
-    if (s) s.innerHTML = `<span class="t5">${tr('Легендарных: {0}', cnt[5])}</span><span class="t4">${tr('Эпических: {0}', cnt[4])}</span><span class="t2">${tr('Новых: {0}', cnt.n)}</span>`;
+    if (s) s.innerHTML = `<span class="t5">${tr('Legendary: {0}', cnt[5])}</span><span class="t4">${tr('Epic: {0}', cnt[4])}</span><span class="t2">${tr('New: {0}', cnt.n)}</span>`;
   }
 
   function rvGridDone() {
     rv.phase = 'done';
     if (rv.cards) for (const c of rv.cards) c.classList.remove('hid');
     if (pullRes.length > 10) { const cnt = { 5: 0, 4: 0, n: 0 }; for (const r of pullRes) { if (r.rarity >= 4) cnt[r.rarity]++; if (r.isNew && r.kind !== 'item') cnt.n++; } rvSum(cnt); }
-    rvNext(tr('Клик по карточке — подробнее, Enter — готово') + ' · +' + (pullRes.feathers || 0) + ' ' + tr('перьев'));
+    rvNext(tr('Click a card for details, Enter: done') + ' · +' + (pullRes.feathers || 0) + ' ' + tr('feathers'));
   }
 
   function rvDetail(i) {
@@ -1208,7 +1222,7 @@ const UI = (() => {
     if (isBig(r) && r.kind !== 'item') rvCinema(r, ov, false);
     else rvShow(i, ov);
     rv.detailEl = ov;
-    rvNext(tr('Клик — назад'));
+    rvNext(tr('Click to go back'));
   }
 
   function rvFlipAll() {
@@ -1222,7 +1236,7 @@ const UI = (() => {
     rv.phase = 'chest';
     rv.chestShown = true;
     const st = $('#rv-stage', layers.reveal), r = pullRes.chest;
-    st.innerHTML = `<div class="chest-wrap"><div class="chest-title">${tr('Сундук трофеев!')}</div><div class="chest" id="chest"><img class="c0" src="assets/sprites/ui_chest.png" alt=""><img class="c1" src="assets/sprites/ui_chestopen.png" alt=""></div></div>`;
+    st.innerHTML = `<div class="chest-wrap"><div class="chest-title">${tr('Trophy chest!')}</div><div class="chest" id="chest"><img class="c0" src="assets/sprites/ui_chest.png" alt=""><img class="c1" src="assets/sprites/ui_chestopen.png" alt=""></div></div>`;
     rvNext('');
     const ch = $('#chest', st);
     [400, 1000, 1500].forEach((ms, k) => rvLater(ms, () => { ch.classList.remove('wob'); void ch.offsetWidth; ch.classList.add('wob'); snd('thud', { vol: 0.6 + k * 0.15 }); fxAt(ch, 12 + k * 10, RCOL[r.rarity], 160); }));
@@ -1232,7 +1246,7 @@ const UI = (() => {
       snd(r.rarity === 5 ? 'choir' : 'shimmer', { vol: 0.8 });
       snd('boom', { vol: 0.6, rate: 1.3 });
     });
-    rvLater(2700, () => { const cw = $('.chest-wrap', st); if (cw) cw.style.opacity = '0'; const wrap = el('div', 'chest-res'); st.appendChild(wrap); rvShow(r, wrap); rvNext(tr('Enter или клик — готово')); rv.phase = 'chest-done'; });
+    rvLater(2700, () => { const cw = $('.chest-wrap', st); if (cw) cw.style.opacity = '0'; const wrap = el('div', 'chest-res'); st.appendChild(wrap); rvShow(r, wrap); rvNext(tr('Enter or click: done')); rv.phase = 'chest-done'; });
   }
 
   let pullLock = 0;
@@ -1243,7 +1257,7 @@ const UI = (() => {
     rv = null;
     state = 'menu';
     go('gacha');
-    if (fe) toast(tr('+{0} перьев', fe));
+    if (fe) toast(tr('+{0} feathers', fe));
   }
 
   function rvFinish() {
@@ -1258,7 +1272,7 @@ const UI = (() => {
     if (ph === 'anomaly' || ph === 'burst' || ph === 'chest') return;
     if (ph === 'launch') { rv.flare = null; rvClear(); rvDim(0); if (pullRes.length === 1) rvShow(0); else if (pullRes.length <= 10) { rvDeal(); rvFlipAll(); } else { rvGrid100(); rvFlipAll(); } return; }
     if (ph === 'deal' || ph === 'grid' || ph === 'grid100') { rvFlipAll(); return; }
-    if (ph === 'cine-grid') { rvClear(); if (rv.over) { rv.over.remove(); rv.over = null; } const res = rv.resume; rv.phase = 'grid'; rvNext(tr('Клик — открыть все')); res(); return; }
+    if (ph === 'cine-grid') { rvClear(); if (rv.over) { rv.over.remove(); rv.over = null; } const res = rv.resume; rv.phase = 'grid'; rvNext(tr('Click to reveal all')); res(); return; }
     if (ph === 'detail') { rvClear(); if (rv.detailEl) rv.detailEl.remove(); rv.phase = 'done'; rvGridDone(); return; }
     rvFinish();
   }
@@ -1266,10 +1280,10 @@ const UI = (() => {
   function buildLevelUp() {
     const L = layers.levelup;
     L.innerHTML = `<div class="shade"></div><div class="panel-wrap"><div class="col" style="pointer-events:auto">
-      <div class="big-title" style="color:#7cfc9a">${tr('Уровень {0}!', game.level - pendingLevels + 1)}</div>
+      <div class="big-title" style="color:#7cfc9a">${tr('Level {0}!', game.level - pendingLevels + 1)}</div>
       <div class="cards" id="lv-cards"></div>
-      <div class="center wood-text" style="margin-top:10px">${tr('← → и Enter, клик или 1 / 2 / 3')}</div>
-      ${game.rerolls > 0 ? '<div class="buttons"><button class="k-btn" id="lv-reroll"><img src="assets/ui/dice.png" alt=""> ' + tr('Перебросить ({0}) — R', game.rerolls) + '</button></div>' : ''}</div></div>`;
+      <div class="center wood-text" style="margin-top:10px">${tr('← → and Enter, click or 1 / 2 / 3')}</div>
+      ${game.rerolls > 0 ? '<div class="buttons"><button class="k-btn" id="lv-reroll"><img src="assets/ui/dice.png" alt=""> ' + tr('Reroll ({0}): R', game.rerolls) + '</button></div>' : ''}</div></div>`;
     const rr = $('#lv-reroll', L);
     if (rr) rr.addEventListener('click', () => rerollChoices());
     const box = $('#lv-cards', L);
@@ -1277,7 +1291,7 @@ const UI = (() => {
       const d = el('div', 'up-card k-card' + (i === sel ? ' sel' : '') + (c.kind === 'evo' ? ' evo' : ''));
       d.insertAdjacentHTML('beforeend', `<div class="num">${i + 1}</div>`);
       d.appendChild(cv(upIcon(c.icon)));
-      d.insertAdjacentHTML('beforeend', `<div class="un">${c.name}</div><div class="lvl-tag">${c.kind === 'evo' ? '<b class="evo-tag">' + tr('ЭВОЛЮЦИЯ') + '</b>' : (c.kind === 'skill' ? tr('Умение') : tr('Улучшение')) + ' · ' + (c.isNew ? '<b style="color:var(--good)">' + tr('Новое!') + '</b>' : tr('ур. {0} → {1}', c.lvl, c.lvl + 1))}</div><div class="ud">${c.desc()}</div>`);
+      d.insertAdjacentHTML('beforeend', `<div class="un">${c.name}</div><div class="lvl-tag">${c.kind === 'evo' ? '<b class="evo-tag">' + tr('EVOLUTION') + '</b>' : (c.kind === 'skill' ? tr('Skill') : tr('Upgrade')) + ' · ' + (c.isNew ? '<b style="color:var(--good)">' + tr('New!#item') + '</b>' : tr('lv. {0} → {1}', c.lvl, c.lvl + 1))}</div><div class="ud">${c.desc()}</div>`);
       d.addEventListener('mouseenter', () => { sel = i; markLevel(); });
       d.addEventListener('click', () => choose(i));
       box.appendChild(d);
@@ -1293,7 +1307,7 @@ const UI = (() => {
   function buildLoot() {
     const L = layers.loot, r = lootRes;
     if (!r) return;
-    L.innerHTML = `<div class="shade"></div><div class="loot-box"><div class="loot-title">${r.boss ? tr('Сундук трофеев!') : tr('Сундук снабжения!')}</div>
+    L.innerHTML = `<div class="shade"></div><div class="loot-box"><div class="loot-title">${r.boss ? tr('Trophy chest!') : tr('Supply chest!')}</div>
       <div class="chest" id="lt-chest"><img class="c0" src="assets/sprites/ui_chest.png" alt=""><img class="c1" src="assets/sprites/ui_chestopen.png" alt=""></div>
       <div class="loot-items" id="lt-items"></div><div class="next wood-text" id="lt-next"></div></div>`;
     const ch = $('#lt-chest', L), box = $('#lt-items', L);
@@ -1303,13 +1317,13 @@ const UI = (() => {
     r.items.forEach((it, i) => T.push(setTimeout(() => {
       const d = el('div', 'loot-it k-card' + (it.kind === 'evo' ? ' evo' : ''));
       d.appendChild(cv(upIcon(it.icon)));
-      d.insertAdjacentHTML('beforeend', `<div><div class="ln">${it.name}</div><div class="muted small">${it.kind === 'evo' ? '<b class="evo-tag">' + tr('ЭВОЛЮЦИЯ') + '</b>' : tr('ур. {0}', it.lvl)}</div></div>`);
+      d.insertAdjacentHTML('beforeend', `<div><div class="ln">${it.name}</div><div class="muted small">${it.kind === 'evo' ? '<b class="evo-tag">' + tr('EVOLUTION') + '</b>' : tr('lv. {0}', it.lvl)}</div></div>`);
       box.appendChild(d);
       snd('chime' + Math.min(6, 3 + i), { vol: 0.6, tag: 'chime' });
     }, 1350 + i * 380)));
     T.push(setTimeout(() => {
-      box.insertAdjacentHTML('beforeend', `<div class="loot-extra wood-text">${r.healed ? '+1 ♥ · ' : ''}+${r.coins} ${tr('жетонов')}</div>`);
-      $('#lt-next', L).textContent = tr('Enter или клик — в бой');
+      box.insertAdjacentHTML('beforeend', `<div class="loot-extra wood-text">${r.healed ? '+1 ♥ · ' : ''}+${r.coins} ${tr('tokens')}</div>`);
+      $('#lt-next', L).textContent = tr('Enter or click: back to battle');
       L.dataset.ready = '1';
     }, 1450 + r.items.length * 380));
     L.dataset.ready = '';
@@ -1318,34 +1332,34 @@ const UI = (() => {
 
   function buildPause() {
     layers.pause.innerHTML = `<div class="shade"></div><div class="panel-wrap"><div class="panel k-frame" style="text-align:center;min-width:320px">
-      <div class="big-title wood-text" style="color:var(--wood-text)">${tr('Пауза')}</div>
-      <div class="col"><button class="k-btn big" id="ps-go">${tr('Продолжить')}</button><button class="k-btn big" id="ps-menu">${tr('В меню')}</button></div>
-      <div class="muted" style="margin-top:8px">${tr('Esc — продолжить, Q — в меню')}</div></div></div>`;
+      <div class="big-title wood-text" style="color:var(--wood-text)">${tr('Pause')}</div>
+      <div class="col"><button class="k-btn big" id="ps-go">${tr('Resume')}</button><button class="k-btn big" id="ps-menu">${tr('Menu')}</button></div>
+      <div class="muted" style="margin-top:8px">${tr('Esc: resume, Q: menu')}</div></div></div>`;
     $('#ps-go').addEventListener('click', () => { state = 'play'; });
     $('#ps-menu').addEventListener('click', () => toMenu());
   }
 
   function buildResult(won) {
     const s = statsOf();
-    const rows = [[tr('Продержался'), fmtTime(game.time)], [tr('Титанов убито'), game.kills], [tr('Уровень'), game.level]];
-    if (faction.civs) rows.push([tr('Горожан погибло'), game.lost]);
-    if (faction.threat > 1) rows.push([tr('Угроза'), THREAT_NAMES[faction.threat - 1]]);
-    if (game.dexNew && game.dexNew.length) rows.push([tr('Новое в титанопедии'), game.dexNew.map(k => DEX.find(e => e.key === k)).filter(Boolean).map(e => e.name).join(', ')]);
-    if (faction.challenge) rows.push([tr('Испытание недели'), game.chalReward ? tr('билет ×10 и 30 перьев!') : won && challengeDone() ? tr('награда уже получена') : '—']);
-    if (game.ticketGain) rows.push([tr('Билеты призыва'), '+' + game.ticketGain]);
-    if (game.heroXpGain) rows.push([tr('Опыт героя'), '+' + game.heroXpGain + (game.heroUps ? ' · ' + tr('новый уровень!') : '')]);
-    if (game.unlocked) rows.push([tr('Открыта угроза'), THREAT_NAMES[game.unlocked - 1] + '!']);
-    rows.push([tr('Рекорд'), fmtTime(bestOf(faction))]);
+    const rows = [[tr('Survived'), fmtTime(game.time)], [tr('Titans killed'), game.kills], [tr('Level'), game.level]];
+    if (faction.civs) rows.push([tr('Citizens lost'), game.lost]);
+    if (faction.threat > 1) rows.push([tr('Threat'), THREAT_NAMES[faction.threat - 1]]);
+    if (game.dexNew && game.dexNew.length) rows.push([tr('New in the Titanpedia'), game.dexNew.map(k => DEX.find(e => e.key === k)).filter(Boolean).map(e => e.name).join(', ')]);
+    if (faction.challenge) rows.push([tr('Weekly challenge'), game.chalReward ? tr('×10 ticket and 30 feathers!') : won && challengeDone() ? tr('reward already claimed') : '—']);
+    if (game.ticketGain) rows.push([tr('Summon tickets'), '+' + game.ticketGain]);
+    if (game.heroXpGain) rows.push([tr('Hero XP'), '+' + game.heroXpGain + (game.heroUps ? ' · ' + tr('level up!') : '')]);
+    if (game.unlocked) rows.push([tr('Threat unlocked'), THREAT_NAMES[game.unlocked - 1] + '!']);
+    rows.push([tr('Best'), fmtTime(bestOf(faction))]);
     layers.result.innerHTML = `<div class="shade"></div><div class="panel-wrap"><div class="panel k-frame result">
-      <div class="rt" style="color:${won ? '#2c7030' : '#b8302a'}">${won ? (faction.map === 'field' ? tr('Вылазка удалась!') : tr('Город отбит!')) : tr('Ты пал')}</div>
-      <div class="muted">${won ? tr('{0} гордится тобой', faction.name) : tr('{0} · отдай своё сердце…', faction.name)}</div>
+      <div class="rt" style="color:${won ? '#2c7030' : '#b8302a'}">${won ? (faction.map === 'field' ? tr('Sortie complete!') : tr('City saved!')) : tr('You fell')}</div>
+      <div class="muted">${won ? tr('{0} is proud of you', faction.name) : tr('{0} · dedicate your heart…', faction.name)}</div>
       <div class="list">${rows.map(([k, v]) => `<div>${k}</div><div class="v">${v}</div>`).join('')}</div>
       <div class="reward"><img src="assets/ui/coin.png" alt="">+${game.reward}</div>
-      ${(game.newDone && game.newDone.length) || game.newDaily > 0 ? '<div class="newdone k-tip">' + tr('Выполнено: ') + [...(game.newDone || []).map(n => '«' + n + '»'), ...(game.newDaily > 0 ? [tr('заданий дня: {0}', game.newDaily)] : [])].join(', ') + tr(' — забери награду в «Заданиях»') + '</div>' : ''}
+      ${(game.newDone && game.newDone.length) || game.newDaily > 0 ? '<div class="newdone k-tip">' + tr('Completed: ') + [...(game.newDone || []).map(n => '«' + n + '»'), ...(game.newDaily > 0 ? [tr('daily tasks: {0}', game.newDaily)] : [])].join(', ') + tr(', claim your reward in “Missions”') + '</div>' : ''}
       <div class="buttons">
-        ${won ? '<button class="k-btn big" id="rs-endless">' + tr('Дальше без конца') + '</button>' : ''}
-        <button class="k-btn big" id="rs-again">${tr('Ещё раз')}</button>
-        <button class="k-btn big" id="rs-menu">${tr('В меню')}</button>
+        ${won ? '<button class="k-btn big" id="rs-endless">' + tr('Keep going') + '</button>' : ''}
+        <button class="k-btn big" id="rs-again">${tr('Again')}</button>
+        <button class="k-btn big" id="rs-menu">${tr('Menu')}</button>
       </div></div></div>`;
     $('#rs-again').addEventListener('click', () => start());
     $('#rs-menu').addEventListener('click', () => toMenu());
@@ -1410,10 +1424,12 @@ const UI = (() => {
       for (let i = 0; i < stats.maxHp; i++) hud.hearts.appendChild(cv(i < player.hp ? HEART : HEART_EMPTY));
     }
     setText(hud.timer, 'timer', game.endless ? fmtTime(game.time) : `${fmtTime(game.time)} / ${fmtTime(game.winTime || WIN_TIME)}`);
-    setText(hud.kills, 'kills', tr('Титанов убито: {0}', game.kills));
-    setText(hud.combo, 'combo', game.combo > 1 && game.time - game.lastKill < 4 ? tr('КОМБО x{0}', game.combo) : '');
-    setText(hud.civ, 'civ', tr('Горожан погибло: {0}', game.lost));
-    setText(hud.lvl, 'lvl', tr('Ур. {0}', game.level));
+    setText(hud.kills, 'kills', tr('Titans killed: {0}', game.kills));
+    setText(hud.combo, 'combo', game.combo > 1 && game.time - game.lastKill < 4 ? tr('COMBO x{0}', game.combo) : '');
+    setText(hud.civ, 'civ', tr('Citizens lost: {0}', game.lost));
+    setText(hud.lvl, 'lvl', tr('Lv. {0}', game.level));
+    const skk = skyKind();
+    if (cache.sky !== skk) { cache.sky = skk; hud.sky.innerHTML = ''; hud.sky.appendChild(cv(skyIcon(skk))); hud.sky.title = { day: tr('Day'), dusk: tr('Sunset'), night: tr('Night'), dawn: tr('Dawn'), rain: tr('Rain'), fog: tr('Fog') }[skk]; hud.sky.className = 'sky-ico pop'; requestAnimationFrame(() => hud.sky.classList.remove('pop')); }
     const up = Math.floor((game.ult || 0) * 100);
     if (cache.ult !== up) { cache.ult = up; hud.ult.style.setProperty('--p', up); hud.ult.classList.toggle('ready', up >= 100); }
     const xp = Math.round(clamp(game.xp / game.need, 0, 1) * 1000) / 10;
@@ -1432,7 +1448,7 @@ const UI = (() => {
     }
     hud.gauge.classList.toggle('low', player.lowT > 0 && Math.floor(player.lowT * 10) % 2 === 1);
     const B = game.boss;
-    const bst = B ? (B.boss.kneel > 0 ? ' · ' + tr('на коленях — бей в затылок!') : ` · ${B.boss.def.wp}: ${B.boss.wp.filter(w => w.cut).length}/2`) : '';
+    const bst = B ? (B.boss.kneel > 0 ? ' · ' + tr('on its knees, hit the nape!') : ` · ${B.boss.def.wp}: ${B.boss.wp.filter(w => w.cut).length}/2`) : '';
     const bk = B ? B.boss.name + B.boss.hp + '/' + B.boss.max + (B.boss.harden > 0 ? 'h' : '') + bst : '';
     if (cache.boss !== bk) {
       cache.boss = bk;
@@ -1485,6 +1501,7 @@ const UI = (() => {
       return true;
     }
     if (state !== 'menu') return false;
+    if (authMode) return true;
     if (c === 'Escape' && screen !== 'hub') { go('hub'); return true; }
     if (screen === 'hub') {
       if (c === 'ArrowUp' || c === 'KeyW') { hubSel = (hubSel + HUB_ITEMS.length - 1) % HUB_ITEMS.length; refreshHubFocus(); }
@@ -1515,6 +1532,157 @@ const UI = (() => {
     return true;
   }
 
+  const LOADED_SAVE = SAVE_KEY;
+  let authMode = null;
+
+  function refreshProfile() {
+    const box = $('#profile'), p = profCur();
+    if (!p) return;
+    const st = save.stats || {};
+    box.innerHTML = `<div class="prof-top"><div class="prof-av"></div><div><div class="h2">${esc(p.name)}</div>
+      <div class="muted">${tr('In the Corps since {0}', new Date(p.created).toLocaleDateString(LANG))}</div>
+      <div class="muted small">${p.pin ? tr('Protected with a PIN code') : tr('No PIN code')}</div></div></div>
+      <div class="prof-stats">
+        <div class="k-card"><b>${st.runs || 0}</b><span>${tr('Runs')}</span></div>
+        <div class="k-card"><b>${st.kills || 0}</b><span>${tr('Titans killed')}</span></div>
+        <div class="k-card"><b>${Object.keys(save.chars).length}/${CHARS.length}</b><span>${tr('Heroes')}</span></div>
+        <div class="k-card"><b>${st.bestLevel || 0}</b><span>${tr('Best level')}</span></div>
+      </div>
+      <div class="buttons"><button class="k-btn" id="pf-edit">${tr('Edit profile')}</button><button class="k-btn" id="pf-out">${tr('Change player')}</button></div>
+      <div class="muted small center" style="margin-top:8px">${tr('Profiles are stored only in this browser. To move your progress to another device, use the save code in Settings')}</div>`;
+    $('.prof-av', box).appendChild(face(p.avatar));
+    $('#pf-edit', box).addEventListener('click', () => authShow('edit', p));
+    $('#pf-out', box).addEventListener('click', () => { profLogout(); go('hub'); authShow('who'); });
+  }
+
+  function esc(t) { return String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
+  function authHide() {
+    authMode = null;
+    layers.auth.classList.remove('on');
+    layers.auth.innerHTML = '';
+    refreshFooter();
+  }
+
+  function authEnter(p) {
+    profUnlock(p.id);
+    if (profSaveKey(p.id) !== LOADED_SAVE) { PROF.cur = p.id; profPersist(); location.reload(); return; }
+    PROF.cur = p.id;
+    profPersist();
+    authHide();
+    toast(tr('Welcome back, {0}!', p.name));
+  }
+
+  function authShow(mode, p) {
+    authMode = mode;
+    const L = layers.auth;
+    L.classList.add('on');
+    const back = mode !== 'enlist' || PROF.list.length > 0;
+    let body = '';
+    if (mode === 'enlist' || mode === 'edit') {
+      const ed = mode === 'edit';
+      body = `<div class="au-emb"></div>
+        <div class="h2 center">${ed ? tr('Edit profile') : tr('Recruit registration')}</div>
+        <div class="muted center">${ed ? '' : tr('Join the Survey Corps: your progress will be saved under this name')}</div>
+        <label class="fl" for="au-name">${tr('Name')}</label><input class="k-input" id="au-name" maxlength="14" autocomplete="off" spellcheck="false" value="${ed ? esc(p.name) : ''}">
+        <div class="fl">${tr('Avatar')}</div><div class="au-avs" id="au-avs"></div>
+        <label class="fl" for="au-pin">${ed && p.pin ? tr('New PIN code (leave empty to keep the old one)') : tr('PIN code (optional)')}</label>
+        <div class="row" style="gap:10px"><input class="k-input pin" id="au-pin" type="password" inputmode="numeric" maxlength="4" autocomplete="new-password" placeholder="····">${ed && p.pin ? `<label class="au-chk"><input type="checkbox" id="au-nopin"> ${tr('Remove PIN')}</label>` : ''}</div>
+        <div class="muted small">${tr('4 digits. Keeps other people on this device out of your progress')}</div>
+        <div class="au-err" id="au-err"></div>
+        <div class="buttons">${back ? `<button class="k-btn" id="au-back">${tr('Back')}</button>` : ''}<button class="k-btn big" id="au-ok">${ed ? tr('Save') : tr('Join the Survey Corps')}</button></div>
+        ${ed ? '' : `<div class="muted small center">${tr('Profiles are stored only in this browser. To move your progress to another device, use the save code in Settings')}</div>`}`;
+    } else if (mode === 'who') {
+      body = `<div class="au-emb"></div><div class="h2 center">${tr("Who's playing?")}</div><div class="au-list" id="au-list"></div>`;
+    } else if (mode === 'pin') {
+      body = `<div class="au-who"></div><div class="h2 center">${esc(p.name)}</div>
+        <label class="fl center" for="au-pin">${tr('Enter your PIN code')}</label>
+        <input class="k-input pin big" id="au-pin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="····">
+        <div class="au-err" id="au-err"></div>
+        <div class="buttons"><button class="k-btn" id="au-back">${tr('Back')}</button><button class="k-btn big" id="au-ok">${tr('Enter')}</button></div>`;
+    } else if (mode === 'del') {
+      body = `<div class="au-who"></div><div class="h2 center">${tr('Delete {0}?', esc(p.name))}</div>
+        <div class="center">${tr('All progress of this player will be erased. This cannot be undone.')}</div>
+        ${p.pin ? `<label class="fl center" for="au-pin">${tr('Enter the PIN code to confirm')}</label><input class="k-input pin big" id="au-pin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="····">` : ''}
+        <div class="au-err" id="au-err"></div>
+        <div class="buttons"><button class="k-btn" id="au-back">${tr('Cancel')}</button><button class="k-btn big danger" id="au-ok">${tr('Delete')}</button></div>`;
+    }
+    L.innerHTML = `<div class="shade"></div><div class="panel-wrap"><div class="panel k-frame auth">${body}</div></div>`;
+    const emb = $('.au-emb', L);
+    if (emb) { if (SPR.ui_emblem) emb.appendChild(cv(SPR.ui_emblem)); else emb.appendChild(emblem('scouts')); }
+    const who = $('.au-who', L);
+    if (who) who.appendChild(face(p.avatar));
+    L.querySelectorAll('input').forEach(i => { for (const t of ['keydown', 'keyup']) i.addEventListener(t, e => { e.stopPropagation(); if (t === 'keydown' && e.key === 'Enter') { const ok = $('#au-ok', L); if (ok) ok.click(); } }); });
+    const err = t => { const e = $('#au-err', L); e.textContent = t; e.classList.remove('shake'); void e.offsetWidth; e.classList.add('shake'); snd('error', { vol: 0.6 }); };
+    const pinIn = $('#au-pin', L);
+    if (pinIn) pinIn.addEventListener('input', () => { pinIn.value = pinIn.value.replace(/\D/g, '').slice(0, 4); });
+    const backBtn = $('#au-back', L);
+    if (backBtn) backBtn.addEventListener('click', () => { if (mode === 'edit') authHide(); else if (PROF.list.length) authShow('who'); else authShow('enlist'); });
+    if (mode === 'enlist' || mode === 'edit') {
+      let av = mode === 'edit' ? p.avatar : save.selected || 'cadet';
+      const avs = $('#au-avs', L);
+      for (const c of CHARS) {
+        const b = el('button', 'au-av k-card' + (c.id === av ? ' sel' : ''));
+        b.title = c.name;
+        b.appendChild(face(c.id));
+        b.addEventListener('click', () => { av = c.id; avs.querySelectorAll('.au-av').forEach(x => x.classList.toggle('sel', x === b)); });
+        avs.appendChild(b);
+      }
+      const nameIn = $('#au-name', L);
+      setTimeout(() => nameIn.focus(), 50);
+      $('#au-ok', L).addEventListener('click', () => {
+        const name = nameIn.value.trim(), pin = pinIn.value, nopin = $('#au-nopin', L);
+        if (!name) return err(tr('Write your name'));
+        if (profNameTaken(name, mode === 'edit' ? p.id : null)) return err(tr('This name is already taken'));
+        if (pin && !/^\d{4}$/.test(pin)) return err(tr('The PIN code must have 4 digits'));
+        if (mode === 'edit') {
+          profEdit(p, name, av, pin, nopin && nopin.checked);
+          authHide();
+          refreshProfile();
+          toast(tr('Profile saved'));
+          return;
+        }
+        const first = !PROF.list.length;
+        const np = profCreate(name, av, pin);
+        snd('levelup', { vol: 0.6 });
+        if (first || profSaveKey(np.id) === LOADED_SAVE) { authHide(); toast(tr('Welcome to the Survey Corps, {0}!', np.name)); return; }
+        location.reload();
+      });
+    } else if (mode === 'who') {
+      const list = $('#au-list', L);
+      for (const q of PROF.list) {
+        const sm = profSummary(q);
+        const d = el('div', 'au-card k-card');
+        d.appendChild(face(q.avatar));
+        d.insertAdjacentHTML('beforeend', `<div class="au-n">${esc(q.name)}${q.pin ? ' ' + img('lock', 'au-lock') : ''}</div><div class="muted small">${tr('{0} titans · {1} heroes', sm.kills, sm.heroes)}</div><button class="au-del" title="${tr('Delete')}">${img('close')}</button>`);
+        d.addEventListener('click', e => {
+          if (e.target.closest('.au-del')) { authShow('del', q); return; }
+          if (q.pin) authShow('pin', q); else authEnter(q);
+        });
+        list.appendChild(d);
+      }
+      const add = el('div', 'au-card au-new k-card', `<div class="au-plus">+</div><div class="au-n">${tr('New recruit')}</div>`);
+      add.addEventListener('click', () => authShow('enlist'));
+      list.appendChild(add);
+    } else if (mode === 'pin') {
+      setTimeout(() => pinIn.focus(), 50);
+      $('#au-ok', L).addEventListener('click', () => {
+        if (!profPinOk(p, pinIn.value)) { pinIn.value = ''; return err(tr('Wrong PIN code')); }
+        authEnter(p);
+      });
+    } else if (mode === 'del') {
+      if (pinIn) setTimeout(() => pinIn.focus(), 50);
+      $('#au-ok', L).addEventListener('click', () => {
+        if (p.pin && !profPinOk(p, pinIn.value)) { pinIn.value = ''; return err(tr('Wrong PIN code')); }
+        const loaded = profSaveKey(p.id) === LOADED_SAVE;
+        profDelete(p.id);
+        if (loaded) { location.reload(); return; }
+        toast(tr('Profile deleted'));
+        if (PROF.list.length) authShow('who'); else authShow('enlist');
+      });
+    }
+  }
+
   function init() {
     if (IS_TOUCH) document.documentElement.classList.add('touch');
     build();
@@ -1527,6 +1695,9 @@ const UI = (() => {
     sync(0);
     const P = new URLSearchParams(location.search);
     const devHost = location.protocol === 'file:' || ['localhost', '127.0.0.1', ''].includes(location.hostname);
+    const devSkip = devHost && !P.get('auth') && [...P.keys()].some(k => k !== 'lang' && k !== 'sound');
+    const gate = devSkip ? null : profGate();
+    if (gate) authShow(gate, profCur());
     if (!devHost) return;
     if ([...P.keys()].some(k => k !== 'lang' && k !== 'sound')) SND.setMuted(true);
     if (P.get('tokens')) save.tokens = +P.get('tokens');
@@ -1567,6 +1738,16 @@ const UI = (() => {
     }
     if (q === 'dex') { ensureMeta(); save.stats.killsBy = { normal: 120, lanky: 12, fat: 3, small: 40, aberrant: 9, crawler: 1, boss_female: 2, boss_jaw: 1 }; go('records'); return; }
     if (q === 'chal') { challengeOn = true; factionSel = weekChallenge().map; reset(); start(); SND.setMuted(true); for (let i = 0; i < 60 * 20; i++) { player.hp = Math.max(player.hp, 1); update(1 / 60); if (state === 'levelup') choose(0); if (state === 'loot') closeLoot(); } return; }
+    if (q === 'sky') {
+      const U = new URLSearchParams(location.search);
+      if (U.get('map')) factionSel = +U.get('map');
+      start();
+      for (let i = 0; i < 30; i++) update(1 / 60);
+      game.time = +(U.get('t') || 0);
+      if (U.get('wx')) { game.sky.wx = U.get('wx'); game.sky.wxLeft = 60; game.sky.wxK = 1; }
+      skyTick(0); game.banner = null;
+      return;
+    }
     if (q === 'ult') {
       const hid = new URLSearchParams(location.search).get('hero');
       if (hid && CHARS.find(c => c.id === hid)) { save.chars[hid] = save.chars[hid] || 1; save.selected = hid; }

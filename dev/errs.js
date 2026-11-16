@@ -23,6 +23,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   send('Page.navigate', { url: `http://localhost:5520/?${q}` });
   await sleep(+(process.env.T || 8000));
   await new Promise(r => { const i = ++id; ws.addEventListener('message', e => { const m = JSON.parse(e.data); if (m.id === i) { console.log('STATE', JSON.stringify(m.result.result.value)); r(); } }); ws.send(JSON.stringify({ id: i, method: 'Runtime.evaluate', params: { expression: 'JSON.stringify({ state: typeof state !== "undefined" ? state : null, loadP: typeof loadP !== "undefined" ? loadP : null, ui: !!document.getElementById("ui") })', returnByValue: true } })); });
+  if (process.env.EVAL) await new Promise(r => { const i = ++id; ws.addEventListener('message', e => { const m = JSON.parse(e.data); if (m.id === i) { console.log('EVAL', JSON.stringify(m.result.result.value !== undefined ? m.result.result.value : m.result)); r(); } }); ws.send(JSON.stringify({ id: i, method: 'Runtime.evaluate', params: { expression: process.env.EVAL, returnByValue: true, awaitPromise: true } })); });
   if (process.env.SHOT) await new Promise(r => { const i = ++id; ws.addEventListener('message', e => { const m = JSON.parse(e.data); if (m.id === i) { fs.writeFileSync(process.env.SHOT, Buffer.from(m.result.data, 'base64')); r(); } }); ws.send(JSON.stringify({ id: i, method: 'Page.captureScreenshot', params: { format: 'png' } })); });
   ws.close(); ch.kill(); try { fs.rmSync(prof, { recursive: true, force: true }); } catch (e) {}
 })();

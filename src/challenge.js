@@ -1,11 +1,11 @@
 'use strict';
 
 const CHALLENGES = [
-  { id: 'night', map: 2, name: 'Ночная вылазка', text: 'Тьма за стеной: видно только то, что рядом с тобой, ракетами и пожарами' },
-  { id: 'aberrant', map: 1, name: 'Нашествие аномальных', text: 'Только аномальные титаны и ползуны — быстрые и непредсказуемые' },
-  { id: 'giants', map: 2, name: 'Земля гигантов', text: 'Титанов меньше, но все огромные: великаны, метатели и 15-метровые' },
-  { id: 'glass', map: 0, name: 'Последний рубеж', text: 'Одно сердце и никакого лечения, зато опыта вдвое больше' },
-  { id: 'bosses', map: 1, name: 'Охота на шифтеров', text: 'Шифтеры приходят каждые 70 секунд' },
+  { id: 'night', map: 2, name: 'Night Sortie', text: 'Darkness beyond the Wall: you only see what is near you, your flares and the fires' },
+  { id: 'aberrant', map: 1, name: 'Aberrant Invasion', text: 'Only aberrant titans and crawlers: fast and unpredictable' },
+  { id: 'giants', map: 2, name: 'Land of Giants', text: 'Fewer titans, but all of them huge: giants, throwers and 15-meter ones' },
+  { id: 'glass', map: 0, name: 'Last Stand', text: 'One heart and no healing, but double XP' },
+  { id: 'bosses', map: 1, name: 'Shifter Hunt', text: 'Shifters arrive every 70 seconds' },
 ];
 trFields(CHALLENGES, ['name', 'text']);
 const CHAL_TIME = 300;
@@ -67,28 +67,8 @@ function drawNight() {
   g.fillStyle = 'rgba(6, 8, 22, 0.86)';
   g.fillRect(0, 0, bw, bh);
   g.globalCompositeOperation = 'destination-out';
-  const hole = (x, y, r, a = 1) => {
-    const gr = g.createRadialGradient(x, y, 0, x, y, r);
-    gr.addColorStop(0, `rgba(0,0,0,${a})`);
-    gr.addColorStop(0.6, `rgba(0,0,0,${a * 0.75})`);
-    gr.addColorStop(1, 'rgba(0,0,0,0)');
-    g.fillStyle = gr;
-    g.fillRect(x - r, y - r, r * 2, r * 2);
-  };
-  hole(sx(player.x), sy(player.y, player.z * 0.5), 150 + Math.sin(performance.now() / 300) * 4);
-  for (const fl of flares) hole(sx(fl.x), sy(fl.y, fl.z), 120, Math.min(1, fl.life));
-  for (const e of emitters) if (e.fire) hole(sx(e.x), sy(e.y, e.z), 60, 0.8);
-  for (const ch of chests) hole(sx(ch.x), sy(ch.y, 0), 50, 0.9);
-  for (const a of allies) hole(sx(a.x), sy(a.y, a.z), 50, 0.6);
-  for (const t of titans) if (t.stun > 0 && !t.dying) hole(sx(t.x), sy(t.y, t.H * 0.5), 60, 0.5);
+  lightHoles(g, 1);
   bctx.drawImage(c, 0, 0);
-  for (const t of titans) {
-    if (t.dying) continue;
-    const x = sx(t.x), y = sy(t.y, t.H * 0.86), d = Math.hypot(t.x - player.x, t.y - player.y);
-    if (d < 260) continue;
-    bctx.globalAlpha = 0.85;
-    rect(bctx, x - 3, y, 2, 1, '#ffe08a');
-    rect(bctx, x + 1, y, 2, 1, '#ffe08a');
-    bctx.globalAlpha = 1;
-  }
+  lampGlow();
+  titanEyes(260);
 }

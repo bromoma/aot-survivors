@@ -15,7 +15,7 @@ function spawnElite() {
   t.elite = true;
   t.hp = Math.max(t.hp, 3);
   t.speed *= 1.15;
-  game.banner = { text: tr('Элитный титан!'), sub: tr('Сруби его трижды — получишь сундук снабжения'), t: 2.2 };
+  game.banner = { text: tr('Elite titan!'), sub: tr('Cut it three times to win a supply chest'), t: 2.2 };
   sfx('horn', { vol: 0.5, rate: 1.3 });
   if (stats.warn || faction.map === 'field') fireFlare(pos.x, pos.y, '#ffd36e');
   return t;
@@ -69,7 +69,7 @@ function openChest(c) {
 
 function closeLoot() {
   if (state !== 'loot') return;
-  if (lootRes && lootRes.evo) game.banner = { text: tr('Эволюция!'), sub: lootRes.evo, t: 2.2, win: true };
+  if (lootRes && lootRes.evo) game.banner = { text: tr('Evolution!'), sub: lootRes.evo, t: 2.2, win: true };
   lootRes = null;
   state = 'play';
   if (pendingLevels > 0) openLevelUp();

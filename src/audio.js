@@ -350,6 +350,23 @@ const SND = (() => {
     startTrack(curList[curIdx]);
   }
 
+  let rainG = null, rainV = -1;
+  function setRain(v) {
+    v = Math.round(v * 20) / 20;
+    if (v === rainV || !ac || !unlocked || !noiseBuf) return;
+    rainV = v;
+    if (!rainG) {
+      const src = ac.createBufferSource();
+      src.buffer = noiseBuf; src.loop = true;
+      const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 2400; bp.Q.value = 0.35;
+      const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 6000;
+      rainG = ac.createGain(); rainG.gain.value = 0;
+      src.connect(bp); bp.connect(lp); lp.connect(rainG); rainG.connect(sfxBus);
+      src.start();
+    }
+    rainG.gain.setTargetAtTime(v * 0.22, ac.currentTime, 0.4);
+  }
+
   const debug = () => ({ ac: ac && ac.state, unlocked, muted, musicVol, sfxVol, duck, wantList, loaded: Object.values(buffers).reduce((n, v) => n + v.filter(Boolean).length, 0), decks: deck.map(a => ({ src: a.src.split('/').pop(), t: +a.currentTime.toFixed(1), paused: a.paused, vol: +a.volume.toFixed(2), err: a.error && a.error.code })) });
-  return { play, playList, setVolumes, setMuted, setDuck, get muted() { return muted; }, unlock, PLAYLISTS, debug };
+  return { play, playList, setVolumes, setMuted, setDuck, setRain, get muted() { return muted; }, unlock, PLAYLISTS, debug };
 })();

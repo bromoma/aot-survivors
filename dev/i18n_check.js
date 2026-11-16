@@ -1,4 +1,4 @@
-// node dev/i18n_check.js en|es — walks every screen and prints strings with no translation
+// node dev/i18n_check.js en|es|ru — walks every screen and prints strings with no translation
 const { spawn } = require('child_process');
 const fs = require('fs'), os = require('os'), path = require('path');
 const lang = process.argv[2] || 'en';
@@ -27,6 +27,8 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   await sleep(500);
   const miss = await ev('[...I18N_MISSING]');
   const cyr = await ev(`[...document.querySelectorAll('#ui *')].filter(e => e.children.length === 0 && /[А-Яа-яЁё]/.test(e.textContent) && e.offsetParent).map(e => e.textContent.trim().slice(0, 60)).slice(0, 30)`);
-  console.log(lang, 'missing', JSON.stringify(miss), '| visible cyrillic', JSON.stringify(cyr));
+  const leak = await ev(`[...document.querySelectorAll('#ui *')].filter(e => e.children.length === 0 && /#[a-z]/.test(e.textContent) && e.offsetParent).map(e => e.textContent.trim().slice(0, 60)).slice(0, 30)`);
+  const eng = lang !== 'ru' ? [] : await ev(`[...document.querySelectorAll('#ui *')].filter(e => e.children.length === 0 && /^[A-Za-z][A-Za-z ,.!?'’:-]{7,}$/.test(e.textContent.trim()) && e.offsetParent).map(e => e.textContent.trim().slice(0, 60)).slice(0, 30)`);
+  console.log(lang, 'missing', JSON.stringify(miss), '| visible cyrillic', JSON.stringify(lang === 'ru' ? [] : cyr), '| #suffix leaks', JSON.stringify(leak), lang === 'ru' ? '| english left ' + JSON.stringify(eng) : '');
   ws.close(); ch.kill(); try { fs.rmSync(prof, { recursive: true, force: true }); } catch (e) {}
 })();

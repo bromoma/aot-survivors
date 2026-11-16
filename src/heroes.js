@@ -25,29 +25,29 @@ function addHeroXp(id, n) {
 }
 
 const SIGNATURE = {
-  cadet: { text: '+20% опыта в забеге', apply: s => { s.xp *= 1.2; } },
-  connie: { text: 'Ещё +10% к скорости, планирует на 20% медленнее', apply: s => { s.speed *= 1.1; s.glide *= 0.8; } },
-  sasha: { text: 'Лечение за убийства приходит ещё чаще', apply: s => { s.healEvery -= 4; } },
-  jean: { text: 'Начинает забег с боевым товарищем', apply: s => { s.startSkills.push(['ally', 1]); } },
-  eren: { text: 'Начинает забег с вихрем клинков', apply: s => { s.startSkills.push(['spin', 1]); } },
-  armin: { text: 'Начинает забег с пушками гарнизона', apply: s => { s.startSkills.push(['cannon', 1]); } },
-  hange: { text: 'Ловушка сразу 2 уровня', apply: s => { s.startSkills.push(['trap', 2]); } },
-  mikasa: { text: 'Облёт ещё +20%, летит к следующему титану каждую секунду', apply: s => { s.orbit *= 1.2; s.chainCd = 1; } },
-  levi: { text: 'Вихрь клинков сразу 2 уровня', apply: s => { s.startSkills.push(['spin', 2]); } },
-  erwin: { text: 'Товарищи атакуют на 40% чаще', apply: s => { s.allyMul = 0.6; } },
-  historia: { text: 'Ещё одно второе дыхание в каждом забеге', apply: s => { s.extraRevive = (s.extraRevive || 0) + 1; } },
-  mike: { text: 'Ещё +15% к дальности атаки', apply: s => { s.engage *= 1.15; } },
+  cadet: { text: '+20% XP in runs', apply: s => { s.xp *= 1.2; } },
+  connie: { text: 'Another +10% speed, glides 20% slower', apply: s => { s.speed *= 1.1; s.glide *= 0.8; } },
+  sasha: { text: 'Kill heals come even sooner', apply: s => { s.healEvery -= 4; } },
+  jean: { text: 'Starts each run with a Comrade', apply: s => { s.startSkills.push(['ally', 1]); } },
+  eren: { text: 'Starts each run with Blade Whirl', apply: s => { s.startSkills.push(['spin', 1]); } },
+  armin: { text: 'Starts each run with Garrison Cannons', apply: s => { s.startSkills.push(['cannon', 1]); } },
+  hange: { text: 'Trap starts at level 2', apply: s => { s.startSkills.push(['trap', 2]); } },
+  mikasa: { text: 'Orbit +20% more, dashes to the next titan every second', apply: s => { s.orbit *= 1.2; s.chainCd = 1; } },
+  levi: { text: 'Blade Whirl starts at level 2', apply: s => { s.startSkills.push(['spin', 2]); } },
+  erwin: { text: 'Comrades attack 40% more often', apply: s => { s.allyMul = 0.6; } },
+  historia: { text: 'One more second wind in every run', apply: s => { s.extraRevive = (s.extraRevive || 0) + 1; } },
+  mike: { text: 'Another +15% attack reach', apply: s => { s.engage *= 1.15; } },
 };
 
 const HERO_PERKS = [
-  { at: 5, text: () => tr('+1 сердце в начале забега'), apply: s => { s.maxHp += 1; } },
-  { at: 10, text: () => tr('Умения перезаряжаются на 10% быстрее'), apply: s => { s.cdMul *= 0.9; } },
-  { at: 15, text: () => tr('Начинает забег со случайным улучшением'), apply: s => { s.startPassive = true; } },
+  { at: 5, text: () => tr('+1 heart at the start of a run'), apply: s => { s.maxHp += 1; } },
+  { at: 10, text: () => tr('Skills recharge 10% faster'), apply: s => { s.cdMul *= 0.9; } },
+  { at: 15, text: () => tr('Starts each run with a random upgrade'), apply: s => { s.startPassive = true; } },
   { at: 20, text: id => tr((SIGNATURE[id] || SIGNATURE.cadet).text), apply: (s, id) => (SIGNATURE[id] || SIGNATURE.cadet).apply(s) },
 ];
 
 function heroBonusText(l) {
-  return tr('Скорость и облёт +{0}%, дальность атаки +{1}%', l - 1, ((l - 1) * 0.5).toFixed(1).replace('.0', ''));
+  return tr('Speed and orbit +{0}%, attack reach +{1}%', l - 1, ((l - 1) * 0.5).toFixed(1).replace('.0', ''));
 }
 
 function applyHeroLevel(s, id) {

@@ -1,22 +1,22 @@
 'use strict';
 
 const DEX = [
-  { key: 'normal', spr: 'titan_normal_140_down', name: 'Обычный титан', lore: 'Бродит без цели и тянется к людям. Рост 4–7 метров.' },
-  { key: 'lanky', spr: 'titan_lanky_140_down', name: 'Долговязый', lore: 'Длинные руки достают дальше, чем кажется.' },
-  { key: 'fat', spr: 'titan_fat_140_down', name: 'Толстяк', lore: 'Медленный, но захват у него крепкий.' },
-  { key: 'small', spr: 'titan_small_84_down', name: 'Мелкий', lore: 'Ходят стаями по трое-пятеро.' },
-  { key: 'aberrant', spr: 'titan_aberrant_140_down', name: 'Аномальный', lore: 'Не идёт к людям, а мечется и прыгает.' },
-  { key: 'crawler', spr: 'titan_crawler_100_down', name: 'Ползун', lore: 'Бросается на тех, кто летит низко.' },
-  { key: 'thrower', spr: 'titan_thrower_170_down', name: 'Метатель', lore: 'Швыряет валуны туда, куда ты летишь.' },
-  { key: 'giant', spr: 'titan_giant_240_down', name: 'Великан', lore: 'Пятнадцать метров. Затылок приходится резать дважды.' },
-  { key: 'boss_female', spr: 'boss_female_down', name: 'Женская особь', lore: 'Быстрая и хитрая: твердеет и убегает.', boss: true },
-  { key: 'boss_jaw', spr: 'boss_jaw_down', name: 'Титан-челюсти', lore: 'Маленький и стремительный, кусает в прыжке.', boss: true },
-  { key: 'boss_cart', spr: 'boss_cart_down', name: 'Титан-перевозчик', lore: 'Держит дистанцию и бьёт из пушек.', boss: true },
-  { key: 'boss_armored', spr: 'boss_armored_down', name: 'Бронированный титан', lore: 'Таранит всё на пути. Слабое место — колени.', boss: true },
-  { key: 'boss_beast', spr: 'boss_beast_down', name: 'Звероподобный титан', lore: 'Бросает валуны и зовёт стаю.', boss: true },
-  { key: 'boss_hammer', spr: 'boss_hammer_down', name: 'Молот войны', lore: 'Растит кристаллы из-под земли. Ищи их вокруг.', boss: true },
-  { key: 'boss_colossal', spr: 'boss_colossal_down', name: 'Колоссальный титан', lore: 'Шестьдесят метров пара и жара.', boss: true },
-  { key: 'boss_reiss', spr: 'boss_reiss_down', name: 'Титан Рода Рейсса', lore: 'Ползёт раскалённым и сжигает всё вокруг.', boss: true },
+  { key: 'normal', spr: 'titan_normal_140_down', name: 'Common Titan', lore: 'Wanders aimlessly and reaches for people. 4–7 meters tall.' },
+  { key: 'lanky', spr: 'titan_lanky_140_down', name: 'Lanky', lore: 'Its long arms reach farther than they seem.' },
+  { key: 'fat', spr: 'titan_fat_140_down', name: 'Fatty', lore: 'Slow, but its grip is strong.' },
+  { key: 'small', spr: 'titan_small_84_down', name: 'Small', lore: 'They roam in packs of three to five.' },
+  { key: 'aberrant', spr: 'titan_aberrant_140_down', name: 'Aberrant', lore: 'Instead of walking to people it darts around and leaps.' },
+  { key: 'crawler', spr: 'titan_crawler_100_down', name: 'Crawler', lore: 'Pounces on anyone flying too low.' },
+  { key: 'thrower', spr: 'titan_thrower_170_down', name: 'Thrower', lore: 'Hurls boulders where you are flying to.' },
+  { key: 'giant', spr: 'titan_giant_240_down', name: 'Giant', lore: 'Fifteen meters tall. Its nape must be cut twice.' },
+  { key: 'boss_female', spr: 'boss_female_down', name: 'Female Titan', lore: 'Fast and cunning: hardens and runs away.', boss: true },
+  { key: 'boss_jaw', spr: 'boss_jaw_down', name: 'Jaw Titan', lore: 'Small and swift, it bites in mid-leap.', boss: true },
+  { key: 'boss_cart', spr: 'boss_cart_down', name: 'Cart Titan', lore: 'Keeps its distance and fires cannons.', boss: true },
+  { key: 'boss_armored', spr: 'boss_armored_down', name: 'Armored Titan', lore: 'Rams everything in its path. Its weak spot is the knees.', boss: true },
+  { key: 'boss_beast', spr: 'boss_beast_down', name: 'Beast Titan', lore: 'Throws boulders and calls the pack.', boss: true },
+  { key: 'boss_hammer', spr: 'boss_hammer_down', name: 'War Hammer Titan', lore: 'Grows crystals from the ground. Look for them around it.', boss: true },
+  { key: 'boss_colossal', spr: 'boss_colossal_down', name: 'Colossal Titan', lore: 'Sixty meters of steam and heat.', boss: true },
+  { key: 'boss_reiss', spr: 'boss_reiss_down', name: 'Rod Reiss Titan', lore: 'Crawls red-hot and burns everything around it.', boss: true },
 ];
 trFields(DEX, ['name', 'lore']);
 const DEX_TIERS = { titan: [10, 100, 500], boss: [1, 5, 20] };

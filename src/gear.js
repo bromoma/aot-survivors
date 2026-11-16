@@ -1,40 +1,40 @@
 'use strict';
 
 const GEAR_SLOTS = ['blade', 'odm', 'gas', 'cloak', 'boots', 'relic'];
-const SLOT_NAMES = { blade: 'Клинки', odm: 'Привод УПМ', gas: 'Газовые баллоны', cloak: 'Плащ', boots: 'Сапоги и ремни', relic: 'Реликвия' };
+const SLOT_NAMES = { blade: 'Blades', odm: 'ODM Gear', gas: 'Gas Tanks', cloak: 'Cloak', boots: 'Boots & Belts', relic: 'Relic' };
 const GEAR_RAR = [null,
-  { name: 'Обычное', col: '#b4b0a8', mul: 1 },
-  { name: 'Необычное', col: '#5ac05a', mul: 1.7 },
-  { name: 'Редкое', col: '#4a8cff', mul: 2.5 },
-  { name: 'Эпическое', col: '#b05aff', mul: 3.6 },
-  { name: 'Легендарное', col: '#ffcf3a', mul: 5 },
+  { name: 'Common', col: '#b4b0a8', mul: 1 },
+  { name: 'Uncommon', col: '#5ac05a', mul: 1.7 },
+  { name: 'Rare#item', col: '#4a8cff', mul: 2.5 },
+  { name: 'Epic#item', col: '#b05aff', mul: 3.6 },
+  { name: 'Legendary#item', col: '#ffcf3a', mul: 5 },
 ];
 
 const GEAR = [
-  { id: 'blade1', slot: 'blade', name: 'Клинки кадета', fx: { engage: 1.5 }, look: { grip: '#7a5030', blade: '#c8ccd4' } },
-  { id: 'blade2', slot: 'blade', name: 'Клинки Разведкорпуса', fx: { engage: 1.2, orbit: 1.2 }, look: { grip: '#3e6a3a', blade: '#e0e4ec' } },
-  { id: 'blade3', slot: 'blade', name: 'Зазубренные клинки', fx: { orbit: 2 }, look: { grip: '#4a3a3a', blade: '#9aa0b0', teeth: true } },
-  { id: 'blade4', slot: 'blade', name: 'Клинки Леви', fx: { orbit: 1.5, cd: 1 }, look: { grip: '#1e1a20', blade: '#f4f6fa', rev: true } },
-  { id: 'odm1', slot: 'odm', name: 'Учебный привод', fx: { speed: 1.5 }, look: { box: '#a87a40', trim: '#6a4a28' } },
-  { id: 'odm2', slot: 'odm', name: 'Привод Разведкорпуса', fx: { speed: 1.2, range: 1.2 }, look: { box: '#b8bcc4', trim: '#3e6a3a' } },
-  { id: 'odm3', slot: 'odm', name: 'Привод антиличного отряда', fx: { range: 2 }, look: { box: '#3a3a44', trim: '#8a8a96' } },
-  { id: 'odm4', slot: 'odm', name: 'Прототип Ханджи', fx: { speed: 1.5, cd: 0.8 }, look: { box: '#6a7a8a', trim: '#5ad8ff', glow: true } },
-  { id: 'gas1', slot: 'gas', name: 'Старые баллоны', fx: { glide: 2 }, look: { tank: '#8a8a8a', band: '#5a5a5a' } },
-  { id: 'gas2', slot: 'gas', name: 'Баллоны Гарнизона', fx: { glide: 1.5, speed: 0.8 }, look: { tank: '#b03a30', band: '#e0d0b0' } },
-  { id: 'gas3', slot: 'gas', name: 'Сдвоенные баллоны', fx: { glide: 2.5 }, look: { tank: '#a8b0b8', band: '#3e6a3a', gauge: true } },
-  { id: 'gas4', slot: 'gas', name: 'Баллоны высокого давления', fx: { glide: 2, range: 1 }, look: { tank: '#c8ccd4', band: '#e8b040', gauge: true } },
-  { id: 'cloak1', slot: 'cloak', name: 'Плащ кадета', fx: { hp: 1, inv: 4 }, look: { cloth: '#8a6a48', emb: null } },
-  { id: 'cloak2', slot: 'cloak', name: 'Плащ Разведкорпуса', fx: { hp: 1, xp: 1 }, look: { cloth: '#3e6a3a', emb: 'wings' } },
-  { id: 'cloak3', slot: 'cloak', name: 'Плащ Гарнизона', fx: { heal: 1 }, look: { cloth: '#8a2a28', emb: 'rose' } },
-  { id: 'cloak4', slot: 'cloak', name: 'Плащ Военной полиции', fx: { tokens: 3 }, look: { cloth: '#2e4a3a', emb: 'uni' } },
-  { id: 'boots1', slot: 'boots', name: 'Сапоги новобранца', fx: { speed: 1, orbit: 0.8 }, look: { leather: '#7a5030' } },
-  { id: 'boots2', slot: 'boots', name: 'Ремни УПМ', fx: { orbit: 1.6 }, look: { leather: '#5a3a24', straps: true } },
-  { id: 'boots3', slot: 'boots', name: 'Сапоги разведчика', fx: { speed: 1.6 }, look: { leather: '#2a2420' } },
-  { id: 'boots4', slot: 'boots', name: 'Сапоги офицера', fx: { orbit: 1, engage: 1 }, look: { leather: '#1a1618', buckle: '#e8c040' } },
-  { id: 'relic1', slot: 'relic', name: 'Ключ от подвала', fx: { xp: 3 }, look: { kind: 'key' } },
-  { id: 'relic2', slot: 'relic', name: 'Красный шарф', fx: { hp: 1, orbit: 1 }, look: { kind: 'scarf' } },
-  { id: 'relic3', slot: 'relic', name: 'Громовое копьё', fx: { cd: 2 }, look: { kind: 'spear' } },
-  { id: 'relic4', slot: 'relic', name: 'Сыворотка титана', fx: { heal: 0.8, speed: 1 }, look: { kind: 'serum' } },
+  { id: 'blade1', slot: 'blade', name: 'Cadet Blades', fx: { engage: 1.5 }, look: { grip: '#7a5030', blade: '#c8ccd4' } },
+  { id: 'blade2', slot: 'blade', name: 'Survey Corps Blades', fx: { engage: 1.2, orbit: 1.2 }, look: { grip: '#3e6a3a', blade: '#e0e4ec' } },
+  { id: 'blade3', slot: 'blade', name: 'Serrated Blades', fx: { orbit: 2 }, look: { grip: '#4a3a3a', blade: '#9aa0b0', teeth: true } },
+  { id: 'blade4', slot: 'blade', name: "Levi's Blades", fx: { orbit: 1.5, cd: 1 }, look: { grip: '#1e1a20', blade: '#f4f6fa', rev: true } },
+  { id: 'odm1', slot: 'odm', name: 'Training Gear', fx: { speed: 1.5 }, look: { box: '#a87a40', trim: '#6a4a28' } },
+  { id: 'odm2', slot: 'odm', name: 'Survey Corps Gear', fx: { speed: 1.2, range: 1.2 }, look: { box: '#b8bcc4', trim: '#3e6a3a' } },
+  { id: 'odm3', slot: 'odm', name: 'Anti-Personnel Gear', fx: { range: 2 }, look: { box: '#3a3a44', trim: '#8a8a96' } },
+  { id: 'odm4', slot: 'odm', name: "Hange's Prototype", fx: { speed: 1.5, cd: 0.8 }, look: { box: '#6a7a8a', trim: '#5ad8ff', glow: true } },
+  { id: 'gas1', slot: 'gas', name: 'Old Tanks', fx: { glide: 2 }, look: { tank: '#8a8a8a', band: '#5a5a5a' } },
+  { id: 'gas2', slot: 'gas', name: 'Garrison Tanks', fx: { glide: 1.5, speed: 0.8 }, look: { tank: '#b03a30', band: '#e0d0b0' } },
+  { id: 'gas3', slot: 'gas', name: 'Twin Tanks', fx: { glide: 2.5 }, look: { tank: '#a8b0b8', band: '#3e6a3a', gauge: true } },
+  { id: 'gas4', slot: 'gas', name: 'High-Pressure Tanks', fx: { glide: 2, range: 1 }, look: { tank: '#c8ccd4', band: '#e8b040', gauge: true } },
+  { id: 'cloak1', slot: 'cloak', name: 'Cadet Cloak', fx: { hp: 1, inv: 4 }, look: { cloth: '#8a6a48', emb: null } },
+  { id: 'cloak2', slot: 'cloak', name: 'Survey Corps Cloak', fx: { hp: 1, xp: 1 }, look: { cloth: '#3e6a3a', emb: 'wings' } },
+  { id: 'cloak3', slot: 'cloak', name: 'Garrison Cloak', fx: { heal: 1 }, look: { cloth: '#8a2a28', emb: 'rose' } },
+  { id: 'cloak4', slot: 'cloak', name: 'Military Police Cloak', fx: { tokens: 3 }, look: { cloth: '#2e4a3a', emb: 'uni' } },
+  { id: 'boots1', slot: 'boots', name: 'Recruit Boots', fx: { speed: 1, orbit: 0.8 }, look: { leather: '#7a5030' } },
+  { id: 'boots2', slot: 'boots', name: 'ODM Harness', fx: { orbit: 1.6 }, look: { leather: '#5a3a24', straps: true } },
+  { id: 'boots3', slot: 'boots', name: 'Scout Boots', fx: { speed: 1.6 }, look: { leather: '#2a2420' } },
+  { id: 'boots4', slot: 'boots', name: 'Officer Boots', fx: { orbit: 1, engage: 1 }, look: { leather: '#1a1618', buckle: '#e8c040' } },
+  { id: 'relic1', slot: 'relic', name: 'Basement Key', fx: { xp: 3 }, look: { kind: 'key' } },
+  { id: 'relic2', slot: 'relic', name: 'Red Scarf', fx: { hp: 1, orbit: 1 }, look: { kind: 'scarf' } },
+  { id: 'relic3', slot: 'relic', name: 'Thunder Spear', fx: { cd: 2 }, look: { kind: 'spear' } },
+  { id: 'relic4', slot: 'relic', name: 'Titan Serum', fx: { heal: 0.8, speed: 1 }, look: { kind: 'serum' } },
 ];
 const gearById = id => GEAR.find(g => g.id === id);
 const GEAR_TOTAL = GEAR.length * 5;
@@ -90,9 +90,9 @@ function applyGear(st) {
 }
 
 const FX_TEXT = {
-  engage: 'Дальность атаки +{0}%', orbit: 'Облёт +{0}%', speed: 'Скорость полёта +{0}%', range: 'Длина тросов +{0}%',
-  glide: 'Планирование медленнее на {0}%', hp: '+{0} к сердцам', heal: 'Лечение раньше на {0} убийств', xp: 'Опыт +{0}%',
-  cd: 'Перезарядка умений −{0}%', inv: 'Неуязвимость после удара +{0}%', tokens: 'Жетоны за забег +{0}%',
+  engage: 'Attack reach +{0}%', orbit: 'Orbit +{0}%', speed: 'Flight speed +{0}%', range: 'Cable length +{0}%',
+  glide: 'Glide {0}% slower', hp: '+{0} hearts', heal: 'Heals {0} kills sooner', xp: 'XP +{0}%',
+  cd: 'Skill cooldown −{0}%', inv: 'Invulnerability after a hit +{0}%', tokens: 'Tokens per run +{0}%',
 };
 function gearFxLines(m, r, lv) {
   const mul = GEAR_RAR[r].mul * (1 + 0.25 * ((lv || 1) - 1));

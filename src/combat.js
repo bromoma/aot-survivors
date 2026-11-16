@@ -2,61 +2,61 @@
 
 const SKILLS = {
   spin: {
-    name: 'Вихрь клинков', icon: 4, max: 5,
+    name: 'Blade Whirl', icon: 4, max: 5,
     cd: [6, 5, 4.2, 3.5, 2.8], rad: [155, 175, 195, 215, 240],
-    text: l => l === 0 ? tr('Время от времени режет всех титанов вокруг. Работает только в воздухе') : tr('Вихрь шире и чаще'),
+    text: l => l === 0 ? tr('Every so often slashes all titans around you. Works only in the air') : tr('Wider and more frequent whirl'),
   },
   flash: {
-    name: 'Световая ракета', icon: 7, max: 5,
+    name: 'Flash Flare', icon: 7, max: 5,
     cd: [9, 8, 7, 6, 5], rad: [220, 250, 280, 310, 350], dur: [2, 2.4, 2.8, 3.2, 3.6],
-    text: l => l === 0 ? tr('Ослепляет толпу титанов: они замирают, а их затылок проще достать') : tr('Вспышка шире, титаны слепнут дольше'),
+    text: l => l === 0 ? tr('Blinds a crowd of titans: they freeze and their napes are easier to reach') : tr('Wider flash, titans stay blind longer'),
   },
   cannon: {
-    name: 'Пушки гарнизона', icon: 8, max: 5,
+    name: 'Garrison Cannons', icon: 8, max: 5,
     cd: [4, 3.6, 3.2, 2.8, 2.4], shots: [1, 1, 2, 2, 3], stun: [0.8, 1, 1, 1.2, 1.4],
-    text: l => l === 0 ? tr('Стена стреляет по титанам рядом с тобой: сбивает с ног и прерывает захват') : l === 1 || l === 3 ? tr('Залп из двух ядер') : tr('Пушки бьют чаще и сильнее'),
+    text: l => l === 0 ? tr('The Wall fires at titans near you: knocks them down and breaks their grab') : l === 1 || l === 3 ? tr('Two-shot volley') : tr('Cannons fire more often and hit harder'),
   },
   ally: {
-    name: 'Боевой товарищ', icon: 9, max: 5,
+    name: 'Comrade', icon: 9, max: 5,
     count: [1, 1, 2, 2, 3], cd: [9, 7, 7, 5.5, 5.5],
-    text: l => l === 0 ? tr('С тобой летит разведчик и сам срезает затылки титанам') : l === 1 || l === 3 ? tr('Ещё один товарищ в отряде') : tr('Товарищи атакуют чаще'),
+    text: l => l === 0 ? tr('A scout flies with you and cuts titan napes on their own') : l === 1 || l === 3 ? tr('One more comrade in the squad') : tr('Comrades attack more often'),
   },
   trap: {
-    name: 'Ловушка Ханджи', icon: 10, max: 5,
+    name: "Hange's Trap", icon: 10, max: 5,
     cd: [12, 11, 10, 9, 8], caps: [1, 1, 2, 2, 3], dur: [4, 5, 5, 6, 7],
-    text: l => l === 0 ? tr('Сеть из тросов на пути титана: пойманный стоит на месте, затылок низко') : tr('Сеть держит дольше и ловит больше титанов'),
+    text: l => l === 0 ? tr("A net of cables in a titan's path: it gets stuck and its nape is low") : tr('The net holds longer and catches more titans'),
   },
 };
 
 const PASSIVES = {
-  speed: { name: 'Мощная лебёдка', icon: 0, max: 5, text: () => tr('Летаешь на 10% быстрее'), apply: s => { s.speed *= 1.1; } },
-  range: { name: 'Длинные тросы', icon: 1, max: 5, text: () => tr('Тросы и атака достают на 15% дальше'), apply: s => { s.range *= 1.15; s.engage *= 1.15; } },
-  orbit: { name: 'Быстрый облёт', icon: 2, max: 5, text: () => tr('Заходишь титану за спину на 15% быстрее'), apply: s => { s.orbit *= 1.15; } },
-  hp: { name: 'Перевязка', icon: 3, max: 5, text: () => tr('+1 к здоровью и лечение'), apply: s => { s.maxHp += 1; player.hp = Math.min(s.maxHp, player.hp + 2); } },
-  heal: { name: 'Полевой медик', icon: 5, max: 5, text: () => tr('Лечение за убийства приходит быстрее'), apply: s => { s.healEvery = Math.max(6, s.healEvery - 4); } },
-  glide: { name: 'Лёгкий газ', icon: 6, max: 5, text: () => tr('Планируешь вниз на 25% медленнее'), apply: s => { s.glide *= 0.75; } },
+  speed: { name: 'Strong Winch', icon: 0, max: 5, text: () => tr('Fly 10% faster'), apply: s => { s.speed *= 1.1; } },
+  range: { name: 'Long Cables', icon: 1, max: 5, text: () => tr('Cables and attacks reach 15% farther'), apply: s => { s.range *= 1.15; s.engage *= 1.15; } },
+  orbit: { name: 'Quick Orbit', icon: 2, max: 5, text: () => tr('Get behind a titan 15% faster'), apply: s => { s.orbit *= 1.15; } },
+  hp: { name: 'Bandages', icon: 3, max: 5, text: () => tr('+1 max health and a heal'), apply: s => { s.maxHp += 1; player.hp = Math.min(s.maxHp, player.hp + 2); } },
+  heal: { name: 'Field Medic', icon: 5, max: 5, text: () => tr('Kill heals come sooner'), apply: s => { s.healEvery = Math.max(6, s.healEvery - 4); } },
+  glide: { name: 'Light Gas', icon: 6, max: 5, text: () => tr('Glide down 25% slower'), apply: s => { s.glide *= 0.75; } },
 };
 
 const BOSSES = [
-  { kind: 'female', tier: 0, name: 'Женская особь', size: 170, hp: 3, speed: 150, wp: 'лодыжки', wz: 0.06, ws: 0.11, kneel: 3 },
-  { kind: 'jaw', tier: 0, name: 'Титан-челюсти', size: 130, hp: 3, speed: 205, wp: 'лодыжки', wz: 0.06, ws: 0.13, kneel: 2.6, napeK: 0.72 },
-  { kind: 'cart', tier: 0, name: 'Титан-перевозчик', size: 160, hp: 3, speed: 175, wp: 'передние лапы', wz: 0.1, ws: 0.16, kneel: 3, napeK: 0.74 },
-  { kind: 'armored', tier: 1, name: 'Бронированный титан', size: 190, hp: 4, speed: 70, wp: 'колени', wz: 0.2, ws: 0.13, kneel: 3.4 },
-  { kind: 'beast', tier: 1, name: 'Звероподобный титан', size: 210, hp: 3, speed: 60, wp: 'руки', wz: 0.42, ws: 0.24, kneel: 3.6 },
-  { kind: 'hammer', tier: 1, name: 'Молот войны', size: 210, hp: 3, speed: 38, wp: 'кристаллы', wz: 0, ws: 0, kneel: 3.4, fixed: true },
-  { kind: 'colossal', tier: 2, name: 'Колоссальный титан', size: 300, hp: 4, speed: 22, wp: 'лодыжки', wz: 0.05, ws: 0.12, kneel: 4 },
-  { kind: 'reiss', tier: 2, name: 'Титан Рода Рейсса', size: 300, hp: 4, speed: 30, wp: 'руки', wz: 0.12, ws: 0.3, kneel: 4.2, napeK: 0.6 },
+  { kind: 'female', tier: 0, name: 'Female Titan', size: 170, hp: 3, speed: 150, wp: 'ankles', wz: 0.06, ws: 0.11, kneel: 3 },
+  { kind: 'jaw', tier: 0, name: 'Jaw Titan', size: 130, hp: 3, speed: 205, wp: 'ankles', wz: 0.06, ws: 0.13, kneel: 2.6, napeK: 0.72 },
+  { kind: 'cart', tier: 0, name: 'Cart Titan', size: 160, hp: 3, speed: 175, wp: 'front legs', wz: 0.1, ws: 0.16, kneel: 3, napeK: 0.74 },
+  { kind: 'armored', tier: 1, name: 'Armored Titan', size: 190, hp: 4, speed: 70, wp: 'knees', wz: 0.2, ws: 0.13, kneel: 3.4 },
+  { kind: 'beast', tier: 1, name: 'Beast Titan', size: 210, hp: 3, speed: 60, wp: 'arms', wz: 0.42, ws: 0.24, kneel: 3.6 },
+  { kind: 'hammer', tier: 1, name: 'War Hammer Titan', size: 210, hp: 3, speed: 38, wp: 'crystals', wz: 0, ws: 0, kneel: 3.4, fixed: true },
+  { kind: 'colossal', tier: 2, name: 'Colossal Titan', size: 300, hp: 4, speed: 22, wp: 'ankles', wz: 0.05, ws: 0.12, kneel: 4 },
+  { kind: 'reiss', tier: 2, name: 'Rod Reiss Titan', size: 300, hp: 4, speed: 30, wp: 'arms', wz: 0.12, ws: 0.3, kneel: 4.2, napeK: 0.6 },
 ];
 
 trFields(Object.values(SKILLS), ['name']);
 trFields(Object.values(PASSIVES), ['name']);
 trFields(BOSSES, ['name', 'wp']);
 const EVOS = {
-  spin: { need: 'orbit', name: 'Ураган Леви', text: 'Вихрь каждые 1,8 с, на 40% шире и рубит титанов на любой высоте' },
-  flash: { need: 'range', name: 'Солнце над стеной', text: 'Раз в 5 с ослепляет всех титанов вокруг на 4 с' },
-  cannon: { need: 'speed', name: 'Громовые копья', text: 'Пять копий: взрыв убивает титанов до 15 м, остальных оглушает' },
-  ally: { need: 'hp', name: 'Отряд Леви', text: 'Четыре элитных разведчика, атакуют каждые 2,5 с' },
-  trap: { need: 'glide', name: 'Паутина Ханджи', text: 'Сеть ловит до шести титанов на 9 с и стягивает их в центр' },
+  spin: { need: 'orbit', name: "Levi's Hurricane", text: 'A whirl every 1.8 s, 40% wider, cuts titans at any height' },
+  flash: { need: 'range', name: 'Sun over the Wall', text: 'Every 5 s blinds every titan around you for 4 s' },
+  cannon: { need: 'speed', name: 'Thunder Spears', text: 'Five spears: the blast kills titans up to 15 m and stuns the rest' },
+  ally: { need: 'hp', name: 'Levi Squad', text: 'Four elite scouts attacking every 2.5 s' },
+  trap: { need: 'glide', name: "Hange's Web", text: 'The net catches up to six titans for 9 s and pulls them together' },
 };
 trFields(Object.values(EVOS), ['name']);
 function evoReady(id) { return stats.skills[id] >= SKILLS[id].max && (stats.pass[EVOS[id].need] || 0) >= 3 && !stats.evo[id]; }
@@ -83,11 +83,11 @@ function combatReset() {
 
 function skillLevelText(id, l) {
   const S = SKILLS[id];
-  if (id === 'spin') return tr('Каждые {0} с', S.cd[l]);
-  if (id === 'flash') return tr('Каждые {0} с, ослепляет на {1} с', S.cd[l], S.dur[l]);
-  if (id === 'cannon') return tr('Каждые {0} с, ядер: {1}', S.cd[l], S.shots[l]);
-  if (id === 'ally') return tr('Товарищей: {0}, атака раз в {1} с', S.count[l], S.cd[l]);
-  return tr('Каждые {0} с, ловит до {1}, держит {2} с', S.cd[l], S.caps[l], S.dur[l]);
+  if (id === 'spin') return tr('Every {0} s', S.cd[l]);
+  if (id === 'flash') return tr('Every {0} s, blinds for {1} s', S.cd[l], S.dur[l]);
+  if (id === 'cannon') return tr('Every {0} s, shots: {1}', S.cd[l], S.shots[l]);
+  if (id === 'ally') return tr('Comrades: {0}, attack every {1} s', S.count[l], S.cd[l]);
+  return tr('Every {0} s, catches up to {1}, holds {2} s', S.cd[l], S.caps[l], S.dur[l]);
 }
 
 function rollChoices(n) {
@@ -134,7 +134,7 @@ function makeChoice(p) {
         stats.evo[p.id] = true;
         if (p.id === 'ally') syncAllies();
         game.sk[p.id] = 0.3;
-        game.banner = { text: tr('Эволюция!'), sub: E.name, t: 2.4, win: true };
+        game.banner = { text: tr('Evolution!'), sub: E.name, t: 2.4, win: true };
         game.flashT = 0.15;
         rings.push({ x: player.x, y: player.y, r: 300, life: 0.35, color: '#ffd36e' });
         for (let i = 0; i < 60; i++) { const a = rand(0, TAU), s = rand(150, 480); particles.push({ x: player.x, y: player.y - KZ * player.z, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 0.9, max: 0.9, size: rand(2, 4), g: 120, kind: 'flare', color: pick(['#ffd36e', '#fff6c8', '#ff9a3a']) }); }
@@ -314,7 +314,7 @@ function updateTraps(dt) {
         stunTitan(t, trp.dur, 'trap');
         t.bound = trp;
         trp.caught.push(t);
-        addText(tr('Пойман!'), t.x, t.y - KZ * t.H * 0.6, '#7ad8d0');
+        addText(tr('Caught!'), t.x, t.y - KZ * t.H * 0.6, '#7ad8d0');
         sfx('snap', { x: t.x, y: t.y, vol: 0.8 });
         if (trp.caught.length >= trp.caps) break;
       }
@@ -444,7 +444,7 @@ function bossRetreat(t) {
   t.hand = null;
   if (player.target === t) { player.mode = 'fly'; player.target = null; player.wp = null; }
   game.boss = null;
-  game.banner = { text: t.boss.name, sub: tr('Отступает… но вернётся'), t: 2.2 };
+  game.banner = { text: t.boss.name, sub: tr('Retreats… but will be back'), t: 2.2 };
   sfx('roar', { x: t.x, y: t.y, vol: 0.7 });
   steam(t.x, t.y - KZ * t.H * 0.5, 30, 120);
 }
@@ -496,7 +496,7 @@ function spawnBoss(def, cycle = 0) {
   titans.push(t);
   if (def.fixed) placePylons(t);
   game.boss = t;
-  game.banner = { text: def.name, sub: tr('Подрежь {0}, чтобы открыть затылок', def.wp), t: 3.4 };
+  game.banner = { text: def.name, sub: tr('Cut its {0} to expose the nape', def.wp), t: 3.4 };
   game.shake = 18;
   fireFlare(p.x + Math.cos(a) * 300, p.y + Math.sin(a) * 300, '#ff3a2a');
   sfx('horn', { vol: 0.9 });
@@ -540,7 +540,7 @@ function cutWeakPoint(t, w) {
   p.engageCd = 0.25;
   gainXp(2);
   const left = b.wp.filter(x => !x.cut).length;
-  if (left) { addText(tr('Подрезано: {0} {1}/2', b.def.wp, 2 - left), q.x, q.y - KZ * q.z - 30, '#ffd27a'); return; }
+  if (left) { addText(tr('Cut: {0} {1}/2', b.def.wp, 2 - left), q.x, q.y - KZ * q.z - 30, '#ffd27a'); return; }
   b.kneel = b.def.kneel;
   t.stun = b.kneel;
   t.state = 'walk';
@@ -552,7 +552,7 @@ function cutWeakPoint(t, w) {
   rings.push({ x: t.x, y: t.y, r: t.H * 0.6, life: 0.35, color: '#d8c8a0' });
   for (let i = 0; i < 24; i++) { const a = rand(0, TAU), s = rand(100, 320); particles.push({ x: t.x + rand(-30, 30), y: t.y, vx: Math.cos(a) * s, vy: Math.sin(a) * s * 0.6, life: 0.7, max: 0.7, size: 2, g: 0, kind: 'dust' }); }
   sfx('boom', { x: t.x, y: t.y, vol: 1, rate: 0.6 });
-  game.banner = { text: tr('На колени!'), sub: tr('Затылок открыт — бей!'), t: 1.6, win: true };
+  game.banner = { text: tr('On its knees!'), sub: tr('The nape is open, strike!'), t: 1.6, win: true };
 }
 
 function bossRise(t) {
@@ -733,7 +733,7 @@ function updateBoss(t, dt) {
       for (let i = 0; i < 3; i++) rings.push({ x: t.x, y: t.y - 10, r: 160 + i * 110, life: 0.35 + i * 0.08, color: '#fff6e0' });
       game.shake = Math.max(game.shake, 8);
       for (let i = 0; i < 3; i++) { const a = rand(0, TAU); spawnTitan({ x: t.x + Math.cos(a) * 320, y: t.y + Math.sin(a) * 320 }, Math.random() < 0.5 ? 'small' : 'normal'); }
-      game.banner = { text: tr('Зверь зовёт стаю!'), sub: tr('Титаны идут на рёв'), t: 1.8 };
+      game.banner = { text: tr('The Beast calls the pack!'), sub: tr('Titans follow the roar'), t: 1.8 };
     }
   }
   if (b.kind === 'colossal') {
@@ -789,7 +789,7 @@ function updateBoss(t, dt) {
         b.act = 'walk';
         b.cd = rand(5, 7);
         t.stun = 1.8;
-        addText(tr('Застрял!'), t.x, t.y - KZ * t.H * 0.9, '#ffd27a');
+        addText(tr('Stuck!'), t.x, t.y - KZ * t.H * 0.9, '#ffd27a');
         sfx('thud', { x: t.x, y: t.y, vol: 0.9 });
       }
       return true;
@@ -894,7 +894,7 @@ function bossHit(t) {
     killTitan(t);
     gainXp(25 + game.bossKills * 10);
     if (player.hp < stats.maxHp) player.hp++;
-    game.banner = { text: b.name, sub: tr('Повержен! Забери сундук трофеев'), t: 2.6, win: true };
+    game.banner = { text: b.name, sub: tr('Defeated! Grab the trophy chest'), t: 2.6, win: true };
     sfx('victory', { vol: 0.7 });
     dropChest(t.x, t.y, true);
     return;
@@ -902,7 +902,7 @@ function bossHit(t) {
   bossRise(t);
   b.harden = 1.6;
   sfx('crystal', { x: t.x, y: t.y, vol: 0.8 });
-  addText(tr('Есть! Осталось {0}/{1}', b.hp, b.max), n.x, n.y - KZ * n.z - 40, '#9fe8ff');
+  addText(tr('Hit! {0}/{1} left', b.hp, b.max), n.x, n.y - KZ * n.z - 40, '#9fe8ff');
   gainXp(6);
   if (b.kind === 'female') { b.act = 'flee'; b.actT = 2.4; }
 }
