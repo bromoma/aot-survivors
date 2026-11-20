@@ -1236,6 +1236,7 @@ function updateTitans(dt) {
   titans = titans.filter(t => !t.gone && (!t.dying || t.dying < 3.2));
 }
 
+const CIV_GAP = 40;
 function updateLife(dt) {
   for (const c of civs) {
     let fx = 0, fy = 0, near = 450;
@@ -1268,6 +1269,16 @@ function updateLife(dt) {
         vx = dx / d * 45;
         vy = dy / d * 45;
       }
+    }
+    for (const o of civs) {
+      if (o === c || o.dead) continue;
+      const ox = c.x - o.x, oy = c.y - o.y;
+      if (Math.abs(ox) > CIV_GAP || Math.abs(oy) > CIV_GAP) continue;
+      const d = Math.hypot(ox, oy);
+      if (d >= CIV_GAP) continue;
+      const k = (CIV_GAP - d) * 8, a = d > 0.01 ? Math.atan2(oy, ox) : c.phase;
+      vx += Math.cos(a) * k;
+      vy += Math.sin(a) * k;
     }
     const nx = c.x + vx * dt, ny = c.y + vy * dt;
     if (Math.abs(c.x - player.x) > 2600 || Math.abs(c.y - player.y) > 2200) c.gone = true;
