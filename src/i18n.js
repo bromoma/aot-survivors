@@ -786,6 +786,7 @@ const I18N_ROWS = [
   ["I'm a soldier... and a warrior.", 'Soy un soldado... y un guerrero.', 'Я солдат... и воин.'],
   ['Everyone is a slave to something.', 'Todos son esclavos de algo.', 'Все чему-то рабы.'],
   ['Dedicate your hearts, beauties of the Garrison!', '¡Entregad vuestros corazones, bellezas de la Guarnición!', 'Отдайте свои сердца, красавицы Гарнизона!'],
+  ['A non-commercial fan game. Pixellari font by Zacchary Dempsey-Plante. Music and sounds were composed and synthesized for this game. Details in CREDITS.md.', 'Juego de fans sin ánimo de lucro. Fuente Pixellari de Zacchary Dempsey-Plante. La música y los sonidos se compusieron y sintetizaron para este juego. Detalles en CREDITS.md.', 'Некоммерческая фан-игра. Шрифт Pixellari — Zacchary Dempsey-Plante. Музыка и звуки написаны и синтезированы специально для этой игры. Подробнее в CREDITS.md.'],
 ];
 
 const I18N = { es: {}, ru: {} };

@@ -833,7 +833,7 @@ const UI = (() => {
         <button class="k-btn" id="tut-again">${tr('Replay training')}</button>
         <button class="k-btn" id="wipe">${confirmReset ? tr('Really erase?') : tr('Erase progress')}</button>
       </div>
-      <div class="muted" style="margin-top:10px;font-size:16px">${tr('A non-commercial Attack on Titan fan game. Pixellari font by Zacchary Dempsey-Plante. Music by RandomMind, Komiku, Will Carpenter, cynicmusic (CC0). Sounds by Kenney (CC0). Details in CREDITS.md.')}</div>`;
+      <div class="muted" style="margin-top:10px;font-size:16px">${tr('A non-commercial fan game. Pixellari font by Zacchary Dempsey-Plante. Music and sounds were composed and synthesized for this game. Details in CREDITS.md.')}</div>`;
     box.querySelectorAll('[data-lang]').forEach(b => b.addEventListener('click', () => {
       const k = b.dataset.lang;
       if (k === LANG) return;
@@ -1448,6 +1448,10 @@ const UI = (() => {
       if (st === 'over' || st === 'win') buildResult(st === 'win');
       if (layers.hud.classList.contains('on')) refreshHudStatic();
     }
+    if ((st === 'play' || st === 'levelup' || st === 'loot' || st === 'paused') && !!(game && game.boss) !== bossMusic) {
+      bossMusic = !!(game && game.boss);
+      music(st);
+    }
     if (st === 'levelup') {
       const key = choices.map(c => c.name).join('|') + game.level + pendingLevels + ':' + game.rerolls;
       if (key !== cache.lvKey) buildLevelUp();
@@ -1561,11 +1565,12 @@ const UI = (() => {
     if (cache.tip !== showTip) { cache.tip = showTip; hud.tip.style.display = showTip ? '' : 'none'; }
   }
 
+  let bossMusic = false;
   function music(st) {
     if (typeof SND === 'undefined') return;
     if (st === 'menu' || st === 'pull') SND.playList('menu');
     else if (st === 'over' || st === 'win') SND.playList(null);
-    else SND.playList(faction.map);
+    else SND.playList(game && game.boss ? 'boss' : faction.map);
     SND.setDuck(st === 'paused' ? 0.35 : st === 'levelup' ? 0.6 : st === 'pull' ? 0.4 : 1);
   }
 

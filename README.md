@@ -77,6 +77,8 @@ Each English text needs a row in `I18N_ROWS` in `src/i18n.js`: `[English, Spanis
 node dev/i18n_check.js es
 ```
 
+Music and sound effects are generated, not downloaded: `python3 dev/music.py` writes `assets/music/*.ogg`, `python3 dev/sfx.py` writes `assets/sfx/*.ogg` (needs numpy and ffmpeg).
+
 After adding sprites run `node dev/pack.js` to rebuild the atlases. The world art is rebuilt with `node dev/build_assets.js world` (ground tiles from `dev/gen_ground.py`, trees and props from the ChatGPT sheets in `assets/raw/`).
 
 ## Contributing

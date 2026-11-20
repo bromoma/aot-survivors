@@ -8,10 +8,11 @@ const SND = (() => {
   };
   for (let i = 0; i < 8; i++) FILES['chime' + i] = ['chime_' + i];
   const PLAYLISTS = {
-    menu: ['menu_castle_town', 'menu_new_town'],
-    city: ['city_exploration', 'city_market_day'],
-    ruins: ['ruins_lament', 'ruins_rising_moon'],
-    field: ['field_fouler_horizon', 'field_kings_feast'],
+    menu: ['menu_main'],
+    city: ['city_square'],
+    ruins: ['ruins_ashes'],
+    field: ['field_gate'],
+    boss: ['boss_shifter'],
   };
   const LIMIT = { roar: 0.8, boom: 0.06, snap: 0.08, crystal: 0.3, horn: 1, rumble: 0.5, steamburst: 1, flashbang: 0.3, gas: 0.22, rope: 0.12, step: 0.09, swing: 0.2, hiss: 0.25, cut: 0.05, chime: 0.05, click: 0.03, flare: 0.3, chomp: 0.4, tick: 0.25, whoosh: 0.04, crack: 0.1 };
 
