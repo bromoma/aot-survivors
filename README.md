@@ -47,6 +47,20 @@ Handy debug links (only on localhost, they start muted and skip the login; add `
 | `assets/` | Sprites, atlases, UI, music, sounds |
 | `dev/` | Tools: local server, sprite cutting and packing, headless tests and recordings |
 
+## Economy
+
+All numbers live in `src/economy.js`, `src/gacha.js` and `src/meta.js`.
+
+| Currency | Comes from | Spent on |
+|---|---|---|
+| Marks | Runs, chests, daily tasks, achievements | Training, hero training, star-ups, gear upgrades |
+| Wings of Freedom | Achievements, daily tasks and supplies, weekly challenge, first win of the day, bosses | Summons only (100 each, 900 for ten) |
+| Dossiers (per hero) | Duplicates, bosses, weekly challenge, feather shop | Recruiting a hero without luck, raising stars |
+| Titan crystals | Bosses, golden elites, boss chests, gear duplicates at max level | Gear upgrades |
+| Feathers | Every summon | Summon shop: tickets, manuals, crystals, dossiers |
+
+Legendary rate is 0.6% with soft pity from the 74th summon and a guarantee on the 90th.
+
 ## Translations
 
 Every text in the code is written in English and wrapped in `tr()`:

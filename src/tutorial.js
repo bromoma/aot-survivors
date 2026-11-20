@@ -44,7 +44,7 @@ function tutFinish(skipped) {
   save.tutForce = false;
   if (!skipped && !save.tutPaid) {
     save.tutPaid = true;
-    save.tokens += TUT_REWARD;
+    save.marks += TUT_REWARD;
     addText(tr('Training complete! +{0}', TUT_REWARD), player.x, player.y - KZ * player.z - 80, '#ffd36e');
   }
   persist();

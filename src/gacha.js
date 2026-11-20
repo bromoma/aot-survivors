@@ -1,8 +1,8 @@
 'use strict';
 
-const PITY5 = 70, SOFT5 = 50, PITY4 = 10;
-const TIER_RATES = [0, 0.44, 0.3, 0.175, 0.07, 0.015];
-const PULL_COST = 60, PULL10_COST = 540, PULL100_COST = 4800;
+const PITY5 = 90, SOFT5 = 73, PITY4 = 10;
+const TIER_RATES = [0, 0.45, 0.3, 0.19, 0.054, 0.006];
+const PULL_COST = 100, PULL10_COST = 900, PULL100_COST = 9000;
 const FEATHER = { 1: 1, 2: 2, 3: 4, 4: 8, 5: 20 };
 const GOLD_CHANCE = 0.03;
 const FEATURE5 = ['levi', 'mikasa', 'erwin'];
@@ -33,7 +33,7 @@ function freeAvailable() { return gachaState().free !== todayKey(); }
 function rate5() {
   const p = (save.pity5 || 0) + 1;
   if (p >= PITY5) return 1;
-  return p > SOFT5 ? TIER_RATES[5] + (p - SOFT5) * 0.05 : TIER_RATES[5];
+  return p > SOFT5 ? TIER_RATES[5] + (p - SOFT5) * 0.06 : TIER_RATES[5];
 }
 
 function rollTier() {
@@ -102,10 +102,10 @@ function gachaPull(n, banner, mode) {
   const cost = mode ? 0 : n === 100 ? PULL100_COST : n === 10 ? PULL10_COST : PULL_COST * n;
   if (mode === 'free' && !freeAvailable()) return null;
   if (mode === 'ticket' && (n === 10 ? (g0.tickets10 || 0) < 1 : tickets() < n)) return null;
-  if (save.tokens < cost) return null;
+  if (wings() < cost) return null;
   if (mode === 'free') g0.free = todayKey();
   if (mode === 'ticket') { if (n === 10) g0.tickets10--; else g0.tickets -= n; }
-  save.tokens -= cost;
+  save.wings = wings() - cost;
   const res = [];
   for (let i = 0; i < n; i++) res.push(rollOne(banner));
   for (let b = 0; b < n; b += 10) {
@@ -138,11 +138,13 @@ function gachaPull(n, banner, mode) {
 
 const ANOMALY_CHANCE = 0.08;
 const SHOP = [
-  { id: 'ticket', cost: 30, icon: 'pearl', name: 'Summon Ticket', text: 'One summon on any banner' },
+  { id: 'ticket', cost: 40, icon: 'pearl', name: 'Summon Ticket', text: 'One summon on any banner' },
   { id: 'manual', cost: 8, icon: 'scroll', name: 'Manual', text: '+150 XP for any hero' },
-  { id: 'pick4', cost: 160, icon: 'seal_red', name: 'Epic of your choice', text: 'Any epic hero, or +1 star for them' },
-  { id: 'pick5', cost: 450, icon: 'ribbon', name: 'Legendary of your choice', text: 'Any legendary hero, or +1 star for them' },
+  { id: 'crystal', cost: 25, icon: 'crystal', name: '10 titan crystals', text: 'For gear upgrades' },
+  { id: 'doss', cost: 0, icon: 'dossier', name: '5 dossiers of your choice', text: 'Dossiers of any hero: recruit them or raise their stars' },
 ];
+const DOSS_PRICE = { 3: 15, 4: 30, 5: 60 };
+function shopCost(id, heroId) { return id === 'doss' ? (heroId ? DOSS_PRICE[charById(heroId).rarity] : DOSS_PRICE[3]) : SHOP.find(s => s.id === id).cost; }
 const QUOTES = {
   cadet: "I'm ready to give my heart to humanity!",
   connie: "I'm the fastest in the squad, try to keep up!",
@@ -165,21 +167,22 @@ function addFeathers(n) { const g = gachaState(); g.feathers = (g.feathers || 0)
 
 function grantHero(id) {
   const c = charById(id), had = save.chars[id] || 0;
-  const refund = had >= 5 ? 20 * c.rarity : 0;
-  if (refund) save.tokens += refund;
-  save.chars[id] = Math.min(5, had + 1);
-  return { kind: 'hero', c, rarity: c.rarity, isNew: !had, stars: save.chars[id], refund };
+  if (!had) { save.chars[id] = 1; return { kind: 'hero', c, rarity: c.rarity, isNew: true, stars: 1 }; }
+  const n = DOSSIER_DUP[c.rarity] || 5, got = addDossiers(id, n);
+  return { kind: 'hero', c, rarity: c.rarity, isNew: false, stars: had, doss: got.dossiers || 0, dossFe: got.feathers || 0 };
 }
 
 function buyShop(id, heroId) {
   const it = SHOP.find(s => s.id === id), g = gachaState();
-  if (!it || feathers() < it.cost) return null;
-  if ((id === 'pick4' || id === 'pick5') && (!heroId || charById(heroId).rarity !== (id === 'pick4' ? 4 : 5))) return null;
-  g.feathers -= it.cost;
+  if (!it || (id === 'doss' && !heroId)) return null;
+  const cost = shopCost(id, heroId);
+  if (feathers() < cost) return null;
+  g.feathers -= cost;
   let res = true;
   if (id === 'ticket') g.tickets = tickets() + 1;
   else if (id === 'manual') save.manuals = (save.manuals || 0) + 1;
-  else res = grantHero(heroId);
+  else if (id === 'crystal') addCrystals(10);
+  else res = addDossiers(heroId, 5);
   persist();
   return res;
 }

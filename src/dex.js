@@ -20,7 +20,7 @@ const DEX = [
 ];
 trFields(DEX, ['name', 'lore']);
 const DEX_TIERS = { titan: [10, 100, 500], boss: [1, 5, 20] };
-const DEX_REWARD = [[60, 5], [180, 15], [500, 40]];
+const DEX_REWARD = [[100, 20], [250, 50], [600, 120]];
 
 function dexKey(t) {
   if (t.boss) return 'boss_' + t.boss.kind;
@@ -57,9 +57,8 @@ function dexClaimAll(e) {
   const t = dexTier(e);
   while (c < t) { tk += DEX_REWARD[c][0]; fe += DEX_REWARD[c][1]; c++; }
   save.dexClaim[e.key] = c;
-  save.tokens += tk;
-  const g = gachaState();
-  g.feathers = (g.feathers || 0) + fe;
+  save.marks += tk;
+  addWings(fe);
   persist();
   return [tk, fe];
 }

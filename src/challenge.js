@@ -48,13 +48,15 @@ function challengeBossPlan() {
   return [[70, 0], [140, 0], [210, 1], [280, 2]];
 }
 
+const CHAL_WINGS = 500, CHAL_DOSS = 10;
+function chalHero() { return bannerInfo().fours[0]; }
+
 function challengeReward(won) {
   if (!faction.challenge || !won || challengeDone()) return false;
   save.chalWeek = weekIndex();
   if (save.stats) save.stats.chalWins = (save.stats.chalWins || 0) + 1;
-  const g = gachaState();
-  g.tickets10 = (g.tickets10 || 0) + 1;
-  g.feathers = (g.feathers || 0) + 30;
+  addWings(CHAL_WINGS);
+  addDossiers(chalHero(), CHAL_DOSS);
   return true;
 }
 

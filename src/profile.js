@@ -74,7 +74,7 @@ function profSummary(p) {
   let s = null;
   try { s = JSON.parse(localStorage.getItem(profSaveKey(p.id)) || 'null'); } catch (e) {}
   const st = (s && s.stats) || {};
-  return { kills: st.kills || 0, runs: st.runs || 0, heroes: s && s.chars ? Object.keys(s.chars).length : 1, tokens: s ? s.tokens || 0 : 300 };
+  return { kills: st.kills || 0, runs: st.runs || 0, heroes: s && s.chars ? Object.keys(s.chars).length : 1, marks: s ? s.marks ?? s.tokens ?? 0 : 300 };
 }
 
 // What the player has to do before playing: 'enlist' (no profiles yet), 'who' (pick a profile) or 'pin'.

@@ -76,8 +76,8 @@ function runHeroXp(won, dk, dt, db) {
 }
 
 function trainHero(id) {
-  if (!save.chars[id] || heroLevel(id) >= HERO_MAX || save.tokens < TRAIN_COST) return 0;
-  save.tokens -= TRAIN_COST;
+  if (!save.chars[id] || heroLevel(id) >= HERO_MAX || save.marks < TRAIN_COST) return 0;
+  save.marks -= TRAIN_COST;
   const ups = addHeroXp(id, TRAIN_XP);
   persist();
   return 1 + ups;

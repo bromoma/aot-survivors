@@ -195,7 +195,7 @@ const UI = (() => {
         <div class="g-history k-card hid" id="g-history"></div>
       </div></div></div>
       <div class="screen" data-s="gear"><div class="panel-wrap"><div class="panel k-frame gear-v">
-        <div class="head"><span class="h2">${tr('Gear')}</span><span class="gear-coll" id="gear-coll"></span><button class="k-icon" data-back>${img('close')}</button></div>
+        <div class="head"><span class="h2">${tr('Gear')}</span><span class="gear-coll" id="gear-coll"></span><span class="gear-wallet" id="gear-wallet"></span><button class="k-icon" data-back>${img('close')}</button></div>
         <div class="row" style="align-items:flex-start">
           <div class="gear-left"><div class="gear-slots" id="gear-slots"></div><div class="gear-tot k-card" id="gear-tot"></div></div>
           <div class="gear-right"><div class="gear-inv" id="gear-inv"></div><div class="gear-info k-card" id="gear-info"></div></div>
@@ -203,7 +203,7 @@ const UI = (() => {
       </div></div></div>
       <div class="screen" data-s="training"><div class="panel-wrap"><div class="panel k-frame" style="width:min(1000px,94vw)">
         <div class="head"><span class="h2">${tr('Cadet Corps Training')}</span><button class="k-icon" data-back>${img('close')}</button></div>
-        <div class="muted" style="margin-bottom:8px">${tr('Permanent upgrades for tokens, active in every run')}</div>
+        <div class="muted" style="margin-bottom:8px">${tr('Permanent upgrades for marks, active in every run')}</div>
         <div class="train-grid" id="training"></div>
       </div></div></div>
       <div class="screen" data-s="missions"><div class="panel-wrap"><div class="panel k-frame" style="width:min(820px,94vw)">
@@ -222,7 +222,7 @@ const UI = (() => {
       </div></div></div>
       <div class="screen" data-s="login"><div class="panel-wrap"><div class="panel k-frame login-v">
         <div class="head"><span class="h2">${tr('Daily supplies')}</span><button class="k-icon" data-back>${img('close')}</button></div>
-        <div class="muted">${tr('Come back every day: the Survey Corps sends supplies. Day 7 brings a ×10 ticket!')}</div>
+        <div class="muted">${tr('Come back every day: the Survey Corps sends supplies. Day 7 brings 300 wings!')}</div>
         <div class="login-days" id="login-days"></div>
         <div class="buttons"><button class="k-btn big" id="login-claim"></button></div>
       </div></div></div>
@@ -235,7 +235,7 @@ const UI = (() => {
         <div id="settings"></div>
       </div></div></div>
       <div class="bottom-bar">
-        <div class="row" style="gap:10px"><button class="coins k-card prof-chip" id="prof-chip"><span class="pav" id="prof-av"></span><span id="prof-name"></span></button><div class="coins k-card"><img src="assets/ui/coin.png" alt=""><span id="tokens"></span></div><div class="coins k-card rank-plate"><img src="assets/ui/ribbon.png" alt=""><span id="rank-foot"></span></div></div>
+        <div class="row" style="gap:10px"><button class="coins k-card prof-chip" id="prof-chip"><span class="pav" id="prof-av"></span><span id="prof-name"></span></button><div class="coins k-card" title="${tr('Marks')}"><img src="assets/ui/coin.png" alt=""><span id="marks"></span></div><div class="coins k-card" title="${tr('Wings of Freedom')}"><img src="assets/ui/wings.png" alt=""><span id="wings"></span></div><div class="coins k-card rank-plate"><img src="assets/ui/ribbon.png" alt=""><span id="rank-foot"></span></div></div>
         <div class="hint" id="menu-hint"></div>
       </div>
       <div class="msg k-tip" id="msg"></div>`;
@@ -348,7 +348,8 @@ const UI = (() => {
   }
 
   function refreshFooter() {
-    $('#tokens').textContent = save.tokens;
+    $('#marks').textContent = save.marks;
+    $('#wings').textContent = wings();
     const pc = profCur(), chip = $('#prof-chip');
     chip.style.display = pc ? '' : 'none';
     if (pc && cache.chip !== pc.avatar + pc.name) {
@@ -396,7 +397,7 @@ const UI = (() => {
       const c = el('div', 'faction k-card' + (i === factionSel && !challengeOn ? ' sel' : ''));
       c.appendChild(emblem(f.id));
       const b = bestOf(f);
-      c.insertAdjacentHTML('beforeend', `<div class="fname">${f.name}</div><div class="diff" style="color:${['#2c7030', '#a8681a', '#b8302a'][i]}">${tr('{0} · tokens x{1}', f.diff, [1, 1.5, 2][i])}</div><div class="desc">${f.desc}</div><div class="muted">${b ? tr('Best: {0}', fmtTime(b)) : tr('Not cleared yet')}</div>`);
+      c.insertAdjacentHTML('beforeend', `<div class="fname">${f.name}</div><div class="diff" style="color:${['#2c7030', '#a8681a', '#b8302a'][i]}">${tr('{0} · marks x{1}', f.diff, [1, 1.5, 2][i])}</div><div class="desc">${f.desc}</div><div class="muted">${b ? tr('Best: {0}', fmtTime(b)) : tr('Not cleared yet')}</div>`);
       c.addEventListener('click', () => {
         if (i === factionSel && !challengeOn) start();
         else { challengeOn = false; factionSel = i; requestReset(); refreshBattle(); }
@@ -406,7 +407,7 @@ const UI = (() => {
     const ch = weekChallenge(), cd = $('#chal');
     cd.className = 'chal k-card' + (challengeOn ? ' sel' : '') + (challengeDone() ? ' done' : '');
     cd.innerHTML = `<div class="ck">${tr('Weekly challenge')} · ${FACTIONS[ch.map].name} · 5:00</div><div class="cn">${ch.name}</div><div class="muted small">${ch.text}</div>
-      <div class="cr">${challengeDone() ? tr("This week's reward claimed ✓") : tr('Reward: ×10 ticket and 30 feathers')} · ${tr('Changes in {0}', fmtDur(bannerInfo().endsIn))}</div>`;
+      <div class="cr">${challengeDone() ? tr("This week's reward claimed ✓") : tr('Reward: {0} wings and {1} dossiers of {2}', CHAL_WINGS, CHAL_DOSS, charById(chalHero()).name)} · ${tr('Changes in {0}', fmtDur(bannerInfo().endsIn))}</div>`;
     cd.onclick = () => {
       if (challengeOn) { start(); return; }
       challengeOn = true; factionSel = ch.map; requestReset(); refreshBattle();
@@ -419,11 +420,11 @@ const UI = (() => {
     tb.innerHTML = '<span class="tl">' + tr('Threat:') + '</span>';
     THREAT_NAMES.forEach((n, k) => {
       const b = el('button', 'k-btn th' + (k + 1 === cur ? ' sel' : '') + (k + 1 > max ? ' off' : ''), n);
-      b.title = k + 1 > max ? tr('Unlock: survive 10 minutes on threat {0}', THREAT_NAMES[k - 1]) : tr('More titans, faster and fiercer. Tokens x{0}', (1 + 0.3 * k).toFixed(1));
+      b.title = k + 1 > max ? tr('Unlock: survive 10 minutes on threat {0}', THREAT_NAMES[k - 1]) : tr('More titans, faster and fiercer. Marks x{0}', (1 + 0.3 * k).toFixed(1));
       b.addEventListener('click', () => setThreat(k + 1));
       tb.appendChild(b);
     });
-    tb.insertAdjacentHTML('beforeend', `<span class="muted">${cur > 1 ? tr('fiercer titans, tokens x{0}', (1 + 0.3 * (cur - 1)).toFixed(1)) : tr('survive 10 minutes to unlock the next one')}</span>`);
+    tb.insertAdjacentHTML('beforeend', `<span class="muted">${cur > 1 ? tr('fiercer titans, marks x{0}', (1 + 0.3 * (cur - 1)).toFixed(1)) : tr('survive 10 minutes to unlock the next one')}</span>`);
   }
 
   function setThreat(k) {
@@ -444,7 +445,9 @@ const UI = (() => {
       const owned = save.chars[c.id];
       const d = el('div', 'hero-card k-card' + (i === squadSel ? ' sel' : '') + (owned ? '' : ' locked') + (save.selected === c.id ? ' chosen' : ''));
       d.appendChild(face(c.id));
-      d.insertAdjacentHTML('beforeend', `<div class="hn">${owned ? c.name : '???'}</div><div class="${rarityClass(c.rarity)}">${owned ? starsHTML(owned) : RARITY[c.rarity].name}</div>${owned ? '<div class="hlv">' + tr('Lv. {0}', heroLevel(c.id)) + '</div>' : ''}`);
+      const dn = dossiers(c.id), need = owned ? (starCost(c.id) || {}).d : recruitCost(c.id);
+      const ready = owned ? canStarUp(c.id) : canRecruit(c.id);
+      d.insertAdjacentHTML('beforeend', `<div class="hn">${owned ? c.name : '???'}</div><div class="${rarityClass(c.rarity)}">${owned ? starsHTML(owned) : RARITY[c.rarity].name}</div>${owned ? '<div class="hlv">' + tr('Lv. {0}', heroLevel(c.id)) + '</div>' : ''}${need ? `<div class="hdos${ready ? ' ready' : ''}"><img src="assets/ui/dossier.png" alt="">${dn}/${need}</div>` : ''}${ready ? '<b class="hup">!</b>' : ''}`);
       d.addEventListener('click', () => { squadSel = i; refreshSquad(); });
       d.addEventListener('dblclick', () => { squadSel = i; pickHero(); });
       box.appendChild(d);
@@ -456,9 +459,30 @@ const UI = (() => {
     const L = heroLevelOf(heroXp(c.id));
     det.insertAdjacentHTML('beforeend', `<div class="center h2 ${rarityClass(c.rarity)}" style="line-height:1">${owned ? c.name : tr('Locked')}</div>
       <div class="center ${rarityClass(c.rarity)}">${RARITY[c.rarity].name} ${owned ? starsHTML(owned) : ''}</div>
-      <div class="center muted ab">${owned ? c.ability : tr('Can be recruited in “Summon”')}</div>`);
+      <div class="center muted ab">${c.ability}</div>`);
     const U = heroUlt(c.id), UD = ULTS[U[0]];
     det.insertAdjacentHTML('beforeend', `<div class="ultd"><b>★ ${UD.name}</b>${U[1] ? ' ×' + U[1] : ''}<div>${UD.text}</div></div>`);
+    const sc = owned ? starCost(c.id) : null, dn = dossiers(c.id);
+    if (!owned || sc) {
+      const need = owned ? sc.d : recruitCost(c.id), ok = owned ? canStarUp(c.id) : canRecruit(c.id);
+      const box = el('div', 'dos-box k-card');
+      box.innerHTML = `<div class="row" style="gap:6px;align-items:center"><img src="assets/ui/dossier.png" alt=""><b>${tr('Dossiers: {0}/{1}', dn, need)}</b></div><div class="xpb dos"><i style="width:${Math.min(100, Math.round(dn / need * 100))}%"></i></div>
+        <div class="muted small">${owned ? tr('Next star: +3% speed. Dossiers come from duplicates, bosses, the weekly challenge and the feather shop') : tr('Collect dossiers to recruit without luck: from bosses, the weekly challenge and the feather shop')}</div>`;
+      const ub = el('button', 'k-btn' + (ok ? ' glow' : ' off'), owned ? `★${owned + 1} · <img src="assets/ui/dossier.png" alt="">${sc.d} · <img src="assets/ui/coin.png" alt="">${sc.m}` : `${tr('Recruit#verb')} · <img src="assets/ui/dossier.png" alt="">${need}`);
+      ub.style.width = '100%';
+      ub.addEventListener('click', () => {
+        if (owned) {
+          if (!starUp(c.id)) { toast(dn < sc.d ? tr('Not enough dossiers') : tr('Not enough marks, play a run')); snd('error', { vol: 0.6 }); return; }
+          snd('levelup', { vol: 0.7 }); toast(tr('{0}: {1} stars!', c.name, save.chars[c.id]));
+        } else {
+          if (!recruitHero(c.id)) { toast(tr('Not enough dossiers')); snd('error', { vol: 0.6 }); return; }
+          snd('reveal', { vol: 0.7 }); toast(tr('{0} joins the Survey Corps!', c.name));
+        }
+        refreshSquad(); refreshFooter();
+      });
+      box.appendChild(ub);
+      det.appendChild(box);
+    }
     if (owned) {
       det.insertAdjacentHTML('beforeend', `<div class="hx"><b>${tr('Lv. {0}', L.level)}</b> / ${HERO_MAX}<div class="xpb"><i style="width:${L.need ? Math.round(L.into / L.need * 100) : 100}%"></i></div><span class="muted">${L.need ? L.into + ' / ' + L.need : tr('Max')}</span></div>
         <div class="muted small">${L.level > 1 ? heroBonusText(L.level) : tr('Each level: +1% speed and orbit')}</div>
@@ -478,8 +502,8 @@ const UI = (() => {
     }
     if (owned && L.level < HERO_MAX) {
       const row = el('div', 'row hbtns');
-      const tb = el('button', 'k-btn' + (save.tokens >= TRAIN_COST ? '' : ' off'), `${tr('Train +{0}', TRAIN_XP)} · <img src="assets/ui/coin.png" alt="">${TRAIN_COST}`);
-      tb.addEventListener('click', () => { const r = trainHero(c.id); if (!r) { toast(tr('Not enough tokens, play a run')); snd('error', { vol: 0.6 }); return; } snd(r > 1 ? 'levelup' : 'confirm', { vol: 0.6 }); if (r > 1) toast(tr('{0}: level {1}!', c.name, heroLevel(c.id))); refreshSquad(); refreshFooter(); });
+      const tb = el('button', 'k-btn' + (save.marks >= TRAIN_COST ? '' : ' off'), `${tr('Train +{0}', TRAIN_XP)} · <img src="assets/ui/coin.png" alt="">${TRAIN_COST}`);
+      tb.addEventListener('click', () => { const r = trainHero(c.id); if (!r) { toast(tr('Not enough marks, play a run')); snd('error', { vol: 0.6 }); return; } snd(r > 1 ? 'levelup' : 'confirm', { vol: 0.6 }); if (r > 1) toast(tr('{0}: level {1}!', c.name, heroLevel(c.id))); refreshSquad(); refreshFooter(); });
       const mb = el('button', 'k-btn' + ((save.manuals || 0) > 0 ? '' : ' off'), `<img src="assets/ui/scroll.png" alt=""> +${MANUAL_XP} (${save.manuals || 0})`);
       mb.title = tr('Manual: +{0} hero XP', MANUAL_XP);
       mb.addEventListener('click', () => { const r = useManual(c.id); if (!r) { toast(tr('Manuals drop from “Summon”')); snd('error', { vol: 0.6 }); return; } snd(r > 1 ? 'levelup' : 'confirm', { vol: 0.6 }); if (r > 1) toast(tr('{0}: level {1}!', c.name, heroLevel(c.id))); refreshSquad(); });
@@ -513,7 +537,7 @@ const UI = (() => {
     const im = document.createElement('img'); im.src = 'assets/ui/scroll.png'; return im;
   }
   function resNote(r) {
-    if (r.kind === 'hero') return r.golden ? tr('GOLDEN!') : r.isNew ? tr('New!') : r.refund ? '+' + r.refund : '★' + r.stars;
+    if (r.kind === 'hero') return r.golden ? tr('GOLDEN!') : r.isNew ? tr('New!') : r.dossFe ? tr('+{0} feathers', r.dossFe) : tr('+{0} dossiers', r.doss);
     if (r.kind === 'gear') return r.isNew ? tr('New!#item') : r.maxed ? tr('Max#short') : tr('Lv. {0}', r.lvl);
     return '+' + MANUAL_XP;
   }
@@ -580,7 +604,7 @@ const UI = (() => {
       ${gBanner === 'event' && g.guar ? '<div class="guar">' + tr('Next legendary soldier is guaranteed to be {0}!', charById(B.five).name) + '</div>' : ''}
       ${gBanner === 'arsenal' && g.guarG ? '<div class="guar">' + tr('Next legendary is guaranteed to be {0}!#item', tr(gearById(B.gear).name)) + '</div>' : ''}
 
-      <div class="g-wallet"><a class="lnk" id="g-hist-btn">${tr('Rates & history')}</a><span><img src="assets/ui/ribbon.png" alt="">${tr('Feathers: {0}', feathers())}</span><span><img src="assets/ui/pearl.png" alt="">${tr('Tickets: {0}', tickets())}</span><span><img src="assets/ui/pearl.png" alt="">${tr('×10 tickets: {0}', g.tickets10 || 0)}</span></div>`;
+      <div class="g-wallet"><a class="lnk" id="g-hist-btn">${tr('Rates & history')}</a><span><img src="assets/ui/wings.png" alt="">${tr('Wings: {0}', wings())}</span><span><img src="assets/ui/ribbon.png" alt="">${tr('Feathers: {0}', feathers())}</span><span><img src="assets/ui/pearl.png" alt="">${tr('Tickets: {0}', tickets())}</span><span><img src="assets/ui/pearl.png" alt="">${tr('×10 tickets: {0}', g.tickets10 || 0)}</span></div>`;
     $('#g-hist-btn').addEventListener('click', () => { $('#g-history').classList.toggle('hid'); refreshHistory(); });
     const bb = $('#g-btns');
     bb.innerHTML = '';
@@ -588,9 +612,9 @@ const UI = (() => {
     if (freeAvailable()) btn('free', `${img('pearl')} ${tr('Free')}`, () => doPull(1, 'free'), tr('One free summon every day'));
     if (tickets() > 0) btn('free', `${img('pearl')} ×1 (${tickets()})`, () => doPull(1, 'ticket'), tr('Summon Ticket'));
     if ((g.tickets10 || 0) > 0) btn('free', `${img('pearl')} ×10 (${g.tickets10})`, () => doPull(10, 'ticket'), tr('×10 ticket'));
-    btn(save.tokens < PULL_COST ? 'off' : '', `${img('coin')} ×1 — ${PULL_COST}`, () => doPull(1));
-    btn(save.tokens < PULL10_COST ? 'off' : '', `${img('coin')} ×10 — ${PULL10_COST}`, () => doPull(10), tr('Ten for the price of nine, at least one epic'));
-    btn('x100' + (save.tokens < PULL100_COST ? ' off' : ''), `${img('coin')} ×100 — ${PULL100_COST}`, () => doPull(100), tr('A hundred summons at once: at least one epic in every ten, and a trophy chest right away'));
+    btn(wings() < PULL_COST ? 'off' : '', `${img('wings')} ×1 — ${PULL_COST}`, () => doPull(1));
+    btn(wings() < PULL10_COST ? 'off' : '', `${img('wings')} ×10 — ${PULL10_COST}`, () => doPull(10), tr('Ten for the price of nine, at least one epic'));
+    btn('x100' + (wings() < PULL100_COST ? ' off' : ''), `${img('wings')} ×100 — ${PULL100_COST}`, () => doPull(100), tr('A hundred summons at once: at least one epic in every ten, and a trophy chest right away'));
     refreshFooter();
   }
 
@@ -602,6 +626,7 @@ const UI = (() => {
     persist();
     refreshFooter();
     $('#gear-coll').textContent = tr('Collected {0}/{1}', gearOwned(), GEAR_TOTAL);
+    $('#gear-wallet').innerHTML = `<img src="assets/ui/crystal.png" alt="">${crystals()} <img src="assets/ui/coin.png" alt="">${save.marks}`;
     const sl = $('#gear-slots');
     sl.innerHTML = '';
     for (const slot of GEAR_SLOTS) {
@@ -634,8 +659,17 @@ const UI = (() => {
     if (gearSel && gs.items[gearSel]) {
       const { m, r } = parseGear(gearSel), it = gs.items[gearSel], eq = gs.eq[m.slot] === gearSel;
       info.innerHTML = `<div class="row" style="gap:10px"><div class="gbig t${r}" id="gbig"></div><div><div class="h2 t${r}" style="line-height:1">${tr(m.name)}</div><div class="t${r}">${tr(SLOT_NAMES[m.slot])} · ${GEAR_RAR[r].name} · ${tr('Lv. {0}', it.lvl)}/5</div>
-        <div class="small">${gearFxLines(m, r, it.lvl).join('<br>')}</div><div class="muted small">${it.lvl < 5 ? tr('Duplicates from summons raise its level') : tr('Max level')}</div></div></div>`;
+        <div class="small">${gearFxLines(m, r, it.lvl).join('<br>')}</div><div class="muted small">${it.lvl < 5 ? tr('Raise the level with titan crystals and marks, or with duplicates from summons') : tr('Max level: more duplicates turn into crystals')}</div></div></div>`;
       $('#gbig', info).appendChild(cv(gearIcon(m.id)));
+      const uc = gearUpCost(gearSel);
+      if (uc) {
+        const ub = el('button', 'k-btn' + (canGearUp(gearSel) ? '' : ' off'), `${tr('Upgrade#verb')} · <img src="assets/ui/crystal.png" alt="">${uc.c} · <img src="assets/ui/coin.png" alt="">${uc.m}`);
+        ub.addEventListener('click', () => {
+          if (!gearUp(gearSel)) { toast(crystals() < uc.c ? tr('Not enough crystals: they drop from bosses and golden elites') : tr('Not enough marks, play a run')); snd('error', { vol: 0.6 }); return; }
+          snd('levelup', { vol: 0.6 }); toast(tr('{0}: level {1}!', tr(m.name), it.lvl)); refreshGear(); refreshFooter();
+        });
+        info.appendChild(ub);
+      }
       const b = el('button', 'k-btn' + (eq ? ' off' : ''), eq ? tr('Equipped') : tr('Equip'));
       b.addEventListener('click', () => { if (equipGear(gearSel)) { snd('confirm', { vol: 0.7 }); refreshGear(); } });
       info.appendChild(b);
@@ -649,40 +683,39 @@ const UI = (() => {
     st.innerHTML = '<div class="shop-grid" id="shop-grid"></div>';
     const grid = $('#shop-grid', st);
     for (const it of SHOP) {
-      const d = el('div', 'shop-it k-card' + (feathers() < it.cost ? ' poor' : '') + (shopPick === it.id ? ' sel' : ''));
-      d.innerHTML = `<img src="assets/ui/${it.icon}.png" alt=""><div class="sn">${tr(it.name)}</div><div class="muted small">${tr(it.text)}</div><div class="sc"><img src="assets/ui/ribbon.png" alt="">${it.cost}</div>`;
+      const cost = it.id === 'doss' ? DOSS_PRICE[3] : it.cost;
+      const d = el('div', 'shop-it k-card' + (feathers() < cost ? ' poor' : '') + (shopPick === it.id ? ' sel' : ''));
+      d.innerHTML = `<img src="assets/ui/${it.icon}.png" alt=""><div class="sn">${tr(it.name)}</div><div class="muted small">${tr(it.text)}</div><div class="sc"><img src="assets/ui/ribbon.png" alt="">${it.id === 'doss' ? Object.values(DOSS_PRICE).join(' / ') : cost}</div>`;
       d.addEventListener('click', () => {
-        if (feathers() < it.cost) { toast(tr('Not enough feathers, you get them from every summon')); snd('error', { vol: 0.6 }); return; }
-        if (it.id === 'pick4' || it.id === 'pick5') { shopPick = shopPick === it.id ? null : it.id; refreshShop(); return; }
+        if (it.id === 'doss') { shopPick = shopPick === it.id ? null : it.id; refreshShop(); return; }
+        if (feathers() < cost) { toast(tr('Not enough feathers, you get them from every summon')); snd('error', { vol: 0.6 }); return; }
         if (buyShop(it.id)) { snd('confirm', { vol: 0.8 }); toast(tr('Bought: {0}', tr(it.name))); refreshGacha(); }
       });
       grid.appendChild(d);
     }
     if (shopPick) {
-      const rar = shopPick === 'pick4' ? 4 : 5;
       const row = el('div', 'shop-pick');
-      row.insertAdjacentHTML('beforeend', `<div class="sec">${tr('Choose a hero')}</div>`);
-      const fl = el('div', 'row');
-      for (const c of CHARS.filter(x => x.rarity === rar)) {
-        const h = el('div', 'hero-card k-card');
+      row.insertAdjacentHTML('beforeend', `<div class="sec">${tr('Whose dossiers? (price depends on rarity)')}</div>`);
+      const fl = el('div', 'row shop-heroes');
+      for (const c of CHARS.filter(x => x.id !== 'cadet')) {
+        const price = DOSS_PRICE[c.rarity], st5 = (save.chars[c.id] || 0) >= 5;
+        const h = el('div', 'hero-card k-card' + (feathers() < price || st5 ? ' poor' : ''));
         h.appendChild(face(c.id));
-        h.insertAdjacentHTML('beforeend', `<div class="hn">${c.name}</div><div class="r${rar}">${save.chars[c.id] ? starsHTML(save.chars[c.id]) : tr('New!')}</div>`);
+        h.insertAdjacentHTML('beforeend', `<div class="hn">${c.name}</div><div class="r${c.rarity}">${save.chars[c.id] ? starsHTML(save.chars[c.id]) : '???'}</div><div class="hdos"><img src="assets/ui/dossier.png" alt="">${dossiers(c.id)}/${save.chars[c.id] ? ((starCost(c.id) || {}).d || '—') : recruitCost(c.id)}</div><div class="sc small"><img src="assets/ui/ribbon.png" alt="">${price}</div>`);
         h.addEventListener('click', () => {
-          const r = buyShop(shopPick, c.id);
-          if (!r) return;
-          shopPick = null;
-          r.feathers = 0;
-          pullRes = [r];
-          pullRes.feathers = 0;
-          state = 'pull';
-          rvDirect();
+          if (st5) { toast(tr('{0} already has 5 stars', c.name)); snd('error', { vol: 0.6 }); return; }
+          if (feathers() < price) { toast(tr('Not enough feathers, you get them from every summon')); snd('error', { vol: 0.6 }); return; }
+          if (!buyShop('doss', c.id)) return;
+          snd('confirm', { vol: 0.8 });
+          toast(tr('{0}: +{1} dossiers', c.name, 5) + (canRecruit(c.id) ? ' · ' + tr('can be recruited in Squad!') : ''));
+          refreshGacha();
         });
         fl.appendChild(h);
       }
       row.appendChild(fl);
       st.appendChild(row);
     }
-    $('#g-info').innerHTML = `<div class="g-wallet big"><span><img src="assets/ui/ribbon.png" alt="">${tr('Feathers: {0}', feathers())}</span><span><img src="assets/ui/pearl.png" alt="">${tr('Tickets: {0}', tickets())}</span></div><div class="muted small">${tr('You get feathers from every summon, double for duplicates')}</div>`;
+    $('#g-info').innerHTML = `<div class="g-wallet big"><span><img src="assets/ui/ribbon.png" alt="">${tr('Feathers: {0}', feathers())}</span><span><img src="assets/ui/crystal.png" alt="">${tr('Crystals: {0}', crystals())}</span><span><img src="assets/ui/pearl.png" alt="">${tr('Tickets: {0}', tickets())}</span></div><div class="muted small">${tr('You get feathers from every summon, double for duplicates')}</div>`;
     $('#g-btns').innerHTML = '';
     refreshFooter();
   }
@@ -692,7 +725,7 @@ const UI = (() => {
     if (h.classList.contains('hid')) return;
     const list = gachaState().history;
     const nm = e => e.k === 'gear' ? tr(parseGear(e.id).m.name) : e.id === 'manual' ? tr('Manual') : (charById(e.id) || { name: e.id }).name;
-    h.innerHTML = '<div class="muted small">' + tr('Rates: legendary 1.5% (about 1 in ~37 with pity) · epic 7% (at least once per 10) · rare 17.5% · uncommon 30% · common 44%; soldiers are 12%, golden uniform is 3% of soldiers') + '</div><div class="sec">' + tr('Summon history') + '</div>' + (list.length ? list.map(e => `<span class="hi t${e.r}">${nm(e)}${e.gold ? ' ✦✦' : e.f ? ' ✦' : ''}</span>`).join('') : '<span class="muted">' + tr('Nothing yet') + '</span>');
+    h.innerHTML = '<div class="muted small">' + tr('Rates: legendary 0.6% (about 1 in ~62 with pity, at the latest on the 90th) · epic 5.4% (at least once per 10) · rare 19% · uncommon 30% · common 45%; soldiers are about 9%, golden uniform is 3% of soldiers') + '</div><div class="sec">' + tr('Summon history') + '</div>' + (list.length ? list.map(e => `<span class="hi t${e.r}">${nm(e)}${e.gold ? ' ✦✦' : e.f ? ' ✦' : ''}</span>`).join('') : '<span class="muted">' + tr('Nothing yet') + '</span>');
   }
 
   function refreshTraining() {
@@ -706,10 +739,10 @@ const UI = (() => {
       const pips = Array.from({ length: t.max }, (_, i) => '<i class="' + (i < l ? 'on' : '') + '"></i>').join('');
       d.insertAdjacentHTML('beforeend', `<div class="tn">${t.name}</div><div class="pips">${pips}</div>
         <div class="ud">${cost === null ? t.text(l) : (l ? tr('Lv. {0}: ', l + 1) : '') + t.text(l + 1)}</div>`);
-      const b = el('button', 'k-btn' + (cost === null || save.tokens < cost ? ' off' : ''), cost === null ? tr('Max') : `<img src="assets/ui/coin.png" alt=""> ${cost}`);
+      const b = el('button', 'k-btn' + (cost === null || save.marks < cost ? ' off' : ''), cost === null ? tr('Max') : `<img src="assets/ui/coin.png" alt=""> ${cost}`);
       b.addEventListener('click', () => {
         if (cost === null) return;
-        if (save.tokens < cost) { toast(tr('Not enough tokens, play a run')); snd('error', { vol: 0.6 }); return; }
+        if (save.marks < cost) { toast(tr('Not enough marks, play a run')); snd('error', { vol: 0.6 }); return; }
         if (buyTraining(t.id)) { snd('levelup', { vol: 0.6 }); toast(tr('{0}: level {1}', t.name, save.meta[t.id])); refreshTraining(); refreshFooter(); }
       });
       d.appendChild(b);
@@ -723,11 +756,11 @@ const UI = (() => {
     row.innerHTML = `<div class="mt"><div class="mn">${name}</div><div class="muted">${text}</div>
       <div class="bar"><i style="width:${pct}%"></i></div></div>
       <div class="mv">${goal > 1 ? value + ' / ' + goal : ''}</div>`;
-    const b = el('button', 'k-btn' + (done && !claimed ? '' : ' off'), claimed ? tr('Claimed') : `<img src="assets/ui/coin.png" alt=""> ${reward}`);
+    const b = el('button', 'k-btn mis-rw' + (done && !claimed ? '' : ' off'), claimed ? tr('Claimed') : `<img src="assets/ui/wings.png" alt="">${reward.w}<img src="assets/ui/coin.png" alt="">${reward.m}`);
     b.addEventListener('click', () => {
       if (!done || claimed) return;
       const got = onClaim();
-      if (got) { snd('chime5', { vol: 0.7, tag: 'chime' }); snd('bong', { vol: 0.5 }); toast(tr('+{0} tokens', got)); refreshMissions(); refreshFooter(); }
+      if (got) { snd('chime5', { vol: 0.7, tag: 'chime' }); snd('bong', { vol: 0.5 }); toast(tr('+{0} wings', got.w) + ' · ' + tr('+{0} marks', got.m)); refreshMissions(); refreshFooter(); }
     });
     row.appendChild(b);
     return row;
@@ -738,11 +771,11 @@ const UI = (() => {
     $('#rank').innerHTML = `${tr('Rank:')} <b>${rk.name}</b>${rk.next ? tr(' · to “{0}”: {1}', rk.next.name, rk.next.at - rk.n) : ''}`;
     const dbox = $('#daily');
     dbox.innerHTML = '';
-    for (const t of dailyState()) dbox.appendChild(misRow(tr('Daily task'), t.text, t.value, t.goal, t.reward, t.done, t.claimed, () => claimDaily(t.i)));
+    for (const t of dailyState()) dbox.appendChild(misRow(tr('Daily task'), t.text, t.value, t.goal, { m: t.reward, w: DAILY_WINGS }, t.done, t.claimed, () => claimDaily(t.i)));
     const abox = $('#achievements');
     abox.innerHTML = '';
     const list = achievementsState().sort((a, b) => ((b.done && !b.claimed) - (a.done && !a.claimed)) || (a.claimed - b.claimed));
-    for (const a of list) abox.appendChild(misRow(a.name, a.text, a.value, a.goal, a.reward, a.done, a.claimed, () => claimAchievement(a.id)));
+    for (const a of list) abox.appendChild(misRow(a.name, a.text, a.value, a.goal, { m: a.reward, w: achWings(a.reward) }, a.done, a.claimed, () => claimAchievement(a.id)));
   }
 
   let dexSel = null;
@@ -763,11 +796,11 @@ const UI = (() => {
     const n = dexCount(e.key), T = DEX_TIERS[e.boss ? 'boss' : 'titan'], tier = dexTier(e), next = T[tier];
     info.innerHTML = `<div class="row" style="gap:10px"><div class="dex-big${n ? '' : ' unk'}" id="dex-big"></div><div><div class="h2" style="line-height:1">${n ? e.name : '???'}</div>
       <div class="muted small">${e.boss ? tr('Shifter') : tr('Titan')} · ${tr('Cut down: {0}', n)}</div><div class="small">${n ? e.lore : tr('Cut one down to learn more about it')}</div>
-      <div class="small dex-next">${next ? tr('Next star: {0}/{1} · +{2} tokens, +{3} feathers', n, next, DEX_REWARD[tier][0], DEX_REWARD[tier][1]) : tr('All stars collected!')}</div></div></div>`;
+      <div class="small dex-next">${next ? tr('Next star: {0}/{1} · +{2} marks, +{3} wings', n, next, DEX_REWARD[tier][0], DEX_REWARD[tier][1]) : tr('All stars collected!')}</div></div></div>`;
     if (SPR[e.spr]) $('#dex-big', info).appendChild(cv(SPR[e.spr]));
     if (dexClaimable(e)) {
       const b = el('button', 'k-btn', tr('Claim reward'));
-      b.addEventListener('click', () => { const [tk, fe] = dexClaimAll(e); snd('chime5', { vol: 0.7, tag: 'chime' }); toast(tr('+{0} tokens', tk) + ' · ' + tr('+{0} feathers', fe)); refreshRecords(); refreshFooter(); });
+      b.addEventListener('click', () => { const [tk, fe] = dexClaimAll(e); snd('chime5', { vol: 0.7, tag: 'chime' }); toast(tr('+{0} marks', tk) + ' · ' + tr('+{0} wings', fe)); refreshRecords(); refreshFooter(); });
       info.appendChild(b);
     }
     const s = statsOf();
@@ -885,7 +918,7 @@ const UI = (() => {
   function doPull(n, mode) {
     if (performance.now() < pullLock) return;
     const res = gachaPull(n, gBanner === 'shop' ? 'event' : gBanner, mode);
-    if (!res) { toast(mode === 'ticket' ? tr('No tickets') : tr('Not enough tokens, play a run')); snd('error', { vol: 0.6 }); return; }
+    if (!res) { toast(mode === 'ticket' ? tr('No tickets') : tr('Not enough wings: get them in Missions, daily supplies and the weekly challenge')); snd('error', { vol: 0.6 }); return; }
     if (res.length <= 10) {
       const w = r => r.rarity * 10 + (r.golden ? 5 : 0) + (r.kind === 'hero' ? 1 : 0) + Math.random();
       const keep = { feathers: res.feathers, anomaly: res.anomaly, chest: res.chest };
@@ -1108,7 +1141,7 @@ const UI = (() => {
     if (r.kind === 'hero') {
       const quote = `<div class="rv-quote">«${tr(QUOTES[r.c.id] || QUOTES.cadet)}»</div>`;
       return `<div class="rname t${r.rarity}">${r.c.name}</div><div class="rrar t${r.rarity}">${rarName(r)}${r.golden ? ' · <b class="gold">' + tr('Golden uniform') + '</b>' : ''}</div><div class="rstars">${rvStars(r)}</div>
-        <div class="rv-txt">${r.isNew ? r.c.ability : r.refund ? tr('Already 5★, {0} tokens refunded', r.refund) : tr('Duplicate: +1 star')}</div>${quote}`;
+        <div class="rv-txt">${r.isNew ? r.c.ability : r.dossFe ? tr('Already 5★: +{0} feathers', r.dossFe) : tr('Duplicate: +{0} dossiers', r.doss)}</div>${quote}`;
     }
     if (r.kind === 'gear') {
       return `<div class="rname t${r.rarity}">${tr(r.gear.name)}</div><div class="rrar t${r.rarity}">${tr(SLOT_NAMES[r.gear.slot])} · ${rarName(r)}</div>
@@ -1143,7 +1176,7 @@ const UI = (() => {
     const kick = gear ? tr('Legendary gear') : r.golden ? tr('Golden soldier!') : tr('Legendary soldier');
     box.insertAdjacentHTML('beforeend', `<div class="cine${r.golden ? ' golden' : ''}"><div class="cine-black"></div><div class="cine-rays"></div><div class="cine-emblem" id="ce"></div>${gear ? '' : '<div class="cine-cables"><i></i><i></i></div>'}<div class="cine-hero${gear ? ' gear' : ''}" id="chero"></div>
       <div class="cine-text"><div class="cine-kick">${kick}</div><div class="cine-name${resName(r).length > 14 ? ' long' : ''}">${resName(r)}</div>${gear ? `<div class="rrar t5">${tr(SLOT_NAMES[r.gear.slot])}</div>` : `<div class="rstars">${rvStars(r)}</div>`}<div class="cine-quote" id="cq"></div>
-      <div class="cine-sub">${gear ? (r.isNew ? '<b>' + tr('New in your collection!') + '</b>' : tr('Duplicate: level {0}', r.lvl)) : (r.isNew ? '<b>' + tr('New!') + '</b> ' + r.c.ability : r.refund ? tr('Already 5★, {0} tokens refunded', r.refund) : tr('Duplicate: +1 star'))}${r.golden ? ' · <b class="gold">' + tr('Golden uniform unlocked!') + '</b>' : ''}</div><div class="rv-fe">+${r.feathers || 0} ${tr('feathers')}</div></div></div>`);
+      <div class="cine-sub">${gear ? (r.isNew ? '<b>' + tr('New in your collection!') + '</b>' : tr('Duplicate: level {0}', r.lvl)) : (r.isNew ? '<b>' + tr('New!') + '</b> ' + r.c.ability : r.dossFe ? tr('Already 5★: +{0} feathers', r.dossFe) : tr('Duplicate: +{0} dossiers', r.doss))}${r.golden ? ' · <b class="gold">' + tr('Golden uniform unlocked!') + '</b>' : ''}</div><div class="rv-fe">+${r.feathers || 0} ${tr('feathers')}</div></div></div>`);
     if (overlay) host.appendChild(box);
     if (SPR.ui_emblem) $('#ce', box).appendChild(cv(SPR.ui_emblem)); else $('#ce', box).appendChild(emblem('scouts'));
     const hc = resIcon(r, true);
@@ -1348,7 +1381,7 @@ const UI = (() => {
       snd('chime' + Math.min(6, 3 + i), { vol: 0.6, tag: 'chime' });
     }, 1350 + i * 380)));
     T.push(setTimeout(() => {
-      box.insertAdjacentHTML('beforeend', `<div class="loot-extra wood-text">${r.healed ? '+1 ♥ · ' : ''}+${r.coins} ${tr('tokens')}</div>`);
+      box.insertAdjacentHTML('beforeend', `<div class="loot-extra wood-text">${r.healed ? '+1 ♥ · ' : ''}+${r.coins} ${tr('marks')}${r.cry ? ' · +' + r.cry + ' ' + tr('crystals#n') : ''}</div>`);
       $('#lt-next', L).textContent = tr('Enter or click: back to battle');
       L.dataset.ready = '1';
     }, 1450 + r.items.length * 380));
@@ -1371,8 +1404,11 @@ const UI = (() => {
     if (faction.civs) rows.push([tr('Citizens lost'), game.lost]);
     if (faction.threat > 1) rows.push([tr('Threat'), THREAT_NAMES[faction.threat - 1]]);
     if (game.dexNew && game.dexNew.length) rows.push([tr('New in the Titanpedia'), game.dexNew.map(k => DEX.find(e => e.key === k)).filter(Boolean).map(e => e.name).join(', ')]);
-    if (faction.challenge) rows.push([tr('Weekly challenge'), game.chalReward ? tr('×10 ticket and 30 feathers!') : won && challengeDone() ? tr('reward already claimed') : '—']);
-    if (game.ticketGain) rows.push([tr('Summon tickets'), '+' + game.ticketGain]);
+    if (faction.challenge) rows.push([tr('Weekly challenge'), game.chalReward ? tr('{0} wings and {1} dossiers!', CHAL_WINGS, CHAL_DOSS) : won && challengeDone() ? tr('reward already claimed') : '—']);
+    if (game.wingGain) rows.push([`<img class="ri" src="assets/ui/wings.png" alt="">${tr('Wings of Freedom')}`, '+' + game.wingGain + (game.firstWin ? ' · ' + tr('first win of the day!') : '')]);
+    if (game.crystalGain) rows.push([`<img class="ri" src="assets/ui/crystal.png" alt="">${tr('Titan crystals')}`, '+' + game.crystalGain]);
+    const dg = Object.entries(game.dossGain || {});
+    if (dg.length) rows.push([`<img class="ri" src="assets/ui/dossier.png" alt="">${tr('Dossiers')}`, dg.map(([id, n]) => charById(id).name + ' +' + n).join(', ')]);
     if (game.heroXpGain) rows.push([tr('Hero XP'), '+' + game.heroXpGain + (game.heroUps ? ' · ' + tr('level up!') : '')]);
     if (game.unlocked) rows.push([tr('Threat unlocked'), THREAT_NAMES[game.unlocked - 1] + '!']);
     rows.push([tr('Best'), fmtTime(bestOf(faction))]);
@@ -1759,7 +1795,8 @@ const UI = (() => {
     else if (!devSkip && loginClaimable()) go('login');
     if (!devHost) return;
     if ([...P.keys()].some(k => k !== 'lang' && k !== 'sound')) SND.setMuted(true);
-    if (P.get('tokens')) save.tokens = +P.get('tokens');
+    if (P.get('tokens')) save.marks = +P.get('tokens');
+    if (P.get('wings')) save.wings = +P.get('wings');
     if (P.get('meta')) { ensureMeta(); for (const t of TRAINING) save.meta[t.id] = Math.min(t.max, +P.get('meta')); reset(); }
     if (P.get('stats')) { ensureMeta(); Object.assign(save.stats, { kills: 1234, runs: 12, bestLevel: 22, maxCombo: 11 }); save.stats.bosses.female = 1; save.daily.tasks[0].progress = 999; save.claimed = { kills0: true, runs0: true, kills1: true, lvl0: true }; refreshFooter(); }
     if (P.get('all')) for (const c of CHARS) save.chars[c.id] = save.chars[c.id] || 1 + (c.id.length % 3);
@@ -1770,14 +1807,14 @@ const UI = (() => {
 
   function debugScreen(q) {
     if (['battle', 'squad', 'gacha', 'records', 'settings', 'training', 'missions'].includes(q)) { go(q); return; }
-    if (q === 'pull') { save.tokens += 900; go('gacha'); doPull(10); return; }
-    if (q === 'pull100') { save.tokens += PULL100_COST; go('gacha'); doPull(100); const U = new URLSearchParams(location.search); if (U.get('skipaim')) rvAimDone(); return; }
+    if (q === 'pull') { addWings(PULL10_COST); go('gacha'); doPull(10); return; }
+    if (q === 'pull100') { addWings(PULL100_COST); go('gacha'); doPull(100); const U = new URLSearchParams(location.search); if (U.get('skipaim')) rvAimDone(); return; }
     if (q === 'gear') { for (let i = 0; i < 40; i++) grantGear(pick(GEAR).id, 1 + Math.floor(Math.random() * 5)); go('gear'); return; }
-    if (q === 'pull1') { save.tokens += 100; go('gacha'); doPull(1); return; }
-    if (q === 'shop') { const g = gachaState(); g.feathers = (g.feathers || 0) + 200; g.tickets = (g.tickets || 0) + 2; gBanner = 'shop'; shopPick = 'pick4'; go('gacha'); return; }
+    if (q === 'pull1') { addWings(PULL_COST); go('gacha'); doPull(1); return; }
+    if (q === 'shop') { const g = gachaState(); g.feathers = (g.feathers || 0) + 200; g.tickets = (g.tickets || 0) + 2; gBanner = 'shop'; shopPick = 'doss'; go('gacha'); return; }
     if (q === 'pull5' || q === 'pull10x' || q === 'anomaly') {
       const U = new URLSearchParams(location.search);
-      save.tokens += 900;
+      addWings(PULL10_COST);
       save.pity5 = PITY5 - 1;
       window.FORCE_ANOMALY = q === 'anomaly';
       if (U.get('chest')) { gachaState().chest[gBanner] = 9.5; }

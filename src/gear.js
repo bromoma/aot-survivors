@@ -26,7 +26,7 @@ const GEAR = [
   { id: 'cloak1', slot: 'cloak', name: 'Cadet Cloak', fx: { hp: 1, inv: 4 }, look: { cloth: '#8a6a48', emb: null } },
   { id: 'cloak2', slot: 'cloak', name: 'Survey Corps Cloak', fx: { hp: 1, xp: 1 }, look: { cloth: '#3e6a3a', emb: 'wings' } },
   { id: 'cloak3', slot: 'cloak', name: 'Garrison Cloak', fx: { heal: 1 }, look: { cloth: '#8a2a28', emb: 'rose' } },
-  { id: 'cloak4', slot: 'cloak', name: 'Military Police Cloak', fx: { tokens: 3 }, look: { cloth: '#2e4a3a', emb: 'uni' } },
+  { id: 'cloak4', slot: 'cloak', name: 'Military Police Cloak', fx: { marks: 3 }, look: { cloth: '#2e4a3a', emb: 'uni' } },
   { id: 'boots1', slot: 'boots', name: 'Recruit Boots', fx: { speed: 1, orbit: 0.8 }, look: { leather: '#7a5030' } },
   { id: 'boots2', slot: 'boots', name: 'ODM Harness', fx: { orbit: 1.6 }, look: { leather: '#5a3a24', straps: true } },
   { id: 'boots3', slot: 'boots', name: 'Scout Boots', fx: { speed: 1.6 }, look: { leather: '#2a2420' } },
@@ -56,7 +56,9 @@ function grantGear(id, r) {
     return { gear: gearById(id), rarity: r, key: k, isNew: true, lvl: 1 };
   }
   if (it.lvl < 5) { it.lvl++; return { gear: gearById(id), rarity: r, key: k, isNew: false, lvl: it.lvl, up: true }; }
-  return { gear: gearById(id), rarity: r, key: k, isNew: false, lvl: 5, maxed: true };
+  const cr = GEAR_DUP_CRYSTALS[r] || 1;
+  addCrystals(cr);
+  return { gear: gearById(id), rarity: r, key: k, isNew: false, lvl: 5, maxed: true, crystals: cr };
 }
 
 function gearEffects() {
@@ -86,13 +88,13 @@ function applyGear(st) {
   if (t.xp) st.xp *= 1 + t.xp / 100;
   if (t.cd) st.cdMul *= Math.max(0.5, 1 - t.cd / 100);
   if (t.inv) st.invMul = 1 + t.inv / 100;
-  st.tokenMul = 1 + (t.tokens || 0) / 100;
+  st.markMul = 1 + (t.marks || 0) / 100;
 }
 
 const FX_TEXT = {
   engage: 'Attack reach +{0}%', orbit: 'Orbit +{0}%', speed: 'Flight speed +{0}%', range: 'Cable length +{0}%',
   glide: 'Glide {0}% slower', hp: '+{0} hearts', heal: 'Heals {0} kills sooner', xp: 'XP +{0}%',
-  cd: 'Skill cooldown −{0}%', inv: 'Invulnerability after a hit +{0}%', tokens: 'Tokens per run +{0}%',
+  cd: 'Skill cooldown −{0}%', inv: 'Invulnerability after a hit +{0}%', marks: 'Marks per run +{0}%',
 };
 function gearFxLines(m, r, lv) {
   const mul = GEAR_RAR[r].mul * (1 + 0.25 * ((lv || 1) - 1));

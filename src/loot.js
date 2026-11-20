@@ -58,12 +58,13 @@ function openChest(c) {
   }
   const healed = player.hp < stats.maxHp;
   if (healed) player.hp++;
-  const coins = c.boss ? 60 : 25;
-  game.lootTokens = (game.lootTokens || 0) + coins;
-  save.tokens += coins;
+  const coins = c.boss ? 80 : 30, cry = c.boss ? 3 : 0;
+  game.lootMarks = (game.lootMarks || 0) + coins;
+  save.marks += coins;
+  if (cry) { addCrystals(cry); game.crystalGain = (game.crystalGain || 0) + cry; }
   const evo = items.find(i => i.kind === 'evo');
   game.banner = null;
-  lootRes = { items, healed, coins, boss: c.boss, t: 0, evo: evo && evo.name };
+  lootRes = { items, healed, coins, cry, boss: c.boss, t: 0, evo: evo && evo.name };
   state = 'loot';
   sfx('reveal', { vol: 0.7 });
 }

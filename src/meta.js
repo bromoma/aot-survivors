@@ -5,7 +5,7 @@ const TRAINING = [
   { id: 'speed', name: 'Winch', icon: 0, max: 5, cost: [150, 300, 550, 900, 1400], text: l => tr('Fly {0}% faster', l * 4), apply: (s, l) => { s.speed *= 1 + l * 0.04; } },
   { id: 'gas', name: 'Gas Tanks', icon: 6, max: 5, cost: [150, 300, 550, 900, 1400], text: l => tr('Glide down {0}% slower', l * 8), apply: (s, l) => { s.glide *= 1 - l * 0.08; } },
   { id: 'xp', name: 'Drill Training', icon: 11, max: 5, cost: [200, 400, 700, 1100, 1600], text: l => tr('+{0}% XP', l * 6), apply: (s, l) => { s.xp *= 1 + l * 0.06; } },
-  { id: 'greed', name: "Soldier's Pay", icon: 12, max: 5, cost: [250, 500, 900, 1400, 2000], text: l => tr('+{0}% tokens per run', l * 10) },
+  { id: 'greed', name: "Soldier's Pay", icon: 12, max: 5, cost: [250, 500, 900, 1400, 2000], text: l => tr('+{0}% marks per run', l * 10) },
   { id: 'heal', name: 'Field Hospital', icon: 5, max: 3, cost: [300, 700, 1300], text: l => tr('Kill heals come {0} kills sooner', l * 2), apply: (s, l) => { s.healEvery -= l * 2; } },
   { id: 'reroll', name: 'Backup Plan', icon: 13, max: 3, cost: [400, 900, 1600], text: l => tr(l === 1 ? '{0} level-card reroll per run (R key)' : '{0} level-card rerolls per run (R key)', l) },
   { id: 'start', name: 'Battle Experience', icon: 15, max: 1, cost: [1500], text: () => tr('Start each run with a random level 1 skill') },
@@ -140,8 +140,8 @@ function buyTraining(id) {
   ensureMeta();
   const t = TRAINING.find(x => x.id === id);
   const c = t && trainingCost(t);
-  if (!c || save.tokens < c) return false;
-  save.tokens -= c;
+  if (!c || save.marks < c) return false;
+  save.marks -= c;
   save.meta[id]++;
   persist();
   return true;
@@ -167,18 +167,23 @@ function claimAchievement(id) {
   const a = achievementsState().find(x => x.id === id);
   if (!a || !a.done || a.claimed) return 0;
   save.claimed[id] = true;
-  save.tokens += a.reward;
+  save.marks += a.reward;
+  addWings(achWings(a.reward));
   persist();
-  return a.reward;
+  return { m: a.reward, w: achWings(a.reward) };
 }
+
+const achWings = r => Math.round(r / 20) * 10;
+const DAILY_WINGS = 20;
 
 function claimDaily(i) {
   const t = dailyState()[i];
   if (!t || !t.done || t.claimed) return 0;
   save.daily.tasks[i].claimed = true;
-  save.tokens += t.reward;
+  save.marks += t.reward;
+  addWings(DAILY_WINGS);
   persist();
-  return t.reward;
+  return { m: t.reward, w: DAILY_WINGS };
 }
 
 function claimableCount() {

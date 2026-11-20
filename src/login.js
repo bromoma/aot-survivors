@@ -2,13 +2,13 @@
 
 // Daily supplies: one reward per calendar day, a 7-day cycle. Missing a day does not reset the cycle.
 const LOGIN_DAYS = [
-  { kind: 'tokens', n: 150 },
-  { kind: 'ticket', n: 1 },
+  { kind: 'marks', n: 300 },
+  { kind: 'wings', n: 100 },
   { kind: 'manual', n: 2 },
-  { kind: 'tokens', n: 300 },
+  { kind: 'crystals', n: 10 },
   { kind: 'feathers', n: 40 },
   { kind: 'gear', n: 4 },
-  { kind: 'ticket10', n: 1 },
+  { kind: 'wings', n: 300 },
 ];
 
 function loginState() {
@@ -19,7 +19,9 @@ function loginClaimable() { return loginState().last !== todayKey(); }
 function loginDay() { return loginState().n % LOGIN_DAYS.length; }
 
 function loginLabel(d) {
-  if (d.kind === 'tokens') return tr('{0} tokens', d.n);
+  if (d.kind === 'marks') return tr('{0} marks', d.n);
+  if (d.kind === 'wings') return tr('{0} wings', d.n);
+  if (d.kind === 'crystals') return tr('{0} crystals', d.n);
   if (d.kind === 'ticket') return tr('Summon ticket');
   if (d.kind === 'manual') return tr('{0} manuals', d.n);
   if (d.kind === 'feathers') return tr('+{0} feathers', d.n);
@@ -28,14 +30,16 @@ function loginLabel(d) {
 }
 
 function loginIcon(d) {
-  return { tokens: 'coin', ticket: 'pearl', manual: 'scroll', feathers: 'ribbon', gear: 'gear', ticket10: 'pearl' }[d.kind];
+  return { marks: 'coin', wings: 'wings', crystals: 'crystal', ticket: 'pearl', manual: 'scroll', feathers: 'ribbon', gear: 'gear', ticket10: 'pearl' }[d.kind];
 }
 
 function loginClaim() {
   if (!loginClaimable()) return null;
   const L = loginState(), d = LOGIN_DAYS[L.n % LOGIN_DAYS.length], g = gachaState();
   let gear = null;
-  if (d.kind === 'tokens') save.tokens += d.n;
+  if (d.kind === 'marks') save.marks += d.n;
+  else if (d.kind === 'wings') addWings(d.n);
+  else if (d.kind === 'crystals') addCrystals(d.n);
   else if (d.kind === 'ticket') g.tickets = (g.tickets || 0) + d.n;
   else if (d.kind === 'manual') save.manuals = (save.manuals || 0) + d.n;
   else if (d.kind === 'feathers') addFeathers(d.n);

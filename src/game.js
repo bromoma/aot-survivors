@@ -113,15 +113,15 @@ factionSel = clamp(save.faction || 0, 0, 2);
 function loadSave() {
   let s = null;
   try { s = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); } catch (e) {}
-  if (s && s.v === 1 && s.chars) return s;
-  s = { v: 1, tokens: 300, pity5: 0, pity4: 0, pulls: 0, chars: { cadet: 1 }, selected: 'cadet', best: {}, faction: 0 };
+  if (s && s.v === 1 && s.chars) return migrateEco(s);
+  s = { v: 1, marks: 300, pity5: 0, pity4: 0, pulls: 0, chars: { cadet: 1 }, selected: 'cadet', best: {}, faction: 0 };
   for (const f of FACTIONS) {
     try {
       const b = +localStorage.getItem('aot-td-best-' + f.id) || 0;
       if (b) s.best[f.id] = b;
     } catch (e) {}
   }
-  return s;
+  return migrateEco(s);
 }
 
 function persist() {
@@ -695,14 +695,21 @@ function finishRun(won) {
     game.heroXpGain = (game.heroXpGain || 0) + hx;
     game.heroUps = (game.heroUps || 0) + ups;
   }
-  const tk = Math.floor((game.kills - game.paidKills) / 70) + (game.bossKills - (game.paidBoss || 0)) + (won ? 2 : 0);
-  if (tk > 0) { const gs = gachaState(); gs.tickets = (gs.tickets || 0) + tk; game.ticketGain = (game.ticketGain || 0) + tk; }
-  const earned = Math.round(((game.kills - game.paidKills) * 2 + Math.floor((game.time - game.paidTime) / 10) + (won ? 300 : 0) + (game.bossKills - (game.paidBoss || 0)) * 60) * mul * greed * (stats.tokenMul || 1));
+  const db = game.bossKills - (game.paidBoss || 0), de = (game.eliteKills || 0) - (game.paidElite || 0);
+  let wg = db * 5;
+  if (won && save.firstWin !== todayKey()) { save.firstWin = todayKey(); wg += 50; game.firstWin = true; }
+  if (wg) { addWings(wg); game.wingGain = (game.wingGain || 0) + wg; }
+  const cg = db * 5 + de;
+  if (cg) { addCrystals(cg); game.crystalGain = (game.crystalGain || 0) + cg; }
+  game.dossGain = game.dossGain || {};
+  for (let i = 0; i < db; i++) { const id = randomDossierHero(); addDossiers(id, 3); game.dossGain[id] = (game.dossGain[id] || 0) + 3; }
+  const earned = Math.round(((game.kills - game.paidKills) + Math.floor((game.time - game.paidTime) / 10) + (won ? 150 : 0) + db * 40) * mul * greed * (stats.markMul || 1));
+  game.paidElite = game.eliteKills || 0;
   game.paidBoss = game.bossKills;
   game.paidKills = game.kills;
   game.paidTime = game.time;
   game.reward = earned;
-  save.tokens += earned;
+  save.marks += earned;
   if (!save.stats) save.stats = { runs: 0, kills: 0, bestLevel: 1, wins: 0, time: 0 };
   if (!game.counted) {
     game.counted = true;
@@ -755,7 +762,7 @@ function killTitan(t) {
   const n = nape(t);
   dexRecord(t);
   ultGain(t.boss ? 6 : t.elite ? 3 : 1);
-  if (t.elite) { dropChest(t.x, t.y); if (save.stats) save.stats.elites = (save.stats.elites || 0) + 1; }
+  if (t.elite) { dropChest(t.x, t.y); game.eliteKills = (game.eliteKills || 0) + 1; if (save.stats) save.stats.elites = (save.stats.elites || 0) + 1; }
   t.dying = 0.001;
   t.flash = 0.035;
   t.fallDir = Math.cos(t.face) >= 0 ? 1 : -1;
@@ -2026,7 +2033,7 @@ function drawMenu() {
   else drawGachaTab();
   ctx.textAlign = 'left';
   ctx.font = font(UP * 7);
-  shadowText(`Tokens: ${save.tokens}`, 16, H - UP * 6, '#ffd27a');
+  shadowText(`Marks: ${save.marks}`, 16, H - UP * 6, '#ffd27a');
   const hero = charById(save.selected);
   ctx.textAlign = 'right';
   shadowText(`${hero.name} ${stars(save.chars[hero.id] || 1)}`, W - 16, H - UP * 6, RARITY[hero.rarity].color);
@@ -2056,7 +2063,7 @@ function drawBattleTab() {
     ctx.fillText(f.name, r.x + r.w / 2, y + UP * 50);
     ctx.font = font(UP * 6);
     ctx.fillStyle = f.color;
-    ctx.fillText(`${f.diff} · tokens x${[1, 1.5, 2][i]}`, r.x + r.w / 2, y + UP * 58);
+    ctx.fillText(`${f.diff} · marks x${[1, 1.5, 2][i]}`, r.x + r.w / 2, y + UP * 58);
     ctx.font = font(UP * 4.5, 400);
     ctx.fillStyle = '#cfd6dc';
     wrap(f.desc, r.w - UP * 10).forEach((l, j) => ctx.fillText(l, r.x + r.w / 2, y + UP * 66 + j * UP * 6));
@@ -2124,9 +2131,9 @@ function drawGachaTab() {
   shadowText('The signal flare shows who answered', W / 2, y + UP * 25, '#e9e4da');
   shadowText('★★★★★ 4%   ★★★★ 21%   ★★★ 75%', W / 2, y + UP * 36, '#cfd6dc');
   shadowText(`Epic guaranteed in ${Math.max(1, 10 - save.pity4)}, legendary in ${Math.max(1, 40 - save.pity5)}`, W / 2, y + UP * 45, '#c58cff');
-  shadowText('A duplicate gives a star (+3% speed), at 5★ — tokens', W / 2, y + UP * 54, 'rgba(255,255,255,0.6)');
+  shadowText('A duplicate gives dossiers for stars', W / 2, y + UP * 54, 'rgba(255,255,255,0.6)');
   const bw2 = UP * 70, bh2 = UP * 16, by = y + UP * 66;
-  const can1 = save.tokens >= 100, can10 = save.tokens >= 900;
+  const can1 = save.marks >= 100, can10 = save.marks >= 900;
   panel(W / 2 - bw2 - UP * 4, by, bw2, bh2, can1 ? '#2f4a3a' : '#2a2630', can1 ? '#7cfc9a' : '#5a5268');
   panel(W / 2 + UP * 4, by, bw2, bh2, can10 ? '#4a3a20' : '#2a2630', can10 ? '#ffd36e' : '#5a5268');
   ctx.font = font(UP * 6);
@@ -2135,7 +2142,7 @@ function drawGachaTab() {
   ctx.fillStyle = can10 ? '#fff' : '#6a6276';
   ctx.fillText('[0] Ten — 900', W / 2 + bw2 / 2 + UP * 4, by + UP * 10);
   ctx.font = font(UP * 5, 400);
-  shadowText('Every run gives tokens: for kills, time and victory', W / 2, y + ph + UP * 10, 'rgba(255,255,255,0.6)');
+  shadowText('Every run gives marks: for kills, time and victory', W / 2, y + ph + UP * 10, 'rgba(255,255,255,0.6)');
 }
 
 function rollRarity() {
@@ -2150,12 +2157,12 @@ function rollRarity() {
 
 function pull(n) {
   const cost = n === 10 ? 900 : 100;
-  if (save.tokens < cost) {
-    menuMsg = 'Not enough tokens, play a run';
+  if (save.marks < cost) {
+    menuMsg = 'Not enough wings';
     menuMsgT = 2;
     return;
   }
-  save.tokens -= cost;
+  save.marks -= cost;
   pullRes = [];
   for (let i = 0; i < n; i++) {
     const r = rollRarity();
@@ -2163,7 +2170,7 @@ function pull(n) {
     if (r >= 4) save.pity4 = 0;
     const c = pick(CHARS.filter(x => x.rarity === r && x.id !== 'cadet'));
     const had = save.chars[c.id] || 0;
-    if (had >= 5) save.tokens += 20 * r;
+    if (had >= 5) save.marks += 20 * r;
     save.chars[c.id] = Math.min(5, had + 1);
     pullRes.push({ c, isNew: !had, stars: save.chars[c.id], refund: had >= 5 ? 20 * r : 0 });
   }
@@ -2244,7 +2251,7 @@ function drawPull() {
     ctx.font = font(UP * 7);
     shadowText(`${rar.name} ${stars(r.stars)}`, W / 2, H * 0.42 + size / 2 + UP * 27, rar.color);
     ctx.font = font(UP * 6, 400);
-    shadowText(r.isNew ? 'NEW SOLDIER! ' + r.c.ability : r.refund ? `Already 5★ — ${r.refund} tokens returned` : 'Duplicate: +1 star', W / 2, H * 0.42 + size / 2 + UP * 37, r.isNew ? '#7cfc9a' : '#e9e4da');
+    shadowText(r.isNew ? 'NEW SOLDIER! ' + r.c.ability : 'Duplicate: dossiers', W / 2, H * 0.42 + size / 2 + UP * 37, r.isNew ? '#7cfc9a' : '#e9e4da');
     ctx.font = font(UP * 6);
     if (Math.floor(performance.now() / 500) % 2 === 0) shadowText(`Enter — next (${pullIdx + 1}/${pullRes.length})`, W / 2, H - UP * 10, 'rgba(255,255,255,0.7)');
   }
@@ -2286,7 +2293,7 @@ function drawOver() {
   ctx.font = font(UP * 6, 400);
   shadowText(`Best: ${fmtTime(bestOf(faction))}`, W / 2, H * 0.48 + UP * 12, 'rgba(255,255,255,0.7)');
   ctx.font = font(UP * 8);
-  shadowText(`+${game.reward} tokens`, W / 2, H * 0.48 + UP * 22, '#ffd27a');
+  shadowText(`+${game.reward} marks`, W / 2, H * 0.48 + UP * 22, '#ffd27a');
   ctx.font = font(UP * 8);
   shadowText('Enter — again   Esc — choose faction', W / 2, H * 0.48 + UP * 32, '#7cfc9a');
 }
@@ -2300,7 +2307,7 @@ function drawWin() {
   shadowText(`${faction.name} is proud of you`, W / 2, H * 0.32 + UP * 13, 'rgba(255,255,255,0.7)');
   ctx.font = font(UP * 8);
   shadowText(`Titans: ${game.kills}   Level: ${game.level}${faction.civs ? `   Citizens lost: ${game.lost}` : ''}`, W / 2, H * 0.48);
-  shadowText(`+${game.reward} tokens`, W / 2, H * 0.48 + UP * 11, '#ffd27a');
+  shadowText(`+${game.reward} marks`, W / 2, H * 0.48 + UP * 11, '#ffd27a');
   shadowText('Enter — keep playing endlessly', W / 2, H * 0.48 + UP * 24, '#7cfc9a');
   ctx.font = font(UP * 6, 400);
   shadowText('R — new game   Esc — choose faction', W / 2, H * 0.48 + UP * 36, '#e9e4da');
