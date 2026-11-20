@@ -24,14 +24,14 @@ const UI = (() => {
   const cache = {};
 
   const HUB_ITEMS = [
-    { id: 'battle', get label() { return tr('Battle'); }, icon: 'play' },
-    { id: 'squad', get label() { return tr('Squad'); }, icon: 'square' },
-    { id: 'gear', get label() { return tr('Gear'); }, icon: 'seal_red' },
-    { id: 'training', get label() { return tr('Training'); }, icon: 'pearl' },
-    { id: 'gacha', get label() { return tr('Summon'); }, icon: 'coin' },
-    { id: 'missions', get label() { return tr('Missions'); }, icon: 'ribbon' },
-    { id: 'records', get label() { return tr('Titanpedia'); }, icon: 'seal_green' },
-    { id: 'settings', get label() { return tr('Settings'); }, icon: 'gear' },
+    { id: 'battle', get label() { return tr('Battle'); }, icon: 'i_battle' },
+    { id: 'squad', get label() { return tr('Squad'); }, icon: 'i_squad' },
+    { id: 'gear', get label() { return tr('Gear'); }, icon: 'i_gear' },
+    { id: 'training', get label() { return tr('Training'); }, icon: 'i_training' },
+    { id: 'gacha', get label() { return tr('Summon'); }, icon: 'i_summon' },
+    { id: 'missions', get label() { return tr('Missions'); }, icon: 'i_missions' },
+    { id: 'records', get label() { return tr('Titanpedia'); }, icon: 'i_dex' },
+    { id: 'settings', get label() { return tr('Settings'); }, icon: 'i_settings' },
   ];
 
   function settings() {
@@ -164,7 +164,7 @@ const UI = (() => {
     const M = layers.menu;
     M.innerHTML = `
       <div class="screen" data-s="hub">
-        <div class="logo"><div class="title">${tr('ATTACK ON TITAN')}</div><div class="sub">SURVIVORS</div></div>
+        <div class="logo"><img class="logo-emb" src="assets/ui/wings.png" alt=""><div><div class="title">${tr('ATTACK ON TITAN')}</div><div class="sub">SURVIVORS</div></div></div>
         <div class="hub-hero k-frame">
           <div class="stage"><img id="hub-hero-img" alt=""></div>
           <div class="name" id="hub-hero-name"></div>
@@ -178,7 +178,7 @@ const UI = (() => {
         <div class="factions" id="factions"></div>
         <div class="threat" id="threat"></div>
         <div class="chal k-card" id="chal"></div>
-        <div class="buttons"><button class="k-btn big" id="go">${img('play')} ${tr('Fight!')}</button></div>
+        <div class="buttons"><button class="k-btn big" id="go">${img('i_battle')} ${tr('Fight!')}</button></div>
         <div class="center muted" style="margin-top:8px">${tr('WASD: fly on your cables up to rooftops and trees. From above, Space: strike the nape')}</div>
       </div></div></div>
       <div class="screen" data-s="squad"><div class="panel-wrap"><div class="panel k-frame">
@@ -504,7 +504,7 @@ const UI = (() => {
       const row = el('div', 'row hbtns');
       const tb = el('button', 'k-btn' + (save.marks >= TRAIN_COST ? '' : ' off'), `${tr('Train +{0}', TRAIN_XP)} · <img src="assets/ui/coin.png" alt="">${TRAIN_COST}`);
       tb.addEventListener('click', () => { const r = trainHero(c.id); if (!r) { toast(tr('Not enough marks, play a run')); snd('error', { vol: 0.6 }); return; } snd(r > 1 ? 'levelup' : 'confirm', { vol: 0.6 }); if (r > 1) toast(tr('{0}: level {1}!', c.name, heroLevel(c.id))); refreshSquad(); refreshFooter(); });
-      const mb = el('button', 'k-btn' + ((save.manuals || 0) > 0 ? '' : ' off'), `<img src="assets/ui/scroll.png" alt=""> +${MANUAL_XP} (${save.manuals || 0})`);
+      const mb = el('button', 'k-btn' + ((save.manuals || 0) > 0 ? '' : ' off'), `<img src="assets/ui/manual.png" alt=""> +${MANUAL_XP} (${save.manuals || 0})`);
       mb.title = tr('Manual: +{0} hero XP', MANUAL_XP);
       mb.addEventListener('click', () => { const r = useManual(c.id); if (!r) { toast(tr('Manuals drop from “Summon”')); snd('error', { vol: 0.6 }); return; } snd(r > 1 ? 'levelup' : 'confirm', { vol: 0.6 }); if (r > 1) toast(tr('{0}: level {1}!', c.name, heroLevel(c.id))); refreshSquad(); });
       row.appendChild(tb);
@@ -534,7 +534,7 @@ const UI = (() => {
   function resIcon(r, big) {
     if (r.kind === 'hero') { const c = big ? cv(heroImg(r.c.id, 'down', false)) : face(r.c.id); if (r.golden) { const v = cv(variant(big ? heroImg(r.c.id, 'down', false) : (heroPortrait(r.c.id) || portrait(r.c.id)), 'gold')); return v; } return c; }
     if (r.kind === 'gear') return cv(gearIcon(r.gear.id));
-    const im = document.createElement('img'); im.src = 'assets/ui/scroll.png'; return im;
+    const im = document.createElement('img'); im.src = 'assets/ui/manual.png'; return im;
   }
   function resNote(r) {
     if (r.kind === 'hero') return r.golden ? tr('GOLDEN!') : r.isNew ? tr('New!') : r.dossFe ? tr('+{0} feathers', r.dossFe) : tr('+{0} dossiers', r.doss);
@@ -604,14 +604,14 @@ const UI = (() => {
       ${gBanner === 'event' && g.guar ? '<div class="guar">' + tr('Next legendary soldier is guaranteed to be {0}!', charById(B.five).name) + '</div>' : ''}
       ${gBanner === 'arsenal' && g.guarG ? '<div class="guar">' + tr('Next legendary is guaranteed to be {0}!#item', tr(gearById(B.gear).name)) + '</div>' : ''}
 
-      <div class="g-wallet"><a class="lnk" id="g-hist-btn">${tr('Rates & history')}</a><span><img src="assets/ui/wings.png" alt="">${tr('Wings: {0}', wings())}</span><span><img src="assets/ui/ribbon.png" alt="">${tr('Feathers: {0}', feathers())}</span><span><img src="assets/ui/pearl.png" alt="">${tr('Tickets: {0}', tickets())}</span><span><img src="assets/ui/pearl.png" alt="">${tr('×10 tickets: {0}', g.tickets10 || 0)}</span></div>`;
+      <div class="g-wallet"><a class="lnk" id="g-hist-btn">${tr('Rates & history')}</a><span><img src="assets/ui/wings.png" alt="">${tr('Wings: {0}', wings())}</span><span><img src="assets/ui/feather.png" alt="">${tr('Feathers: {0}', feathers())}</span><span><img src="assets/ui/ticket.png" alt="">${tr('Tickets: {0}', tickets())}</span><span><img src="assets/ui/ticket.png" alt="">${tr('×10 tickets: {0}', g.tickets10 || 0)}</span></div>`;
     $('#g-hist-btn').addEventListener('click', () => { $('#g-history').classList.toggle('hid'); refreshHistory(); });
     const bb = $('#g-btns');
     bb.innerHTML = '';
     const btn = (cls, html, fn, title) => { const b = el('button', 'k-btn big ' + cls, html); if (title) b.title = title; b.addEventListener('click', fn); bb.appendChild(b); };
-    if (freeAvailable()) btn('free', `${img('pearl')} ${tr('Free')}`, () => doPull(1, 'free'), tr('One free summon every day'));
-    if (tickets() > 0) btn('free', `${img('pearl')} ×1 (${tickets()})`, () => doPull(1, 'ticket'), tr('Summon Ticket'));
-    if ((g.tickets10 || 0) > 0) btn('free', `${img('pearl')} ×10 (${g.tickets10})`, () => doPull(10, 'ticket'), tr('×10 ticket'));
+    if (freeAvailable()) btn('free', `${img('ticket')} ${tr('Free')}`, () => doPull(1, 'free'), tr('One free summon every day'));
+    if (tickets() > 0) btn('free', `${img('ticket')} ×1 (${tickets()})`, () => doPull(1, 'ticket'), tr('Summon Ticket'));
+    if ((g.tickets10 || 0) > 0) btn('free', `${img('ticket')} ×10 (${g.tickets10})`, () => doPull(10, 'ticket'), tr('×10 ticket'));
     btn(wings() < PULL_COST ? 'off' : '', `${img('wings')} ×1 — ${PULL_COST}`, () => doPull(1));
     btn(wings() < PULL10_COST ? 'off' : '', `${img('wings')} ×10 — ${PULL10_COST}`, () => doPull(10), tr('Ten for the price of nine, at least one epic'));
     btn('x100' + (wings() < PULL100_COST ? ' off' : ''), `${img('wings')} ×100 — ${PULL100_COST}`, () => doPull(100), tr('A hundred summons at once: at least one epic in every ten, and a trophy chest right away'));
@@ -685,7 +685,7 @@ const UI = (() => {
     for (const it of SHOP) {
       const cost = it.id === 'doss' ? DOSS_PRICE[3] : it.cost;
       const d = el('div', 'shop-it k-card' + (feathers() < cost ? ' poor' : '') + (shopPick === it.id ? ' sel' : ''));
-      d.innerHTML = `<img src="assets/ui/${it.icon}.png" alt=""><div class="sn">${tr(it.name)}</div><div class="muted small">${tr(it.text)}</div><div class="sc"><img src="assets/ui/ribbon.png" alt="">${it.id === 'doss' ? Object.values(DOSS_PRICE).join(' / ') : cost}</div>`;
+      d.innerHTML = `<img src="assets/ui/${it.icon}.png" alt=""><div class="sn">${tr(it.name)}</div><div class="muted small">${tr(it.text)}</div><div class="sc"><img src="assets/ui/feather.png" alt="">${it.id === 'doss' ? Object.values(DOSS_PRICE).join(' / ') : cost}</div>`;
       d.addEventListener('click', () => {
         if (it.id === 'doss') { shopPick = shopPick === it.id ? null : it.id; refreshShop(); return; }
         if (feathers() < cost) { toast(tr('Not enough feathers, you get them from every summon')); snd('error', { vol: 0.6 }); return; }
@@ -701,7 +701,7 @@ const UI = (() => {
         const price = DOSS_PRICE[c.rarity], st5 = (save.chars[c.id] || 0) >= 5;
         const h = el('div', 'hero-card k-card' + (feathers() < price || st5 ? ' poor' : ''));
         h.appendChild(face(c.id));
-        h.insertAdjacentHTML('beforeend', `<div class="hn">${c.name}</div><div class="r${c.rarity}">${save.chars[c.id] ? starsHTML(save.chars[c.id]) : '???'}</div><div class="hdos"><img src="assets/ui/dossier.png" alt="">${dossiers(c.id)}/${save.chars[c.id] ? ((starCost(c.id) || {}).d || '—') : recruitCost(c.id)}</div><div class="sc small"><img src="assets/ui/ribbon.png" alt="">${price}</div>`);
+        h.insertAdjacentHTML('beforeend', `<div class="hn">${c.name}</div><div class="r${c.rarity}">${save.chars[c.id] ? starsHTML(save.chars[c.id]) : '???'}</div><div class="hdos"><img src="assets/ui/dossier.png" alt="">${dossiers(c.id)}/${save.chars[c.id] ? ((starCost(c.id) || {}).d || '—') : recruitCost(c.id)}</div><div class="sc small"><img src="assets/ui/feather.png" alt="">${price}</div>`);
         h.addEventListener('click', () => {
           if (st5) { toast(tr('{0} already has 5 stars', c.name)); snd('error', { vol: 0.6 }); return; }
           if (feathers() < price) { toast(tr('Not enough feathers, you get them from every summon')); snd('error', { vol: 0.6 }); return; }
@@ -715,7 +715,7 @@ const UI = (() => {
       row.appendChild(fl);
       st.appendChild(row);
     }
-    $('#g-info').innerHTML = `<div class="g-wallet big"><span><img src="assets/ui/ribbon.png" alt="">${tr('Feathers: {0}', feathers())}</span><span><img src="assets/ui/crystal.png" alt="">${tr('Crystals: {0}', crystals())}</span><span><img src="assets/ui/pearl.png" alt="">${tr('Tickets: {0}', tickets())}</span></div><div class="muted small">${tr('You get feathers from every summon, double for duplicates')}</div>`;
+    $('#g-info').innerHTML = `<div class="g-wallet big"><span><img src="assets/ui/feather.png" alt="">${tr('Feathers: {0}', feathers())}</span><span><img src="assets/ui/crystal.png" alt="">${tr('Crystals: {0}', crystals())}</span><span><img src="assets/ui/ticket.png" alt="">${tr('Tickets: {0}', tickets())}</span></div><div class="muted small">${tr('You get feathers from every summon, double for duplicates')}</div>`;
     $('#g-btns').innerHTML = '';
     refreshFooter();
   }

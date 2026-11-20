@@ -46,8 +46,8 @@
 .k-frame {
   border-style: solid;
   border-color: transparent;
-  border-width: calc(14px * var(--u));
-  border-image: url('../assets/ui/frame.png') 14 fill / calc(14px * var(--u)) stretch;
+  border-width: calc(13px * var(--u));
+  border-image: url('../assets/ui/frame.png') 13 fill / calc(13px * var(--u)) round;
 }
 .k-card {
   border-style: solid;
@@ -65,8 +65,8 @@
 .k-field {
   border-style: solid;
   border-color: transparent;
-  border-width: calc(6px * var(--u));
-  border-image: url('../assets/ui/field.png') 6 fill / calc(6px * var(--u)) stretch;
+  border-width: calc(5px * var(--u));
+  border-image: url('../assets/ui/field.png') 5 fill / calc(5px * var(--u)) stretch;
 }
 .k-btn {
   pointer-events: auto;
@@ -77,8 +77,8 @@
   gap: 8px;
   border-style: solid;
   border-color: transparent;
-  border-width: calc(5px * var(--u));
-  border-image: url('../assets/ui/button.png') 5 fill / calc(5px * var(--u)) stretch;
+  border-width: calc(6px * var(--u)) calc(9px * var(--u));
+  border-image: url('../assets/ui/button.png') 6 9 fill / calc(6px * var(--u)) calc(9px * var(--u)) stretch;
   color: var(--wood-text);
   text-shadow: 2px 2px 0 var(--shadow);
   font: inherit;
@@ -88,7 +88,7 @@
   outline: none;
 }
 .k-btn.big { font-size: 32px; padding: 6px 26px; min-height: calc(30px * var(--u)); }
-.k-btn:hover, .k-btn.focus { border-image-source: url('../assets/ui/hover.png'); color: var(--wood-hot); }
+.k-btn:hover, .k-btn.focus { border-image-source: url('../assets/ui/hover.png'); color: #ffffff; text-shadow: 2px 2px 0 #10161e; }
 .k-btn:active { border-image-source: url('../assets/ui/pressed.png'); transform: translateY(1px); }
 .k-btn.off, .k-btn.off:hover { border-image-source: url('../assets/ui/disabled.png'); color: var(--wood-off); cursor: default; transform: none; }
 .k-btn img { width: calc(16px * var(--u)); height: calc(16px * var(--u)); }
@@ -135,7 +135,7 @@ html[lang="es"] .logo .title { font-size: 40px; }
 .hub-hero .ability { text-align: center; color: var(--ink-muted); min-height: 40px; }
 .hub-menu { position: absolute; right: 8%; top: 26%; display: flex; flex-direction: column; gap: 10px; width: min(330px, 32vw); }
 .hub-menu .k-btn { justify-content: flex-start; font-size: 32px; }
-.hub-menu .k-btn .ico { width: calc(16px * var(--u)); height: calc(16px * var(--u)); }
+.hub-menu .k-btn .ico { width: calc(18px * var(--u)); height: calc(18px * var(--u)); object-fit: contain; }
 .bottom-bar { position: absolute; left: 0; right: 0; bottom: 14px; display: flex; justify-content: space-between; padding: 0 22px; pointer-events: none; }
 .coins { display: inline-flex; align-items: center; gap: 8px; padding: 2px 14px; font-size: 32px; }
 .coins img { width: calc(14px * var(--u)); height: calc(14px * var(--u)); }
@@ -182,7 +182,7 @@ html[lang="es"] .logo .title { font-size: 40px; }
 
 /* hud */
 #hud .tl { position: absolute; left: 12px; top: 10px; display: flex; flex-direction: column; gap: 8px; }
-#hud .plate { display: inline-flex; align-items: center; gap: 10px; padding: 2px 10px; border-style: solid; border-color: transparent; border-width: calc(5px * var(--u)); border-image: url('../assets/ui/button.png') 5 fill / calc(5px * var(--u)) stretch; }
+#hud .plate { display: inline-flex; align-items: center; gap: 10px; padding: 2px 10px; border-style: solid; border-color: transparent; border-width: calc(5px * var(--u)); border-image: url('../assets/ui/button.png') 6 9 fill / calc(6px * var(--u)) calc(9px * var(--u)) stretch; }
 #hud .plate canvas { width: calc(20px * var(--u)); height: calc(20px * var(--u)); }
 #hud .hearts { display: flex; gap: 4px; }
 #hud .hearts canvas { width: calc(13px * var(--u)); height: calc(11px * var(--u)); }
@@ -925,3 +925,11 @@ html.touch #hud .ult .un { right: calc(100% + 8px); bottom: 50%; transform: tran
 .shop-heroes .hero-card { width: 84px; padding: 2px; }
 .shop-heroes .hero-card .hn { font-size: 15px; }
 .shop-heroes .hero-card canvas { width: 56px; }
+
+/* Survey Corps UI kit */
+.coins.k-card { border-image-source: url('../assets/ui/plate.png'); }
+.k-btn img, .coins img, .g-wallet img, .sc img, .ld-ic img { object-fit: contain; }
+.k-tip { color: #f4ead0; text-shadow: 1px 1px 0 #1a2410; }
+.logo { display: flex; align-items: center; gap: 14px; padding: 6px 26px 10px; border-style: solid; border-color: transparent; border-width: calc(6px * var(--u)); border-image: url('../assets/ui/tip.png') 6 fill / calc(6px * var(--u)) round; filter: drop-shadow(0 4px 0 rgba(0, 0, 0, 0.35)); }
+.logo .logo-emb { width: calc(30px * var(--u)); height: auto; }
+@media (max-width: 700px) { .logo { padding: 4px 12px 6px; gap: 8px; } .logo .logo-emb { width: 40px; } }

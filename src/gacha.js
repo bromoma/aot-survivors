@@ -138,8 +138,8 @@ function gachaPull(n, banner, mode) {
 
 const ANOMALY_CHANCE = 0.08;
 const SHOP = [
-  { id: 'ticket', cost: 40, icon: 'pearl', name: 'Summon Ticket', text: 'One summon on any banner' },
-  { id: 'manual', cost: 8, icon: 'scroll', name: 'Manual', text: '+150 XP for any hero' },
+  { id: 'ticket', cost: 40, icon: 'ticket', name: 'Summon Ticket', text: 'One summon on any banner' },
+  { id: 'manual', cost: 8, icon: 'manual', name: 'Manual', text: '+150 XP for any hero' },
   { id: 'crystal', cost: 25, icon: 'crystal', name: '10 titan crystals', text: 'For gear upgrades' },
   { id: 'doss', cost: 0, icon: 'dossier', name: '5 dossiers of your choice', text: 'Dossiers of any hero: recruit them or raise their stars' },
 ];

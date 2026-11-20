@@ -1,7 +1,8 @@
 # Credits
 
 - Font **Pixellari** — Zacchary Dempsey-Plante (https://ztdp.ca), "100% Free", attribution requested. `assets/fonts/Pixellari.ttf` is the Tradisea version with a redrawn lowercase Cyrillic "а".
-- UI elements (`assets/ui/`), grass, roads, paving, trees and props (`assets/tradisea/`) — from the game Tradisea by the same author.
+- UI frames, buttons and icons in the Survey Corps style (`assets/ui/`: frame, card, button, tab, field, tip, plate, close, check, `i_*.png` and the currency icons) — generated in ChatGPT (`assets/raw/aot_ui_kit.png`, `assets/raw/aot_ui_icons.png`) and cut into pixel art with `dev/cut_kit.py`.
+- A few older UI pieces (sliders, scrollbars, ribbon, seals), grass, roads, paving, trees and props (`assets/tradisea/`) — from the game Tradisea by the same author.
 - Characters, titans, houses, ruins and the Wall (`assets/raw/`, `assets/sprites/`) — generated in ChatGPT and turned into pixel art with the scripts in `dev/`.
 
 ## Music (all CC0, taken from Tradisea; sources checked there in assets/music/CREDITS.md)

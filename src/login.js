@@ -30,7 +30,7 @@ function loginLabel(d) {
 }
 
 function loginIcon(d) {
-  return { marks: 'coin', wings: 'wings', crystals: 'crystal', ticket: 'pearl', manual: 'scroll', feathers: 'ribbon', gear: 'gear', ticket10: 'pearl' }[d.kind];
+  return { marks: 'coin', wings: 'wings', crystals: 'crystal', ticket: 'ticket', manual: 'manual', feathers: 'feather', gear: 'i_gear', ticket10: 'ticket' }[d.kind];
 }
 
 function loginClaim() {
