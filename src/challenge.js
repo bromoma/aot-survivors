@@ -48,8 +48,8 @@ function challengeBossPlan() {
   return [[70, 0], [140, 0], [210, 1], [280, 2]];
 }
 
-const CHAL_WINGS = 500, CHAL_DOSS = 10;
-function chalHero() { return bannerInfo().fours[0]; }
+const CHAL_WINGS = 500, CHAL_DOSS = 20;
+function chalHero() { return 'pixis'; }
 
 function challengeReward(won) {
   if (!faction.challenge || !won || challengeDone()) return false;

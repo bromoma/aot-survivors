@@ -6,7 +6,7 @@ const PULL_COST = 100, PULL10_COST = 900, PULL100_COST = 9000;
 const FEATHER = { 1: 1, 2: 2, 3: 4, 4: 8, 5: 20 };
 const GOLD_CHANCE = 0.03;
 const FEATURE5 = ['levi', 'mikasa', 'erwin'];
-const FEATURE4 = ['eren', 'armin', 'hange', 'historia', 'mike'];
+const FEATURE4 = ['eren', 'armin', 'hange', 'historia', 'mike', 'petra', 'nanaba'];
 const FEATURE_GEAR = ['blade4', 'relic2', 'odm4', 'relic1', 'relic3', 'gas4'];
 const BANNER_TITLES = { levi: "Humanity's Strongest", mikasa: 'The Red Scarf', erwin: 'Dedicate Your Hearts' };
 
@@ -58,15 +58,15 @@ function heroOfTier(t, banner) {
   const g = gachaState(), B = bannerInfo();
   if (t === 5) {
     if (banner === 'event' && (g.guar || Math.random() < 0.5)) { g.guar = false; return { c: charById(B.five), featured: true }; }
-    const pool = CHARS.filter(x => x.rarity === 5 && (banner !== 'event' || x.id !== B.five));
+    const pool = CHARS.filter(x => x.rarity === 5 && x.gacha !== false && (banner !== 'event' || x.id !== B.five));
     if (banner === 'event') g.guar = true;
     return { c: pool.length ? pick(pool) : charById(B.five) };
   }
   if (t === 4) {
     if (banner === 'event' && Math.random() < 0.5) return { c: charById(pick(B.fours)), featured: true };
-    return { c: pick(CHARS.filter(x => x.rarity === 4)) };
+    return { c: pick(CHARS.filter(x => x.rarity === 4 && x.gacha !== false)) };
   }
-  return { c: pick(CHARS.filter(x => x.rarity === 3 && x.id !== 'cadet')) };
+  return { c: pick(CHARS.filter(x => x.rarity === 3 && x.id !== 'cadet' && x.gacha !== false)) };
 }
 
 function rollOne(banner) {
@@ -158,6 +158,18 @@ const QUOTES = {
   erwin: 'Forward! Beyond the Wall, to the truth!',
   historia: 'I choose who I want to be.',
   mike: '*sniffs* Titans are close.',
+  petra: 'I trust the Captain with my life.',
+  nanaba: 'Keep your formation, we hold this line.',
+  oluo: "Don't get in my way, rookie... *bites tongue*",
+  eld: 'Stay calm and trust your squad.',
+  gunther: 'Cables ready. Let us move.',
+  moblit: 'Squad Leader, please be careful!',
+  hannes: "I'll be the one to save you this time!",
+  ymir: 'I live for myself now.',
+  annie: "I'm a warrior. That's all.",
+  reiner: "I'm a soldier... and a warrior.",
+  kenny: 'Everyone is a slave to something.',
+  pixis: 'Dedicate your hearts, beauties of the Garrison!',
 };
 
 function feathers() { return gachaState().feathers || 0; }

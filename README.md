@@ -1,6 +1,6 @@
 # Attack on Titan: Survivors
 
-A fan-made survivors-style game inspired by *Attack on Titan*: swing through the city on ODM gear cables, gain height and cut titan napes. Three factions with an endless world, 12 heroes with levels and ultimates, 8 shifter bosses, skill evolutions, gear, a gacha with banners, a weekly challenge, a day/night cycle and weather, daily supplies, achievements, a guided first run and local player profiles.
+A fan-made survivors-style game inspired by *Attack on Titan*: swing through the city on ODM gear cables, gain height and cut titan napes. Three factions with an endless world, 24 heroes with levels and ultimates (some only from bosses, elites, achievements or the weekly challenge), 8 shifter bosses, skill evolutions, gear, a gacha with banners, a weekly challenge, a day/night cycle and weather, daily supplies, achievements, a guided first run and local player profiles.
 
 **Play:** https://bromoma.github.io/aot-survivors/
 
@@ -56,6 +56,8 @@ All numbers live in `src/economy.js`, `src/gacha.js` and `src/meta.js`.
 | Marks | Runs, chests, daily tasks, achievements | Training, hero training, star-ups, gear upgrades |
 | Wings of Freedom | Achievements, daily tasks and supplies, weekly challenge, first win of the day, bosses | Summons only (100 each, 900 for ten) |
 | Dossiers (per hero) | Duplicates, bosses, weekly challenge, feather shop | Recruiting a hero without luck, raising stars |
+
+Some heroes never appear in summons: Annie, Reiner and Ymir get dossiers from the Female, Armored and Jaw Titans, Kenny from golden elite titans, Pixis from the weekly challenge, and Hannes is the reward for “Shiganshina Retaken”. New hero sprites: one 8-pose sheet per hero in `assets/raw/aot_hero_<id>.png`, cut with `dev/cut_hero.sh <id>`, then `node dev/pack.js`.
 | Titan crystals | Bosses, golden elites, boss chests, gear duplicates at max level | Gear upgrades |
 | Feathers | Every summon | Summon shop: tickets, manuals, crystals, dossiers |
 

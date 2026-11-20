@@ -45,10 +45,22 @@ const CHARS = [
   { id: 'erwin', name: 'Erwin', rarity: 5, hair: '#d8b860', look: 'short', ability: 'Commander: starts with Flash Flare and a Comrade' },
   { id: 'historia', name: 'Historia', rarity: 4, hair: '#f0d070', look: 'ponytail', ability: 'Queen: +2 hearts and heals more often' },
   { id: 'mike', name: 'Mike', rarity: 4, hair: '#c8a870', look: 'short', ability: 'Keen nose: attacks reach 15% farther, +10% XP, flares warn about titans' },
+  { id: 'petra', name: 'Petra', rarity: 4, hair: '#b06a3a', look: 'bob', ability: 'Levi Squad: +1 heart, invulnerability after a hit lasts 50% longer' },
+  { id: 'nanaba', name: 'Nanaba', rarity: 4, hair: '#e0d4a8', look: 'short', ability: 'Veteran: skills recharge 10% faster, orbit +10%' },
+  { id: 'oluo', name: 'Oluo', rarity: 3, hair: '#c8b890', look: 'undercut', ability: 'Copies Levi: orbit +15%' },
+  { id: 'eld', name: 'Eld', rarity: 3, hair: '#e0c070', look: 'short', ability: 'Second in command: attacks reach 10% farther, +10% XP' },
+  { id: 'gunther', name: 'Gunther', rarity: 3, hair: '#4a3020', look: 'short', ability: 'Cable expert: cables 20% longer, glides 15% slower' },
+  { id: 'moblit', name: 'Moblit', rarity: 3, hair: '#a07850', look: 'short', ability: "Hange's assistant: starts with a Trap" },
+  { id: 'hannes', name: 'Hannes', rarity: 3, hair: '#d8b860', look: 'short', ability: 'Garrison veteran: +1 heart, heals 3 kills sooner', gacha: false, how: 'Reward for the achievement “Shiganshina Retaken”' },
+  { id: 'ymir', name: 'Ymir', rarity: 4, hair: '#4a3020', look: 'ponytail', ability: 'Shifter: speed +10%, ultimate charges 25% faster', gacha: false, how: 'Dossiers drop from the Jaw Titan' },
+  { id: 'annie', name: 'Annie', rarity: 5, hair: '#e8d090', look: 'bun', ability: 'Shifter: orbit +25%, attacks reach 10% farther', gacha: false, how: 'Dossiers drop from the Female Titan' },
+  { id: 'reiner', name: 'Reiner', rarity: 5, hair: '#d8c070', look: 'short', ability: 'Shifter: +2 hearts, invulnerability after a hit +30%', gacha: false, how: 'Dossiers drop from the Armored Titan' },
+  { id: 'kenny', name: 'Kenny', rarity: 5, hair: '#2a2018', look: 'hat', ability: 'The Ripper: attacks reach 25% farther, flight speed +10%', gacha: false, how: 'Every golden elite titan gives a dossier' },
+  { id: 'pixis', name: 'Pixis', rarity: 5, hair: '#d0d0d0', look: 'bald', ability: 'Commander: starts with Garrison Cannons and Flash Flare', gacha: false, how: 'Dossiers come from the weekly challenge' },
 ];
 trFields(FACTIONS, ['name', 'diff', 'desc']);
 trFields(Object.values(RARITY), ['name']);
-trFields(CHARS, ['name', 'ability']);
+trFields(CHARS, ['name', 'ability', 'how']);
 const charById = id => CHARS.find(c => c.id === id) || CHARS[0];
 
 
@@ -406,6 +418,18 @@ function reset() {
   if (hero.id === 'erwin') stats.startSkills.push(['flash', 1], ['ally', 1]);
   if (hero.id === 'historia') { stats.maxHp += 2; stats.healEvery -= 2; }
   if (hero.id === 'mike') { stats.engage *= 1.15; stats.xp *= 1.1; stats.warn = true; }
+  if (hero.id === 'petra') { stats.maxHp += 1; stats.invMul = 1.5; }
+  if (hero.id === 'nanaba') { stats.cdMul *= 0.9; stats.orbit *= 1.1; }
+  if (hero.id === 'oluo') stats.orbit *= 1.15;
+  if (hero.id === 'eld') { stats.engage *= 1.1; stats.xp *= 1.1; }
+  if (hero.id === 'gunther') { stats.range *= 1.2; stats.glide *= 0.85; }
+  if (hero.id === 'moblit') stats.startSkills.push(['trap', 1]);
+  if (hero.id === 'hannes') { stats.maxHp += 1; stats.healEvery -= 3; }
+  if (hero.id === 'ymir') { stats.speed *= 1.1; stats.ultMul = 0.75; }
+  if (hero.id === 'annie') { stats.orbit *= 1.25; stats.engage *= 1.1; }
+  if (hero.id === 'reiner') { stats.maxHp += 2; stats.invMul = 1.3; }
+  if (hero.id === 'kenny') { stats.engage *= 1.25; stats.speed *= 1.1; }
+  if (hero.id === 'pixis') stats.startSkills.push(['cannon', 1], ['flash', 1]);
   stats.speed *= 1 + (stars - 1) * 0.03;
   stats.orbit *= 1 + (stars - 1) * 0.03;
   applyHeroLevel(stats, hero.id);
@@ -702,7 +726,11 @@ function finishRun(won) {
   const cg = db * 5 + de;
   if (cg) { addCrystals(cg); game.crystalGain = (game.crystalGain || 0) + cg; }
   game.dossGain = game.dossGain || {};
-  for (let i = 0; i < db; i++) { const id = randomDossierHero(); addDossiers(id, 3); game.dossGain[id] = (game.dossGain[id] || 0) + 3; }
+  const giveD = (id, n) => { addDossiers(id, n); game.dossGain[id] = (game.dossGain[id] || 0) + n; };
+  for (let i = 0; i < db; i++) giveD(randomDossierHero(), 3);
+  for (const k of (game.bossKinds || []).slice(game.paidBossIdx || 0)) if (BOSS_HERO[k]) giveD(BOSS_HERO[k], BOSS_HERO_DOSS);
+  game.paidBossIdx = (game.bossKinds || []).length;
+  if (de) giveD('kenny', de);
   const earned = Math.round(((game.kills - game.paidKills) + Math.floor((game.time - game.paidTime) / 10) + (won ? 150 : 0) + db * 40) * mul * greed * (stats.markMul || 1));
   game.paidElite = game.eliteKills || 0;
   game.paidBoss = game.bossKills;

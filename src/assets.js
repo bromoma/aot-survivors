@@ -1,7 +1,7 @@
 'use strict';
 
 const DIR_KEYS = ['down', 'left', 'right', 'up'];
-const HERO_IDS = ['cadet', 'connie', 'sasha', 'jean', 'eren', 'armin', 'hange', 'mikasa', 'levi', 'erwin', 'historia', 'mike'];
+const HERO_IDS = ['cadet', 'connie', 'sasha', 'jean', 'eren', 'armin', 'hange', 'mikasa', 'levi', 'erwin', 'historia', 'mike', 'petra', 'nanaba', 'oluo', 'eld', 'gunther', 'moblit', 'hannes', 'ymir', 'annie', 'reiner', 'kenny', 'pixis'];
 const TITAN_TYPES = ['normal', 'lanky', 'fat', 'aberrant'];
 const NEW_TYPES = ['crawler', 'small', 'thrower', 'giant'];
 const TITAN_SIZES = [110, 140, 170, 200];

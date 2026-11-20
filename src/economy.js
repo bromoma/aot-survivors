@@ -67,7 +67,15 @@ function starUp(id) {
 // A random hero for dossiers found on the battlefield: commons are frequent, legendaries rare.
 function randomDossierHero() {
   const x = Math.random(), r = x < 0.6 ? 3 : x < 0.9 ? 4 : 5;
-  return pick(CHARS.filter(c => c.rarity === r && c.id !== 'cadet')).id;
+  return pick(CHARS.filter(c => c.rarity === r && c.id !== 'cadet' && c.gacha !== false)).id;
+}
+
+// Heroes that never come from summons have their own source of dossiers.
+const BOSS_HERO = { female: 'annie', armored: 'reiner', jaw: 'ymir' };
+const BOSS_HERO_DOSS = 4;
+function grantHeroReward(id) {
+  if (!save.chars[id]) { save.chars[id] = 1; return { isNew: true }; }
+  return addDossiers(id, 10);
 }
 
 function gearUpCost(key) {

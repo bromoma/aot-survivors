@@ -37,6 +37,18 @@ const SIGNATURE = {
   erwin: { text: 'Comrades attack 40% more often', apply: s => { s.allyMul = 0.6; } },
   historia: { text: 'One more second wind in every run', apply: s => { s.extraRevive = (s.extraRevive || 0) + 1; } },
   mike: { text: 'Another +15% attack reach', apply: s => { s.engage *= 1.15; } },
+  petra: { text: 'Kill heals come 3 kills sooner', apply: s => { s.healEvery -= 3; } },
+  nanaba: { text: 'Skills recharge another 10% faster', apply: s => { s.cdMul *= 0.9; } },
+  oluo: { text: 'Starts each run with Blade Whirl', apply: s => { s.startSkills.push(['spin', 1]); } },
+  eld: { text: 'Starts each run with a Comrade', apply: s => { s.startSkills.push(['ally', 1]); } },
+  gunther: { text: 'Another +10% flight speed', apply: s => { s.speed *= 1.1; } },
+  moblit: { text: 'Trap starts at level 2', apply: s => { s.startSkills.push(['trap', 2]); } },
+  hannes: { text: 'One more second wind in every run', apply: s => { s.extraRevive = (s.extraRevive || 0) + 1; } },
+  ymir: { text: 'Ultimate charges another 15% faster', apply: s => { s.ultMul = (s.ultMul || 1) * 0.85; } },
+  annie: { text: 'After a kill, flies straight to the next titan', apply: s => { s.chain = true; } },
+  reiner: { text: 'Another +1 heart', apply: s => { s.maxHp += 1; } },
+  kenny: { text: 'Another +15% flight speed', apply: s => { s.speed *= 1.15; } },
+  pixis: { text: 'Skills recharge 15% faster', apply: s => { s.cdMul *= 0.85; } },
 };
 
 const HERO_PERKS = [

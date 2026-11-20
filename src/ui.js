@@ -467,7 +467,7 @@ const UI = (() => {
       const need = owned ? sc.d : recruitCost(c.id), ok = owned ? canStarUp(c.id) : canRecruit(c.id);
       const box = el('div', 'dos-box k-card');
       box.innerHTML = `<div class="row" style="gap:6px;align-items:center"><img src="assets/ui/dossier.png" alt=""><b>${tr('Dossiers: {0}/{1}', dn, need)}</b></div><div class="xpb dos"><i style="width:${Math.min(100, Math.round(dn / need * 100))}%"></i></div>
-        <div class="muted small">${owned ? tr('Next star: +3% speed. Dossiers come from duplicates, bosses, the weekly challenge and the feather shop') : tr('Collect dossiers to recruit without luck: from bosses, the weekly challenge and the feather shop')}</div>`;
+        <div class="muted small">${owned ? tr('Next star: +3% speed. Dossiers come from duplicates, bosses, the weekly challenge and the feather shop') : c.how ? '<b>' + c.how + '</b>' + (c.id === 'hannes' ? '' : ' · ' + tr('also in the feather shop')) : tr('Collect dossiers to recruit without luck: from bosses, the weekly challenge and the feather shop')}</div>`;
       const ub = el('button', 'k-btn' + (ok ? ' glow' : ' off'), owned ? `★${owned + 1} · <img src="assets/ui/dossier.png" alt="">${sc.d} · <img src="assets/ui/coin.png" alt="">${sc.m}` : `${tr('Recruit#verb')} · <img src="assets/ui/dossier.png" alt="">${need}`);
       ub.style.width = '100%';
       ub.addEventListener('click', () => {
@@ -760,7 +760,7 @@ const UI = (() => {
     b.addEventListener('click', () => {
       if (!done || claimed) return;
       const got = onClaim();
-      if (got) { snd('chime5', { vol: 0.7, tag: 'chime' }); snd('bong', { vol: 0.5 }); toast(tr('+{0} wings', got.w) + ' · ' + tr('+{0} marks', got.m)); refreshMissions(); refreshFooter(); }
+      if (got) { snd('chime5', { vol: 0.7, tag: 'chime' }); snd('bong', { vol: 0.5 }); toast(tr('+{0} wings', got.w) + ' · ' + tr('+{0} marks', got.m)); if (got.hero) setTimeout(() => { snd('reveal', { vol: 0.7 }); toast(tr('{0} joins the Survey Corps!', charById(got.hero).name)); }, 1200); refreshMissions(); refreshFooter(); }
     });
     row.appendChild(b);
     return row;

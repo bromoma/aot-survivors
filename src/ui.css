@@ -933,3 +933,8 @@ html.touch #hud .ult .un { right: calc(100% + 8px); bottom: 50%; transform: tran
 .logo { display: flex; align-items: center; gap: 14px; padding: 6px 26px 10px; border-style: solid; border-color: transparent; border-width: calc(6px * var(--u)); border-image: url('../assets/ui/tip.png') 6 fill / calc(6px * var(--u)) round; filter: drop-shadow(0 4px 0 rgba(0, 0, 0, 0.35)); }
 .logo .logo-emb { width: calc(30px * var(--u)); height: auto; }
 @media (max-width: 700px) { .logo { padding: 4px 12px 6px; gap: 8px; } .logo .logo-emb { width: 40px; } }
+/* 24 heroes: compact scrollable squad grid */
+.squad { grid-template-columns: repeat(6, calc(48px * var(--u))); max-height: min(72vh, calc(300px * var(--u))); overflow-y: auto; padding-right: 6px; align-content: start; }
+.squad .hero-card canvas { width: calc(36px * var(--u)); height: calc(36px * var(--u)); }
+.squad .hero-card .hn { font-size: 15px; }
+.squad .hero-card .hlv, .squad .hero-card .hdos { font-size: 12px; }

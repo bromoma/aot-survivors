@@ -31,7 +31,7 @@ const ACHIEVEMENTS = [
   ...[[1, 30], [10, 100], [50, 300]].map(([n, r], i) => ({ id: 'runs' + i, get name() { return tr(['First Sortie', 'Veteran', 'Living Legend'][i]); }, get text() { return tr(n === 1 ? 'Play {0} run' : 'Play {0} runs', n); }, goal: n, reward: r, get: () => stat('runs') })),
   ...Object.entries(BOSS_NAMES).map(([k, nm], i) => ({ id: 'boss_' + k, get name() { return tr(BOSS_DOWN[k]); }, get text() { return tr('Defeat the shifter: {0}', tr(nm)); }, goal: 1, reward: [150, 200, 250, 400, 150, 150, 250, 400][i], get: () => (save.stats && save.stats.bosses && save.stats.bosses[k]) || 0 })),
   { id: 'boss_all', get name() { return tr('Shifter Hunt'); }, get text() { return tr('Defeat five shifters in one run'); }, goal: 5, reward: 600, get: () => stat('maxBossRun') },
-  ...Object.entries(FACTION_WIN_NAMES).map(([k, nm], i) => ({ id: 'win_' + k, get name() { return tr(['Order in the Capital', 'Shiganshina Retaken', 'Beyond the Wall'][i]); }, get text() { return tr('Survive 10 minutes: {0}', tr(nm)); }, goal: 1, reward: [200, 300, 500][i], get: () => (save.stats && save.stats.winsBy && save.stats.winsBy[k]) || 0 })),
+  ...Object.entries(FACTION_WIN_NAMES).map(([k, nm], i) => ({ id: 'win_' + k, get name() { return tr(['Order in the Capital', 'Shiganshina Retaken', 'Beyond the Wall'][i]); }, get text() { return tr('Survive 10 minutes: {0}', tr(nm)) + (k === 'garrison' ? ' · ' + tr('reward: {0} joins the squad', charById('hannes').name) : ''); }, hero: k === 'garrison' ? 'hannes' : null, goal: 1, reward: [200, 300, 500][i], get: () => (save.stats && save.stats.winsBy && save.stats.winsBy[k]) || 0 })),
   ...[[10, 60], [20, 150], [30, 300]].map(([n, r], i) => ({ id: 'lvl' + i, get name() { return tr(['Fast Learner', 'Seasoned Fighter', 'Elite'][i]); }, get text() { return tr('Reach level {0} in one run', n); }, goal: n, reward: r, get: () => stat('bestLevel') })),
   ...[[10, 60], [30, 150], [60, 300]].map(([n, r], i) => ({ id: 'combo' + i, get name() { return tr(['Combo', 'Whirlwind', 'Hurricane'][i]); }, get text() { return tr('Make a x{0} combo', n); }, goal: n, reward: r, get: () => stat('maxCombo') })),
   ...[[3, 80], [6, 200], [9, 500]].map(([n, r], i) => ({ id: 'squad' + i, get name() { return tr(['My Own Team', 'Levi Squad', 'Full Squad'][i]); }, get text() { return tr('Unlock {0} soldiers', n); }, goal: n, reward: r, get: () => Object.keys(save.chars).length })),
@@ -169,8 +169,9 @@ function claimAchievement(id) {
   save.claimed[id] = true;
   save.marks += a.reward;
   addWings(achWings(a.reward));
+  const h = a.hero ? grantHeroReward(a.hero) : null;
   persist();
-  return { m: a.reward, w: achWings(a.reward) };
+  return { m: a.reward, w: achWings(a.reward), hero: h && a.hero };
 }
 
 const achWings = r => Math.round(r / 20) * 10;

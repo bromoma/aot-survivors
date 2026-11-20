@@ -87,7 +87,7 @@ function applyGear(st) {
   if (t.heal) st.healEvery = Math.max(4, st.healEvery - t.heal);
   if (t.xp) st.xp *= 1 + t.xp / 100;
   if (t.cd) st.cdMul *= Math.max(0.5, 1 - t.cd / 100);
-  if (t.inv) st.invMul = 1 + t.inv / 100;
+  if (t.inv) st.invMul = (st.invMul || 1) * (1 + t.inv / 100);
   st.markMul = 1 + (t.marks || 0) / 100;
 }
 
