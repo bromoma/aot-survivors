@@ -235,7 +235,7 @@ const UI = (() => {
         <div id="settings"></div>
       </div></div></div>
       <div class="bottom-bar">
-        <div class="row" style="gap:10px"><button class="coins k-card prof-chip" id="prof-chip"><span class="pav" id="prof-av"></span><span id="prof-name"></span></button><div class="coins k-card" title="${tr('Marks')}"><img src="assets/ui/coin.png" alt=""><span id="marks"></span></div><div class="coins k-card" title="${tr('Wings of Freedom')}"><img src="assets/ui/wings.png" alt=""><span id="wings"></span></div><div class="coins k-card rank-plate"><img src="assets/ui/ribbon.png" alt=""><span id="rank-foot"></span></div></div>
+        <div class="row" style="gap:10px"><button class="coins k-card prof-chip" id="prof-chip"><span class="pav" id="prof-av"></span><span id="prof-name"></span></button><div class="coins k-card" title="${tr('Marks')}"><img src="assets/ui/coin.png" alt=""><span id="marks"></span></div><div class="coins k-card" title="${tr('Wings of Freedom')}"><img src="assets/ui/wings.png" alt=""><span id="wings"></span></div><div class="coins k-card rank-plate"><img src="assets/ui/rank.png" alt=""><span id="rank-foot"></span></div></div>
         <div class="hint" id="menu-hint"></div>
       </div>
       <div class="msg k-tip" id="msg"></div>`;

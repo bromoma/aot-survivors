@@ -4,7 +4,6 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 const raw = f => path.join(root, 'assets/raw', f);
-const TR = path.join(process.env.HOME, 'GitHub/Ecomodef/assets/sprites/world');
 const only = process.argv[2] || '';
 const T = 32;
 
@@ -60,29 +59,18 @@ if (!only || only === 'sprites' || only === 'heroes') {
   }
 }
 
-if (!only || only === 'tradisea') {
-  const px = (src, out, w, trim) => run('pixelate.js', [src, path.join('assets/tradisea', out), '', w ? String(w) : '', trim ? '1' : '']);
-  px(`${TR}/grass/ground/grass.png`, 'grass.png');
-  px(`${TR}/grass/ground/grass3.png`, 'grass3.png');
-  px(`${TR}/grass/ground/path.png`, 'path.png');
-  for (const c of 'abc') px(`${TR}/rock/ground/paving_${c}.png`, `paving_${c}.png`);
-  const props = {
-    'grass/nature/oak.png': 3.6, 'grass/nature/apple_tree.png': 2.8, 'grass/nature/well.png': 1.3, 'grass/nature/hay_bales.png': 1.2,
-    'grass/nature/cart.png': 1.7, 'grass/nature/flower_pots.png': 1.2, 'grass/nature/rain_barrel.png': 0.7, 'grass/nature/lamp_post_wood.png': 0.95,
-    'grass/nature/bush1.png': 1.3, 'grass/nature/bush_berry.png': 1.5, 'common/nature/bush0.png': 1.3, 'common/nature/bush2.png': 1.5,
-    'grass/nature/log_mossy.png': 1.8, 'grass/nature/rock_mossy.png': 1.25, 'grass/nature/statue.png': 1.2, 'grass/nature/bench.png': 1.5,
-    'grass/nature/woodpile.png': 1.45, 'common/nature/flowers_wild.png': 1.3, 'grass/nature/flowers_blue.png': 1.3, 'common/nature/grass_tall.png': 1.2,
-  };
-  for (const [f, k] of Object.entries(props)) if (fs.existsSync(`${TR}/${f}`)) px(`${TR}/${f}`, path.basename(f), Math.round(T * k * (/bush|flower|grass_tall/.test(f) ? 0.8 : 1)), true);
-  const tmp = path.join(root, 'dev/out_test');
-  fs.mkdirSync(tmp, { recursive: true });
-  const cols = [[44, 358], [438, 901], [936, 1494]];
-  cols.forEach(([a, b], i) => {
-    execFileSync('sips', ['-c', '1024', String(b - a), '--cropOffset', '0', String(a), `${TR}/grass/nature/pines.png`, '--out', path.join(tmp, `pine${i + 1}.png`)], { stdio: 'ignore' });
-    px(path.join(tmp, `pine${i + 1}.png`), `pine${i + 1}.png`, [60, 80, 92][i], true);
-  });
+if (!only || only === 'world') {
+  execFileSync('python3', [path.join(root, 'dev/gen_ground.py')], { stdio: 'inherit' });
+  const tmp = path.join(root, 'dev/out_test/world');
+  const kit = (sheet, names) => execFileSync('python3', [path.join(root, 'dev/cut_kit.py'), raw(sheet), tmp, names, '1'], { stdio: 'ignore' });
+  const fit = (spec, out = 'assets/props', colors = '40') => execFileSync('python3', [path.join(root, 'dev/fit_sprites.py'), tmp, path.join(root, out), spec, colors], { stdio: 'ignore' });
+  kit('aot_nature.png', 'oak,apple_tree,pine1,pine2,pine3,bush0,bush1,bush2,bush_berry,grass_tall,flowers_wild,flowers_blue');
+  fit('oak:116,apple_tree:118,pine1:153,pine2:139,pine3:143,bush0:23,bush1:27,bush2:37,bush_berry:34,grass_tall:29,flowers_wild:32,flowers_blue:30');
+  kit('aot_props.png', 'well,hay_bales,cart,flower_pots,rain_barrel,lamp_post_wood,bench,woodpile,statue,log_mossy,rock_mossy,crate,dice,rank,seal_green,seal_red');
+  fit('well:46,hay_bales:36,cart:34,flower_pots:29,rain_barrel:34,lamp_post_wood:66,bench:30,woodpile:40,statue:92,log_mossy:29,rock_mossy:36,crate:30');
+  fit('dice:22,rank:28,seal_green:34,seal_red:34', 'assets/ui', '32');
 }
 
-if (!only || only === 'atlas' || only === 'sprites' || only === 'heroes' || only === 'tradisea') {
+if (!only || only === 'atlas' || only === 'sprites' || only === 'heroes' || only === 'world') {
   console.log(execFileSync('node', [path.join(root, 'dev/pack.js')], { cwd: root }).toString().trim().split('\n').pop());
 }

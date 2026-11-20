@@ -36,7 +36,8 @@ function assetList() {
     if (d !== 'right') for (const t of WALK_TYPES) for (const h of sizesOf(t)) for (let i = 0; i < 3; i++) L[`titan_${t}_${h}_walk${i}_${d}`] = `assets/sprites/titan_${t}_${h}_walk${i}_${d}.png`;
   }
   for (const k of ['house_h1', 'house_h2', 'house_h3', 'house_tower', 'ruin_r1', 'ruin_r2', 'ruin_r3', 'ruin_r4', 'wall_a']) L[k] = `assets/sprites/${k}.png`;
-  for (const k of TR_GROUND.concat(TR_PROPS)) L[k] = `assets/tradisea/${k}.png`;
+  for (const k of TR_GROUND) L[k] = `assets/ground/${k}.png`;
+  for (const k of TR_PROPS) L[k] = `assets/props/${k}.png`;
   for (const k of ['ui_emblem', 'ui_cardback', 'ui_chest', 'ui_chestopen']) L[k] = `assets/sprites/${k}.png`;
   for (const s of ['blade', 'odm', 'gas', 'cloak', 'boots', 'relic']) for (let i = 1; i <= 4; i++) L[`gear_${s}${i}`] = `assets/sprites/gear_${s}${i}.png`;
   return L;

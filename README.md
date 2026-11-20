@@ -77,7 +77,7 @@ Each English text needs a row in `I18N_ROWS` in `src/i18n.js`: `[English, Spanis
 node dev/i18n_check.js es
 ```
 
-After adding sprites run `node dev/pack.js` to rebuild the atlases.
+After adding sprites run `node dev/pack.js` to rebuild the atlases. The world art is rebuilt with `node dev/build_assets.js world` (ground tiles from `dev/gen_ground.py`, trees and props from the ChatGPT sheets in `assets/raw/`).
 
 ## Contributing
 

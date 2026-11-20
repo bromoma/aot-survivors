@@ -94,7 +94,7 @@ function lightHoles(g, scale) {
   for (const a of allies) skyHole(g, sx(a.x), sy(a.y, a.z), 50 * scale, 0.6);
   for (const p of props) {
     if (p.key !== 'lamp_post_wood') continue;
-    const x = sx(p.x), y = sy(p.y, 0) - p.img.height + 5;
+    const x = sx(p.x) + (p.img === SPR.lamp_post_wood ? 1 : -1), y = sy(p.y, 0) - p.img.height + 25;
     if (x < -60 || y < -60 || x > bw + 60 || y > bh + 60) continue;
     skyHole(g, x, y, (46 + Math.sin(now * 7 + p.x) * 1.5) * scale, 0.9);
   }
@@ -105,7 +105,7 @@ function lampGlow() {
   bctx.globalAlpha = 0.5;
   for (const p of props) {
     if (p.key !== 'lamp_post_wood') continue;
-    const x = sx(p.x), y = sy(p.y, 0) - p.img.height + 5;
+    const x = sx(p.x) + (p.img === SPR.lamp_post_wood ? 1 : -1), y = sy(p.y, 0) - p.img.height + 25;
     if (x < -20 || y < -20 || x > bw + 20 || y > bh + 20) continue;
     bctx.drawImage(gs, x - (gs.width >> 1), y - (gs.height >> 1));
   }
